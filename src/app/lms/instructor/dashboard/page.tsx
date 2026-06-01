@@ -13,6 +13,7 @@ import {
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Cohort, Profile, Meeting } from "@/lib/mockData";
+import StudentProgressSection from "@/components/StudentProgressSection";
 
 export default function InstructorDashboard() {
   const { currentUser } = useAuth();
@@ -23,6 +24,9 @@ export default function InstructorDashboard() {
   const [students, setStudents] = useState<Profile[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [pendingGradingCount, setPendingGradingCount] = useState(0);
+
+  // Selected Student for Progress View
+  const [selectedStudentProgress, setSelectedStudentProgress] = useState<Profile | null>(null);
 
   // Forms
   const [annTitle, setAnnTitle] = useState("");
@@ -300,7 +304,12 @@ export default function InstructorDashboard() {
                     {students.map((student) => {
                       const grad = db.getGraduateStatus(student.id);
                       return (
-                        <tr key={student.id}>
+                        <tr
+                          key={student.id}
+                          onClick={() => setSelectedStudentProgress(student)}
+                          className="hover:bg-bg-card-hover cursor-pointer transition-colors"
+                          title="Click to view student academic progress"
+                        >
                           <td>
                             <div className="font-bold text-text-main">{student.full_name}</div>
                           </td>
@@ -360,6 +369,46 @@ export default function InstructorDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Student Progress Modal */}
+      {selectedStudentProgress && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="w-full max-w-2xl bg-bg-card border border-border-main rounded-2xl shadow-xl flex flex-col max-h-[85vh] overflow-hidden">
+            <div className="p-6 border-b border-border-main flex items-center justify-between bg-gradient-to-r from-bg-card to-bg-card/85">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
+                  Student Academic Progress
+                </span>
+                <h3 className="font-heading font-extrabold text-base sm:text-lg text-text-main">
+                  {selectedStudentProgress.full_name}
+                </h3>
+                <p className="text-xs text-text-muted">{selectedStudentProgress.email}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedStudentProgress(null)}
+                className="p-1.5 rounded-lg border border-border-main hover:bg-bg-card-hover text-text-muted hover:text-text-main transition-colors text-xs font-bold"
+              >
+                Close
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              <StudentProgressSection studentId={selectedStudentProgress.id} />
+            </div>
+            
+            <div className="p-4 border-t border-border-main bg-bg-main/55 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedStudentProgress(null)}
+                className="btn bg-primary text-white hover:brightness-110 px-5 py-2.5 rounded-xl text-xs font-bold"
+              >
+                Close Progress View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

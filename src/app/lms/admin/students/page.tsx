@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, ChevronRight } from "lucide-react";
+import { ShieldCheck, ChevronRight, GraduationCap, Activity } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Profile, GraduateStatus, Cohort, Certificate } from "@/lib/mockData";
+import StudentProgressSection from "@/components/StudentProgressSection";
 
 type StudentWithDeployment = Profile & {
   cohort: Cohort | undefined;
@@ -18,6 +19,9 @@ export default function AdminStudents() {
   // Data States
   const [students, setStudents] = useState<StudentWithDeployment[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithDeployment | null>(null);
+
+  // Tab State
+  const [rightTab, setRightTab] = useState<"progress" | "deployment">("progress");
 
   // Form States
   const [status, setStatus] = useState<GraduateStatus["deployment_status"]>("Active");
@@ -92,6 +96,7 @@ export default function AdminStudents() {
                     setSelectedStudent(student);
                     setStatus(student.grad?.deployment_status || "Active");
                     setNotes(student.grad?.placement_notes || "");
+                    setRightTab("progress");
                   }}
                   className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
                     selectedStudent?.id === student.id
@@ -123,7 +128,7 @@ export default function AdminStudents() {
           )}
         </div>
 
-        {/* Right Column: Edit Deployment Status (7 cols) */}
+        {/* Right Column: Student Details (7 cols) */}
         <div className="lg:col-span-7">
           {selectedStudent ? (
             <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-6 shadow-md animate-fade-in">
@@ -139,47 +144,79 @@ export default function AdminStudents() {
                 </p>
               </div>
 
-              {/* Status Update Form */}
-              <form onSubmit={handleUpdateStatus} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="form-group">
-                    <label htmlFor="status" className="text-[10px] font-bold text-text-muted block mb-1">
-                      Select Deployment Status
-                    </label>
-                    <select
-                      id="status"
-                      value={status}
-                      onChange={(e) => setStatus(e.target.value as GraduateStatus["deployment_status"])}
-                    >
-                      <option value="Active">Active (In training)</option>
-                      <option value="Available">Available (Certified & seeking deployment)</option>
-                      <option value="Assigned">Assigned (Deployed to active estate portfolio)</option>
-                      <option value="Suspended">Suspended (Credential paused/revoked)</option>
-                      <option value="Alumni">Alumni (Retired / ecosystem transition)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="notes" className="text-[10px] font-bold text-text-muted block mb-1">
-                    Placement & Tracking Remarks
-                  </label>
-                  <textarea
-                    id="notes"
-                    placeholder="e.g. Deployed to Property Max Block 4 Facilties on 2026-06-01..."
-                    rows={4}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                  />
-                </div>
-
+              {/* Tab Selector */}
+              <div className="flex gap-2 border-b border-border-main pb-3">
                 <button
-                  type="submit"
-                  className="btn bg-primary text-text-inverse hover:brightness-110 w-full py-3 rounded-xl font-bold text-xs"
+                  type="button"
+                  onClick={() => setRightTab("progress")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    rightTab === "progress"
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                  }`}
                 >
-                  Save Status Update
+                  <Activity className="w-3.5 h-3.5" />
+                  Academic Progress
                 </button>
-              </form>
+                <button
+                  type="button"
+                  onClick={() => setRightTab("deployment")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    rightTab === "deployment"
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                  }`}
+                >
+                  <GraduationCap className="w-3.5 h-3.5" />
+                  Deployment Status
+                </button>
+              </div>
+
+              {rightTab === "progress" ? (
+                <StudentProgressSection studentId={selectedStudent.id} />
+              ) : (
+                /* Status Update Form */
+                <form onSubmit={handleUpdateStatus} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="form-group">
+                      <label htmlFor="status" className="text-[10px] font-bold text-text-muted block mb-1">
+                        Select Deployment Status
+                      </label>
+                      <select
+                        id="status"
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value as GraduateStatus["deployment_status"])}
+                      >
+                        <option value="Active">Active (In training)</option>
+                        <option value="Available">Available (Certified & seeking deployment)</option>
+                        <option value="Assigned">Assigned (Deployed to active estate portfolio)</option>
+                        <option value="Suspended">Suspended (Credential paused/revoked)</option>
+                        <option value="Alumni">Alumni (Retired / ecosystem transition)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="notes" className="text-[10px] font-bold text-text-muted block mb-1">
+                      Placement & Tracking Remarks
+                    </label>
+                    <textarea
+                      id="notes"
+                      placeholder="e.g. Deployed to Property Max Block 4 Facilties on 2026-06-01..."
+                      rows={4}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn bg-primary text-text-inverse hover:brightness-110 w-full py-3 rounded-xl font-bold text-xs"
+                  >
+                    Save Status Update
+                  </button>
+                </form>
+              )}
             </div>
           ) : (
             <div className="p-12 text-center text-xs text-text-muted bg-bg-card border border-border-main rounded-2xl italic">
