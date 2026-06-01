@@ -15,7 +15,8 @@ import {
   FileCheck2,
   ListTodo,
   Menu,
-  X
+  X,
+  Megaphone
 } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import Logo from "@/components/Logo";
@@ -89,6 +90,7 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
   const navItems = {
     admin: [
       { name: "Overview Hub", href: "/lms/admin/dashboard", icon: <Layers className="w-4 h-4" /> },
+      { name: "Announcements Portal", href: "/lms/admin/announcements", icon: <Megaphone className="w-4 h-4" /> },
       { name: "User Accounts", href: "/lms/admin/users", icon: <UserCheck className="w-4 h-4" /> },
       { name: "Admissions Review", href: "/lms/admin/applications", icon: <ClipboardList className="w-4 h-4" /> },
       { name: "Cohort Manager", href: "/lms/admin/cohorts", icon: <Users className="w-4 h-4" /> },

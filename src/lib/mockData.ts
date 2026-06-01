@@ -144,7 +144,7 @@ export interface Attendance {
 
 export interface Announcement {
   id: string;
-  cohort_id: string;
+  cohort_id: string | null;
   title: string;
   content: string;
   created_at: string;

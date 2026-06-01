@@ -593,10 +593,25 @@ class LocalStorageDB {
       const profile = this.getProfile(list[idx].user_id);
       const assignment = this.getAssignment(list[idx].assignment_id);
       if (profile && assignment) {
+        // Try to get the module name
+        const modules = seeds.seedModules;
+        const moduleObj = modules.find((m) => m.id === assignment.module_id);
+        const moduleName = moduleObj ? moduleObj.title : `Module ${assignment.module_id}`;
+
+        const finalGrades = this.getFinalModuleGrade(list[idx].user_id, assignment.module_id);
+
+        let emailBody = `Hello ${profile.full_name},\n\nYour submission for "${assignment.title}" has been graded.\nScore: ${grade}/${assignment.points_possible}\nFeedback: ${feedback}\n\n`;
+
+        if (finalGrades) {
+          emailBody += `Great news! Your overall grade for ${moduleName} is now finalized:\n- Quiz Score: ${finalGrades.quizScore.toFixed(1)}%\n- Assignment Grade: ${finalGrades.assignmentGrade.toFixed(1)}%\n- Final Module Grade: ${finalGrades.finalGrade.toFixed(1)}% (weighted 30% Quiz / 70% Assignment)\n\n`;
+        }
+
+        emailBody += `Log in to your student dashboard to review details and proceed to the next module.\n\nBest regards,\nHousmata Academy Grading Team`;
+
         this.logEmail(
           profile.email,
-          `Assignment Graded: ${assignment.title}`,
-          `Hello ${profile.full_name},\n\nYour submission for "${assignment.title}" has been graded.\nScore: ${grade}/${assignment.points_possible}\nFeedback: ${feedback}\n\nLog in to review details.`
+          finalGrades ? `Academic Module Graded & Finalized: ${moduleName}` : `Assignment Graded: ${assignment.title}`,
+          emailBody
         );
       }
       return list[idx];
@@ -773,14 +788,19 @@ class LocalStorageDB {
   // --- Announcements ---
   getAnnouncements(cohortId: string): seeds.Announcement[] {
     return this.get<seeds.Announcement>("lms_announcements", []).filter(
-      (a) => a.cohort_id === cohortId
+      (a) => a.cohort_id === cohortId || !a.cohort_id
     );
+  }
+
+  getAllAnnouncements(): seeds.Announcement[] {
+    return this.get<seeds.Announcement>("lms_announcements", []);
   }
 
   createAnnouncement(ann: Omit<seeds.Announcement, "id" | "created_at">): seeds.Announcement {
     const list = this.get<seeds.Announcement>("lms_announcements", []);
     const newAnn: seeds.Announcement = {
       ...ann,
+      cohort_id: ann.cohort_id || null,
       id: generateUUID(),
       created_at: new Date().toISOString(),
     };

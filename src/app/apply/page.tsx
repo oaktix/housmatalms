@@ -63,6 +63,13 @@ export default function Apply() {
         `Hello ${formData.name},\n\nWe have received your admission application for Housmata Academy.\nOur academic board will review your profile and motivation statement within 3 business days.\n\nThank you,\nHousmata Admissions Office`
       );
 
+      // Notify administrator of new application
+      db.logEmail(
+        "myhousmata@gmail.com",
+        `New Admission Application Submitted: ${formData.name}`,
+        `Hello Admin,\n\nA new admission application has been submitted on the website.\n\nApplicant Details:\n- Name: ${formData.name}\n- Email: ${formData.email}\n- Phone: ${formData.phone}\n- State: ${formData.state}\n- Experience Level: ${formData.experience}\n- Motivation: ${formData.motivation}\n\nPlease review this application in the admin portal.\n\nBest regards,\nHousmata Website System`
+      );
+
       setSubmitted(true);
     } catch {
       setError("This email address has already submitted an application.");

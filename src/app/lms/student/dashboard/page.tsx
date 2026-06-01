@@ -10,12 +10,13 @@ import {
   ChevronRight,
   Sparkles,
   Lock,
-  Award
+  Award,
+  Megaphone
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
-import { Cohort, StudentProgress, Meeting, Quiz, QuizQuestion, Assignment } from "@/lib/mockData";
+import { Cohort, StudentProgress, Meeting, Quiz, QuizQuestion, Assignment, Announcement } from "@/lib/mockData";
 import { phase1Curriculum, Lesson } from "@/lib/curriculum";
 
 export default function StudentDashboard() {
@@ -25,6 +26,7 @@ export default function StudentDashboard() {
   const [cohort, setCohort] = useState<Cohort | null>(null);
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   // Navigation / Modal States
   const [activeTab, setActiveTab] = useState<"phase1" | "phase2" | "phase3">("phase1");
@@ -63,6 +65,8 @@ export default function StudentDashboard() {
     if (studentCohort) {
       setMeetings(db.getMeetings(studentCohort.id));
     }
+    
+    setAnnouncements(db.getAnnouncements(studentCohort?.id || ""));
   }, [currentUser]);
 
   useEffect(() => {
@@ -222,6 +226,29 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Announcements Widget */}
+      {announcements.length > 0 && (
+        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <h3 className="font-heading font-bold text-sm text-text-main flex items-center gap-2 border-b border-border-main pb-2">
+            <Megaphone className="w-4 h-4 text-primary animate-pulse" />
+            Latest Announcements & Academy Broadcasts
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[300px] overflow-y-auto pr-1">
+            {announcements.slice().reverse().map((ann) => (
+              <div key={ann.id} className="p-4 rounded-xl border border-border-main bg-bg-main/40 space-y-2 hover:border-primary/30 transition-all duration-300">
+                <div className="flex justify-between items-start gap-4">
+                  <h4 className="font-bold text-xs text-text-main leading-snug">{ann.title}</h4>
+                  <span className="text-[9px] text-text-muted flex-shrink-0 bg-bg-card border border-border-main px-2 py-0.5 rounded-full">
+                    {new Date(ann.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  </span>
+                </div>
+                <p className="text-[11px] text-text-muted leading-relaxed whitespace-pre-wrap">{ann.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex gap-2 border-b border-border-main pb-4 overflow-x-auto">
