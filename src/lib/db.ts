@@ -213,12 +213,14 @@ class LocalStorageDB {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async saveToSupabase(table: string, record: any) {
+  private async saveToSupabase(table: string, record: any, isInsert: boolean = false) {
     if (!this.isSupabase || !supabase) return;
     try {
-      const { error } = await supabase.from(table).upsert(record);
+      const { error } = isInsert
+        ? await supabase.from(table).insert(record)
+        : await supabase.from(table).upsert(record);
       if (error) {
-        console.error(`Supabase upsert error on '${table}':`, {
+        console.error(`Supabase ${isInsert ? 'insert' : 'upsert'} error on '${table}':`, {
           message: error.message,
           code: error.code,
           hint: error.hint,
@@ -226,7 +228,7 @@ class LocalStorageDB {
         });
       }
     } catch (e) {
-      console.error(`Failed to upsert to Supabase table ${table}:`, e);
+      console.error(`Failed to ${isInsert ? 'insert' : 'upsert'} to Supabase table ${table}:`, e);
     }
   }
 
@@ -379,7 +381,7 @@ class LocalStorageDB {
     };
     list.push(newApp);
     this.set("lms_applications", list);
-    this.saveToSupabase("applications", newApp);
+    this.saveToSupabase("applications", newApp, true);
     return newApp;
   }
 
@@ -567,7 +569,7 @@ class LocalStorageDB {
     };
     filtered.push(newSub);
     this.set("lms_submissions", filtered);
-    this.saveToSupabase("submissions", newSub);
+    this.saveToSupabase("submissions", newSub, true);
     
     const assignment = this.getAssignment(newSub.assignment_id);
     if (assignment) {
@@ -647,7 +649,7 @@ class LocalStorageDB {
     };
     list.push(newAttempt);
     this.set("lms_quiz_attempts", list);
-    this.saveToSupabase("quiz_attempts", newAttempt);
+    this.saveToSupabase("quiz_attempts", newAttempt, true);
     
     if (quiz) {
       this.checkAndPromoteModule(newAttempt.user_id, quiz.module_id);
@@ -892,7 +894,7 @@ class LocalStorageDB {
     };
     list.push(newLog);
     this.set("lms_email_logs", list);
-    this.saveToSupabase("email_logs", newLog);
+    this.saveToSupabase("email_logs", newLog, true);
 
     // Asynchronously dispatch real email transmission via server-side Resend API
     fetch("/api/send-email", {
