@@ -523,12 +523,6 @@ export const seedLessons: Lesson[] = [
 export const seedQuizzes: Quiz[] = [
   ...generatedQuizzes,
   {
-    id: "quiz-p1-m1",
-    module_id: "p1-m1",
-    title: "Module 1: Introduction to Property Management Quiz",
-    passing_score: 50,
-  },
-  {
     id: "quiz-p1-m2",
     module_id: "p1-m2",
     title: "Module 2: Ethics & Conduct Assessment",
@@ -551,21 +545,6 @@ export const seedQuizzes: Quiz[] = [
 export const seedQuizQuestions: QuizQuestion[] = [
   ...generatedQuizQuestions,
   ...generatedQuizQuestions2,
-  // Module 1 Introduction Quiz
-  {
-    id: "q-p1m1-1",
-    quiz_id: "quiz-p1-m1",
-    question: "What is the primary role of a digital estate manager?",
-    options: ["To sell properties", "To manage properties effectively and transparently", "To evict tenants", "To collect rent only"],
-    correct_option_index: 1,
-  },
-  {
-    id: "q-p1m1-2",
-    quiz_id: "quiz-p1-m1",
-    question: "Which of the following is an essential part of the property lifecycle?",
-    options: ["Tenant Onboarding", "Marketing", "Maintenance", "All of the above"],
-    correct_option_index: 3,
-  },
   // Module 2 Ethics Quiz Questions
   {
     id: "q-p1m2-1",
@@ -665,13 +644,6 @@ export const seedQuizQuestions: QuizQuestion[] = [
 ];
 
 export const seedAssignments: Assignment[] = [
-  {
-    id: "assign-p1-m1",
-    module_id: "p1-m1",
-    title: "Property Lifecycle Description",
-    description: "Write a detailed explanation of the entire property lifecycle from landlord onboarding and media creation to tenant exit, highlighting the critical role of a digital estate manager at each stage.",
-    points_possible: 100,
-  },
   {
     id: "assign-p1-m2",
     module_id: "p1-m2",

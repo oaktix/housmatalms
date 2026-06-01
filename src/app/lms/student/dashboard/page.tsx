@@ -77,7 +77,7 @@ export default function StudentDashboard() {
 
   // Mark Lesson Read
   const handleMarkLessonRead = () => {
-    if (!selectedLesson || !progress) return;
+    if (!selectedLesson || !progress || !currentUser) return;
     const lessonId = `${selectedLesson.moduleId}-lesson-${selectedLesson.lessonIndex}`;
     
     const currentRead = progress.read_lessons || [];
@@ -87,7 +87,8 @@ export default function StudentDashboard() {
         read_lessons: [...currentRead, lessonId]
       };
       db.updateProgress(updatedProgress);
-      setProgress(updatedProgress);
+      db.checkAndPromoteModule(currentUser.id, selectedLesson.moduleId);
+      setProgress(db.getProgress(currentUser.id));
     }
     setSelectedLesson(null);
   };
