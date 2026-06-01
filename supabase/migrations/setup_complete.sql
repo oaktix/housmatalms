@@ -207,26 +207,26 @@ create table if not exists public.email_logs (
 -- PART 2: ROW LEVEL SECURITY (RLS)
 -- =====================================================================
 
-alter table public.profiles enable row level security;
-alter table public.instructors enable row level security;
-alter table public.applications enable row level security;
-alter table public.cohorts enable row level security;
-alter table public.cohort_members enable row level security;
-alter table public.courses enable row level security;
-alter table public.modules enable row level security;
-alter table public.lessons enable row level security;
-alter table public.assignments enable row level security;
-alter table public.submissions enable row level security;
-alter table public.quizzes enable row level security;
-alter table public.quiz_questions enable row level security;
-alter table public.quiz_attempts enable row level security;
-alter table public.meetings enable row level security;
-alter table public.attendance enable row level security;
-alter table public.certificates enable row level security;
-alter table public.graduate_status enable row level security;
-alter table public.student_progress enable row level security;
-alter table public.announcements enable row level security;
-alter table public.email_logs enable row level security;
+alter table public.profiles disable row level security;
+alter table public.instructors disable row level security;
+alter table public.applications disable row level security;
+alter table public.cohorts disable row level security;
+alter table public.cohort_members disable row level security;
+alter table public.courses disable row level security;
+alter table public.modules disable row level security;
+alter table public.lessons disable row level security;
+alter table public.assignments disable row level security;
+alter table public.submissions disable row level security;
+alter table public.quizzes disable row level security;
+alter table public.quiz_questions disable row level security;
+alter table public.quiz_attempts disable row level security;
+alter table public.meetings disable row level security;
+alter table public.attendance disable row level security;
+alter table public.certificates disable row level security;
+alter table public.graduate_status disable row level security;
+alter table public.student_progress disable row level security;
+alter table public.announcements disable row level security;
+alter table public.email_logs disable row level security;
 
 -- Helper Functions
 create or replace function public.is_admin(user_id uuid)
