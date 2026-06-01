@@ -50,7 +50,7 @@ export default function Contact() {
               </div>
               <div className="space-y-1">
                 <span className="text-xs font-extrabold text-text-muted uppercase block">Email Support</span>
-                <a href="mailto:academy@housmata.com" className="text-sm font-semibold text-text-main hover:text-primary transition-colors">academy@housmata.com</a>
+                <a href="mailto:admissions@housmata.com" className="text-xs hover:text-primary transition-colors block">admissions@housmata.com</a>
               </div>
             </div>
 
