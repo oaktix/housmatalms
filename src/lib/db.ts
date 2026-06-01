@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import * as seeds from "./mockData";
+import { phase1Curriculum } from "./curriculum";
 
 // Retrieve keys from environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -658,14 +659,24 @@ class LocalStorageDB {
     const dbModuleId = normalizeToDbModuleId(moduleId) || "";
     const uiModuleId = normalizeToUiModuleId(moduleId) || "";
 
+    const progress = this.getProgress(userId);
+
+    // Verify all lessons in the curriculum for this module are read
+    const curriculumModule = phase1Curriculum.find(m => m.id === uiModuleId);
+    let allLessonsRead = true;
+    if (curriculumModule) {
+      allLessonsRead = curriculumModule.lessons.every((_, idx) => 
+        progress.read_lessons?.includes(`${uiModuleId}-lesson-${idx}`)
+      );
+    }
+
     const quizzes = this.getQuizzes(dbModuleId);
     const quizPassed = quizzes.length === 0 || this.getQuizAttempts(userId).some(a => a.quiz_id === quizzes[0].id && a.passed);
     
     const assignments = this.getAssignments(dbModuleId);
     const assignmentSubmitted = assignments.length === 0 || this.getStudentSubmissions(userId).some(s => s.assignment_id === assignments[0].id);
     
-    if (quizPassed && assignmentSubmitted) {
-      const progress = this.getProgress(userId);
+    if (allLessonsRead && quizPassed && assignmentSubmitted) {
       if (!progress.completed_modules.includes(uiModuleId)) {
         progress.completed_modules.push(uiModuleId);
         this.updateProgress(progress);

@@ -56,6 +56,11 @@ export default function StudentDashboard() {
     if (!currentUser) return;
     const studentId = currentUser.id;
 
+    // Proactively heal/promote modules where progress criteria are fully met
+    phase1Curriculum.forEach((mod) => {
+      db.checkAndPromoteModule(studentId, mod.id);
+    });
+
     const studentCohort = db.getStudentCohort(studentId);
     setCohort(studentCohort || null);
 
