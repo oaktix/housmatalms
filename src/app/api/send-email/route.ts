@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.RESEND_API_KEY;
-    const from = process.env.RESEND_FROM || "Housmata Academy <onboarding@resend.dev>";
+    const from = process.env.RESEND_FROM || "Housmata Academy <admissions@housmata.com.ng>";
 
     // Graceful fallback to simulation mode if Resend API key is not configured
     if (!apiKey) {
