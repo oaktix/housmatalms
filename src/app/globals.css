@@ -1,26 +1,216 @@
 @import "tailwindcss";
+@source "../app";
+@source "../components";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-bg-main: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-bg-glass: var(--bg-glass);
+  --color-bg-elevated: var(--bg-elevated);
+  
+  --color-border-main: var(--border-color);
+  --color-border-glow: var(--border-glow);
+  
+  --color-primary: var(--primary);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  
+  --color-text-main: var(--text-main);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: var(--text-inverse);
+
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-glow: var(--shadow-glow);
+
+  --animate-fade-in: fade-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  --animate-slide-up: slide-up 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+:root {
+  color-scheme: light;
+  /* Very clean, crisp light mode */
+  --bg-main: #fcfcfc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --bg-elevated: #ffffff;
+  
+  --border-color: #e2e8f0;
+  --border-glow: rgba(38, 196, 150, 0.3);
+  
+  --primary: #10b981;
+  --primary-glow: rgba(16, 185, 129, 0.25);
+  --secondary: #0ea5e9;
+  
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-inverse: #ffffff;
+
+  --shadow-card: 0 10px 40px -10px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 30px rgba(16, 185, 129, 0.15);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+    /* Sleek, deep midnight dark mode */
+    --bg-main: #090e17;
+    --bg-card: #111827;
+    --bg-card-hover: #1f2937;
+    --bg-glass: rgba(17, 24, 39, 0.75);
+    --bg-elevated: #111827;
+    
+    --border-color: #334155;
+    --border-glow: rgba(16, 185, 129, 0.3);
+    
+    --primary: #10b981;
+    --primary-glow: rgba(16, 185, 129, 0.25);
+    --secondary: #38bdf8;
+    
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --text-inverse: #ffffff;
+
+    --shadow-card: 0 10px 40px -10px rgba(0, 0, 0, 0.7);
+    --shadow-glow: 0 0 30px rgba(16, 185, 129, 0.2);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Minimal, polished scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
+  }
+}
+
+@layer components {
+  /* Premium frosted glass effect */
+  .glass {
+    background-color: var(--bg-glass);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+  }
+  
+  /* Modern dynamic cards */
+  .premium-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    border-radius: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .premium-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-glow);
+    box-shadow: var(--shadow-glow), var(--shadow-card);
+    background-color: var(--bg-card-hover);
+  }
+
+  /* Refined, pill-shaped buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.75rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: 9999px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .btn:active {
+    transform: scale(0.96);
+  }
+
+  /* Form Elements Global Aesthetics */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .form-group label {
+    font-size: 0.65rem !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.65rem 0.9rem !important;
+    font-size: 0.8rem !important;
+    font-family: inherit;
+    color: var(--text-main);
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 0.75rem !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none !important;
+    box-shadow: none;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px var(--primary-glow) !important;
+    background-color: var(--bg-card-hover) !important;
+  }
+
+  /* Corrects placeholder sizes to be neat, polished and proportional */
+  input::placeholder,
+  textarea::placeholder {
+    font-size: 0.75rem !important;
+    color: var(--text-muted) !important;
+    opacity: 0.65 !important;
+  }
 }
