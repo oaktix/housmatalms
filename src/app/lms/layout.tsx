@@ -183,7 +183,7 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
               Menu Navigation
             </span>
             {navItems.map((item) => {
-              const active = pathname.startsWith(item.href);
+              const active = (pathname ?? "").startsWith(item.href);
               return (
                 <Link
                   key={item.name}
