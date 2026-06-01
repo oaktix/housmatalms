@@ -16,6 +16,7 @@ export default function LmsLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showForgotTip, setShowForgotTip] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -105,9 +106,18 @@ export default function LmsLogin() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password" className="text-xs font-extrabold text-text-muted mb-1 block">
-                Password
-              </label>
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="password" className="text-xs font-extrabold text-text-muted block">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotTip((prev) => !prev)}
+                  className="text-[10px] font-semibold text-primary hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -128,6 +138,14 @@ export default function LmsLogin() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+              {showForgotTip && (
+                <div className="mt-2 p-3 bg-primary/10 border border-primary/20 text-text-main text-xs rounded-lg animate-in fade-in slide-in-from-top-1 duration-200">
+                  <p className="font-semibold text-primary mb-1">Password Support</p>
+                  <p className="text-text-muted leading-relaxed">
+                    All student and administrator accounts in this sandbox use the default password: <strong className="text-primary">housmata2024</strong>.
+                  </p>
+                </div>
+              )}
             </div>
 
             <button

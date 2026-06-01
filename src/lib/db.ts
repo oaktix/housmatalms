@@ -421,7 +421,7 @@ class LocalStorageDB {
         this.logEmail(
           email,
           "Admission Approved - Welcome to Housmata Academy!",
-          `Hello ${name},\n\nYour application to Housmata Academy has been approved!\nWe have assigned you to cohort: ${this.getCohort(cohortId)?.name || cohortId}.\n\nYou can log in using your email: ${email}\n\nBest wishes,\nHousmata Admissions Team`
+          `Hello ${name},\n\nYour application to Housmata Academy has been approved!\nWe have assigned you to cohort: ${this.getCohort(cohortId)?.name || cohortId}.\n\nYou can log in at: https://academy.housmata.com/lms/login\n\nYour credentials are:\n- Email: ${email}\n- Password: housmata2024\n\nBest wishes,\nHousmata Admissions Team`
         );
       }
       return list[idx];

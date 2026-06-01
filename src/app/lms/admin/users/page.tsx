@@ -93,9 +93,10 @@ Congratulations! An administrator has officially created your student account at
 Your student portal credentials and cohort allocation details are shown below:
 - Account Name: ${studentName}
 - Login Email: ${studentEmail}
+- Password: housmata2024
 - Allocated Cohort: ${assignedCohortName}
 
-You can log in and start your curriculum at any time here: http://localhost:3000/lms/login
+You can log in and start your curriculum at any time here: https://academy.housmata.com/lms/login
 
 We are excited to have you in this session.
 
