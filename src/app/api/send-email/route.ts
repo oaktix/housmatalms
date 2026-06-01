@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     }
 
     const apiKey = process.env.RESEND_API_KEY;
-    const from = process.env.RESEND_FROM || process.env.SMTP_FROM || "Housmata Academy <admissions@housmata.co>";
+    const from = process.env.RESEND_FROM || "Housmata Academy <onboarding@resend.dev>";
 
     // Graceful fallback to simulation mode if Resend API key is not configured
     if (!apiKey) {

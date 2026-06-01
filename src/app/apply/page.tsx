@@ -226,10 +226,10 @@ export default function Apply() {
             </div>
             <div className="space-y-2">
               <h2 className="text-2xl font-heading font-bold text-text-main">
-                Application Received!
+                Congratulations, your application has been received!
               </h2>
               <p className="text-text-muted text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
-                Thank you for applying. We have simulated an email confirmation to **{formData.email}**. You can view this log and approve your application directly in the Admin Dashboard!
+                Thank you for applying to Housmata Academy. A confirmation email has been sent to **{formData.email}**. Our admissions board will review your profile and motivation statement within 3 business days.
               </p>
             </div>
             <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
@@ -237,7 +237,7 @@ export default function Apply() {
                 href="/lms"
                 className="btn bg-primary text-text-inverse hover:brightness-110 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all"
               >
-                Go to LMS (Review Admissions)
+                Go to LMS Portal
               </Link>
               <Link
                 href="/"
