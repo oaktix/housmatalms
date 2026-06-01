@@ -353,49 +353,71 @@ export default function StudentDashboard() {
                   </div>
 
                   {(() => {
+                    const quizzes = db.getQuizzes(mod.id);
+                    const assignments = db.getAssignments(mod.id);
+                    const hasAssessment = quizzes.length > 0 || assignments.length > 0;
+                    
                     const allLessonsRead = mod.lessons.every((_, idx) => progress.read_lessons?.includes(`${mod.id}-lesson-${idx}`));
                     
-                    if (!isCompleted && isUnlocked && allLessonsRead) {
-                      return (
-                        <button
-                          onClick={() => handleOpenAssessment(mod.id)}
-                          className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-bold text-primary transition-all duration-300 hover:shadow-[0_0_20px_rgba(43,108,176,0.3)] hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
-                        >
-                          <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                          End of Module Assessment
-                        </button>
-                      );
-                    } else if (!isCompleted && isUnlocked && !allLessonsRead) {
-                      return (
-                        <button disabled className="w-full mt-2 py-2.5 rounded-xl border border-border-main bg-bg-main text-text-muted/50 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-not-allowed">
-                          <Lock className="w-4 h-4" />
-                          Complete Lessons to Unlock Assessment
-                        </button>
-                      );
-                    } else if (isCompleted) {
-                      const grades = db.getFinalModuleGrade(currentUser.id, mod.id);
-                      if (grades) {
-                        return (
-                          <div className="w-full mt-2 p-3 rounded-xl border border-border-main bg-bg-main space-y-2">
-                            <h4 className="text-[10px] font-extrabold uppercase text-text-muted tracking-widest text-center">Final Grades</h4>
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-text-muted">Quiz (30%)</span>
-                              <span className="font-bold text-text-main">{grades.quizScore.toFixed(0)}%</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs">
-                              <span className="text-text-muted">Assignment (70%)</span>
-                              <span className="font-bold text-text-main">{grades.assignmentGrade.toFixed(0)}%</span>
-                            </div>
-                            <div className="pt-2 mt-2 border-t border-border-main flex justify-between items-center text-xs font-bold">
-                              <span className="text-primary">Module Score</span>
-                              <span className="text-primary">{grades.finalGrade.toFixed(0)}%</span>
-                            </div>
-                          </div>
-                        );
+                    if (!isCompleted && isUnlocked) {
+                      if (hasAssessment) {
+                        if (allLessonsRead) {
+                          return (
+                            <button
+                              onClick={() => handleOpenAssessment(mod.id)}
+                              className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-bold text-primary transition-all duration-300 hover:shadow-[0_0_20px_rgba(43,108,176,0.3)] hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
+                            >
+                              <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              End of Module Assessment
+                            </button>
+                          );
+                        } else {
+                          return (
+                            <button disabled className="w-full mt-2 py-2.5 rounded-xl border border-border-main bg-bg-main text-text-muted/50 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-not-allowed">
+                              <Lock className="w-4 h-4" />
+                              Complete Lessons to Unlock Assessment
+                            </button>
+                          );
+                        }
                       } else {
                         return (
                           <div className="w-full mt-2 py-2 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
-                            Module Completed. Awaiting assignment grading.
+                            Read all lessons to complete this module.
+                          </div>
+                        );
+                      }
+                    } else if (isCompleted) {
+                      if (hasAssessment) {
+                        const grades = db.getFinalModuleGrade(currentUser.id, mod.id);
+                        if (grades) {
+                          return (
+                            <div className="w-full mt-2 p-3 rounded-xl border border-border-main bg-bg-main space-y-2">
+                              <h4 className="text-[10px] font-extrabold uppercase text-text-muted tracking-widest text-center">Final Grades</h4>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-text-muted">Quiz (30%)</span>
+                                <span className="font-bold text-text-main">{grades.quizScore.toFixed(0)}%</span>
+                              </div>
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-text-muted">Assignment (70%)</span>
+                                <span className="font-bold text-text-main">{grades.assignmentGrade.toFixed(0)}%</span>
+                              </div>
+                              <div className="pt-2 mt-2 border-t border-border-main flex justify-between items-center text-xs font-bold">
+                                <span className="text-primary">Module Score</span>
+                                <span className="text-primary">{grades.finalGrade.toFixed(0)}%</span>
+                              </div>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="w-full mt-2 py-2 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
+                              Module Completed. Awaiting assignment grading.
+                            </div>
+                          );
+                        }
+                      } else {
+                        return (
+                          <div className="w-full mt-2 py-2 p-3 rounded-xl border border-primary/20 bg-primary/5 text-xs font-semibold text-primary text-center">
+                            Module Completed ✓
                           </div>
                         );
                       }
