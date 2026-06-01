@@ -853,7 +853,7 @@ class LocalStorageDB {
     this.set("lms_email_logs", list);
     this.saveToSupabase("email_logs", newLog);
 
-    // Asynchronously dispatch real email transmission via server-side AWS SES SMTP API
+    // Asynchronously dispatch real email transmission via server-side Resend API
     fetch("/api/send-email", {
       method: "POST",
       headers: {
@@ -865,7 +865,7 @@ class LocalStorageDB {
         body,
       }),
     }).catch((err) => {
-      console.error("[SMTP Dispatch Error] Failed to send email via API endpoint:", err);
+      console.error("[Email Dispatch Error] Failed to send email via API endpoint:", err);
     });
 
     return newLog;

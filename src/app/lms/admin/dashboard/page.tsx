@@ -193,16 +193,16 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Right: AWS SES SMTP email logs (6 cols) */}
+        {/* Right: Resend email logs (6 cols) */}
         <div className="lg:col-span-6">
           <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4">
             <div className="flex justify-between items-center border-b border-border-main pb-3">
               <h3 className="font-heading font-bold text-sm text-text-main flex items-center gap-2">
                 <Mail className="w-4 h-4 text-primary" />
-                AWS SES Outbound Email Logs
+                Resend Outbound Email Logs
               </h3>
               <span className="text-[9px] font-bold text-primary bg-primary-glow px-2 py-0.5 rounded-full border border-primary/20">
-                AWS SES SMTP Active
+                Resend Active
               </span>
             </div>
 

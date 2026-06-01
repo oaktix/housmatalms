@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 
 export async function POST(request: Request) {
   try {
@@ -12,55 +12,48 @@ export async function POST(request: Request) {
       );
     }
 
-    const host = process.env.SMTP_HOST;
-    const port = process.env.SMTP_PORT;
-    const user = process.env.SMTP_USER;
-    const pass = process.env.SMTP_PASSWORD;
-    const from = process.env.SMTP_FROM || "Housmata Academy <admissions@housmata.co>";
+    const apiKey = process.env.RESEND_API_KEY;
+    const from = process.env.RESEND_FROM || process.env.SMTP_FROM || "Housmata Academy <admissions@housmata.co>";
 
-    // Graceful fallback to simulation mode if SMTP credentials are not configured
-    if (!host || !user || !pass) {
-      console.log(`[SMTP SIMULATION] (No credentials)
+    // Graceful fallback to simulation mode if Resend API key is not configured
+    if (!apiKey) {
+      console.log(`[RESEND SIMULATION] (No API key)
 To: ${recipient}
 Subject: ${subject}
 Body: ${body}
 `);
       return NextResponse.json({
         success: true,
-        message: "Email simulated successfully (SMTP not configured).",
+        message: "Email simulated successfully (Resend API key not configured).",
       });
     }
 
-    // Create Nodemailer Transporter
-    const transporter = nodemailer.createTransport({
-      host,
-      port: Number(port) || 587,
-      secure: false, // true for port 465, false for other ports like 587 (STARTTLS)
-      auth: {
-        user,
-        pass,
-      },
-      tls: {
-        // AWS SES SMTP requires TLS
-        rejectUnauthorized: true,
-      },
-    });
+    // Initialize Resend
+    const resend = new Resend(apiKey);
 
-    // Send the email
-    const info = await transporter.sendMail({
+    // Send the email via Resend
+    const { data, error } = await resend.emails.send({
       from,
       to: recipient,
       subject,
       text: body,
     });
 
-    console.log(`[SMTP SUCCESS] Email sent to ${recipient}. MessageID: ${info.messageId}`);
+    if (error) {
+      console.error("[RESEND ERROR] Failed to send email via Resend:", error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
+    }
+
+    console.log(`[RESEND SUCCESS] Email sent to ${recipient}. ID: ${data?.id}`);
     return NextResponse.json({
       success: true,
-      messageId: info.messageId,
+      messageId: data?.id,
     });
   } catch (error: unknown) {
-    console.error("[SMTP ERROR] Failed to send email via AWS SES SMTP:", error);
+    console.error("[RESEND ERROR] Failed to send email:", error);
     const errorMessage = error instanceof Error ? error.message : "Failed to send email";
     return NextResponse.json(
       {
