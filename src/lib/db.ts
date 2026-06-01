@@ -96,25 +96,7 @@ class LocalStorageDB {
       // 1. Fetch profiles from Supabase
       const { data: profiles, error: pErr } = await supabase.from("profiles").select("*");
       if (pErr) throw pErr;
-
-      // Merge: Supabase profiles + any seed profiles not yet in Supabase.
-      // The anon key cannot INSERT into profiles (RLS). Seeding Supabase is done
-      // via the SQL migration (setup_complete.sql). Until that runs, we keep seed
-      // accounts available in localStorage so the app always works.
-      const supabaseEmails = new Set((profiles || []).map((p: seeds.Profile) => p.email.toLowerCase()));
-      const localOnlySeeds = seeds.seedProfiles.filter(
-        (sp) => !supabaseEmails.has(sp.email.toLowerCase())
-      );
-      const mergedProfiles = [...(profiles || []), ...localOnlySeeds];
-      this.set("lms_profiles", mergedProfiles);
-
-      if (localOnlySeeds.length > 0) {
-        console.warn(
-          `Supabase is missing ${localOnlySeeds.length} seed profile(s): ` +
-          `${localOnlySeeds.map((p) => p.email).join(", ")}. ` +
-          `Run setup_complete.sql in the Supabase SQL Editor to fix permanently.`
-        );
-      }
+      this.set("lms_profiles", profiles || []);
 
       // 2. Fetch other tables in parallel
       const tables = [
@@ -251,9 +233,8 @@ class LocalStorageDB {
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  // --- Profiles ---
   getProfiles(): seeds.Profile[] {
-    return this.get<seeds.Profile>("lms_profiles", seeds.seedProfiles);
+    return this.get<seeds.Profile>("lms_profiles", this.isSupabase ? [] : seeds.seedProfiles);
   }
 
   getProfile(id: string): seeds.Profile | undefined {
@@ -336,9 +317,8 @@ class LocalStorageDB {
     }
   }
 
-  // --- Instructors ---
   getInstructors(): seeds.Instructor[] {
-    return this.get<seeds.Instructor>("lms_instructors", seeds.seedInstructors);
+    return this.get<seeds.Instructor>("lms_instructors", this.isSupabase ? [] : seeds.seedInstructors);
   }
 
   getInstructorByProfile(profileId: string): seeds.Instructor | undefined {
@@ -431,7 +411,7 @@ class LocalStorageDB {
 
   // --- Cohorts ---
   getCohorts(): seeds.Cohort[] {
-    return this.get<seeds.Cohort>("lms_cohorts", seeds.seedCohorts);
+    return this.get<seeds.Cohort>("lms_cohorts", this.isSupabase ? [] : seeds.seedCohorts);
   }
 
   getCohort(id: string): seeds.Cohort | undefined {
@@ -453,7 +433,7 @@ class LocalStorageDB {
 
   // --- Cohort Members ---
   getCohortMembers(): seeds.CohortMember[] {
-    return this.get<seeds.CohortMember>("lms_cohort_members", seeds.seedCohortMembers);
+    return this.get<seeds.CohortMember>("lms_cohort_members", this.isSupabase ? [] : seeds.seedCohortMembers);
   }
 
   getStudentCohort(userId: string): seeds.Cohort | undefined {
