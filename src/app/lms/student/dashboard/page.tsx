@@ -67,6 +67,8 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     loadStudentData();
+    db.sync();
+    return db.subscribe(loadStudentData);
   }, [loadStudentData]);
 
   // Mark Lesson Read

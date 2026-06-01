@@ -43,6 +43,8 @@ export default function AdminCohorts() {
 
   useEffect(() => {
     loadCohortData();
+    db.sync();
+    return db.subscribe(loadCohortData);
   }, [currentUser, loadCohortData]);
 
   const handleSubmit = (e: React.FormEvent) => {

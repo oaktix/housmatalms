@@ -64,6 +64,8 @@ export default function AdminUsersCrud() {
 
   useEffect(() => {
     loadData();
+    db.sync();
+    return db.subscribe(loadData);
   }, [currentUser, loadData]);
 
   // Form Reset
@@ -161,9 +163,7 @@ Housmata Academy Admissions & Operations Team`;
     }
 
     if (panelMode === "create") {
-      const newUserId = role === "student" ? "student-" + Math.random().toString(36).substr(2, 9) 
-                       : role === "instructor" ? "inst-" + Math.random().toString(36).substr(2, 9)
-                       : "admin-" + Math.random().toString(36).substr(2, 9);
+      const newUserId = db.generateUUID();
       
       const newProfile: Profile = {
         id: newUserId,
@@ -188,7 +188,7 @@ Housmata Academy Admissions & Operations Team`;
         sendCongratsEmail(fullName, email, cohortObj?.name || "Unassigned");
       } else if (role === "instructor") {
         const newInstructor: Instructor = {
-          id: "inst-profile-" + Math.random().toString(36).substr(2, 9),
+          id: db.generateUUID(),
           profile_id: newUserId,
           full_name: fullName,
           bio: bio,
@@ -228,7 +228,7 @@ Housmata Academy Admissions & Operations Team`;
         
         const existingInst = db.getInstructorByProfile(selectedUserId);
         const instPayload: Instructor = {
-          id: existingInst?.id || "inst-profile-" + Math.random().toString(36).substr(2, 9),
+          id: existingInst?.id || db.generateUUID(),
           profile_id: selectedUserId,
           full_name: fullName,
           bio: bio,

@@ -44,6 +44,8 @@ export default function InstructorAttendance() {
 
   useEffect(() => {
     loadAttendanceData();
+    db.sync();
+    return db.subscribe(loadAttendanceData);
   }, [loadAttendanceData]);
 
   // Load existing attendance logs when a meeting is selected

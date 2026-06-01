@@ -37,14 +37,54 @@ function normalizeToUiModuleId(moduleId?: string): string | undefined {
   return moduleId;
 }
 
+// RFC 4122 v4 compliant UUID generator
+function generateUUID(): string {
+  if (typeof window !== "undefined" && window.crypto && window.crypto.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
 // LocalStorage Mock DB implementation with Supabase Synchronization
 class LocalStorageDB {
   private isSupabase = false;
+  private listeners = new Set<() => void>();
 
   constructor() {
     if (isSupabaseConfigured && supabase) {
       this.isSupabase = true;
       this.syncFromSupabase();
+    }
+  }
+
+  generateUUID(): string {
+    return generateUUID();
+  }
+
+  subscribe(listener: () => void) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  notify() {
+    this.listeners.forEach((listener) => {
+      try {
+        listener();
+      } catch (err) {
+        console.error("Error invoking DB subscriber:", err);
+      }
+    });
+  }
+
+  async sync() {
+    if (this.isSupabase) {
+      await this.syncFromSupabase();
     }
   }
 
@@ -118,6 +158,7 @@ class LocalStorageDB {
           console.warn("[Storage Event Exception] Caught dispatch error:", err);
         }
       }
+      this.notify();
     } catch (e) {
       console.error("Failed to sync from Supabase:", e);
     }
@@ -332,7 +373,7 @@ class LocalStorageDB {
     const list = this.getApplications();
     const newApp: seeds.Application = {
       ...app,
-      id: "app-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       status: "pending",
       created_at: new Date().toISOString(),
     };
@@ -359,7 +400,7 @@ class LocalStorageDB {
         let studentProfile = this.getProfileByEmail(email);
         if (!studentProfile) {
           studentProfile = {
-            id: "student-" + Math.random().toString(36).substr(2, 9),
+            id: generateUUID(),
             full_name: name,
             email: email,
             role: "student",
@@ -399,7 +440,7 @@ class LocalStorageDB {
     const list = this.getCohorts();
     const newCohort: seeds.Cohort = {
       ...cohort,
-      id: "cohort-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       active: true,
     };
     list.push(newCohort);
@@ -520,7 +561,7 @@ class LocalStorageDB {
     
     const newSub: seeds.Submission = {
       ...sub,
-      id: "sub-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       status: "pending",
       submitted_at: new Date().toISOString(),
     };
@@ -601,7 +642,7 @@ class LocalStorageDB {
       ...attempt,
       score: finalScore,
       passed: passed,
-      id: "attempt-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       attempted_at: new Date().toISOString(),
     };
     list.push(newAttempt);
@@ -681,7 +722,7 @@ class LocalStorageDB {
     const list = this.getMeetings();
     const newMeeting: seeds.Meeting = {
       ...meeting,
-      id: "meet-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
     };
     list.push(newMeeting);
     this.set("lms_meetings", list);
@@ -710,7 +751,7 @@ class LocalStorageDB {
     const idx = list.findIndex((a) => a.meeting_id === meetingId && a.user_id === userId);
     
     const record: seeds.Attendance = {
-      id: idx !== -1 ? list[idx].id : "att-" + Math.random().toString(36).substr(2, 9),
+      id: idx !== -1 ? list[idx].id : generateUUID(),
       meeting_id: meetingId,
       user_id: userId,
       present,
@@ -738,7 +779,7 @@ class LocalStorageDB {
     const list = this.get<seeds.Announcement>("lms_announcements", []);
     const newAnn: seeds.Announcement = {
       ...ann,
-      id: "ann-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       created_at: new Date().toISOString(),
     };
     list.push(newAnn);
@@ -763,7 +804,7 @@ class LocalStorageDB {
     const hash = Math.random().toString(36).substr(2, 12) + Math.random().toString(36).substr(2, 12);
     
     const newCert: seeds.Certificate = {
-      id: "cert-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       user_id: userId,
       certificate_code: certCode,
       issue_date: new Date().toISOString().split("T")[0],
@@ -818,7 +859,7 @@ class LocalStorageDB {
     const idx = list.findIndex((g) => g.user_id === userId);
 
     const record: seeds.GraduateStatus = {
-      id: idx !== -1 ? list[idx].id : "grad-" + Math.random().toString(36).substr(2, 9),
+      id: idx !== -1 ? list[idx].id : generateUUID(),
       user_id: userId,
       deployment_status: status,
       placement_notes: notes || (idx !== -1 ? list[idx].placement_notes : ""),
@@ -843,7 +884,7 @@ class LocalStorageDB {
   logEmail(recipient: string, subject: string, body: string): seeds.EmailLog {
     const list = this.getEmailLogs();
     const newLog: seeds.EmailLog = {
-      id: "email-" + Math.random().toString(36).substr(2, 9),
+      id: generateUUID(),
       recipient_email: recipient,
       subject,
       body,

@@ -143,7 +143,7 @@ export function generateEmailHtml(
   origin?: string
 ): string {
   // Use production domain for public image assets, fallback to request origin if testing locally
-  const siteUrl = origin && origin.includes("localhost") ? origin : "https://housmata.com.ng";
+  const siteUrl = origin && origin.includes("localhost") ? origin : "https://academy.housmata.com";
   const logoUrl = `${siteUrl}/logo-light.png`;
   const currentYear = new Date().getFullYear();
   

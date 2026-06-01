@@ -51,6 +51,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadAdminDashboardData();
+    db.sync();
+    return db.subscribe(loadAdminDashboardData);
   }, [currentUser]);
 
   return (

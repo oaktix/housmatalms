@@ -42,6 +42,8 @@ export default function AdminStudents() {
 
   useEffect(() => {
     loadStudents();
+    db.sync();
+    return db.subscribe(loadStudents);
   }, [currentUser, loadStudents]);
 
   const handleUpdateStatus = (e: React.FormEvent) => {

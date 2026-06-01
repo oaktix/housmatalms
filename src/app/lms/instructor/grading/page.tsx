@@ -70,6 +70,8 @@ export default function InstructorGrading() {
 
   useEffect(() => {
     loadData();
+    db.sync();
+    return db.subscribe(loadData);
   }, [currentUser, loadData]);
 
   const handleGradeSubmit = (e: React.FormEvent) => {

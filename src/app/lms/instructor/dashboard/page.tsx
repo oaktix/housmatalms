@@ -59,6 +59,8 @@ export default function InstructorDashboard() {
 
   useEffect(() => {
     loadInstructorData();
+    db.sync();
+    return db.subscribe(loadInstructorData);
   }, [loadInstructorData]);
 
   // Submit Announcement

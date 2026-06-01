@@ -18,13 +18,23 @@ export default function StudentCredentials() {
   const certificateRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (currentUser) {
+    if (!currentUser) return;
+
+    const loadCerts = () => {
       const list = db.getCertificates(currentUser.id);
       setCerts(list);
-      if (list.length > 0) {
-        setActiveCert(list[0]);
-      }
-    }
+      setActiveCert((prev) => {
+        if (prev) {
+          const found = list.find((c) => c.id === prev.id);
+          return found || (list.length > 0 ? list[0] : null);
+        }
+        return list.length > 0 ? list[0] : null;
+      });
+    };
+
+    loadCerts();
+    db.sync();
+    return db.subscribe(loadCerts);
   }, [currentUser]);
 
   // Generate QR Code when active certificate changes
