@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { generateEmailHtml } from "@/lib/emailTemplate";
 
 export async function POST(request: Request) {
   try {
@@ -28,15 +29,24 @@ Body: ${body}
       });
     }
 
+    // Determine the host and protocol to construct the absolute origin for image assets
+    const host = request.headers.get("host") || "";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const origin = `${protocol}://${host}`;
+
+    // Generate the beautifully formatted email template wrapper
+    const htmlBody = generateEmailHtml(subject, body, recipient, origin);
+
     // Initialize Resend
     const resend = new Resend(apiKey);
 
-    // Send the email via Resend
+    // Send the email via Resend (with both html template and plaintext fallback)
     const { data, error } = await resend.emails.send({
       from,
       to: recipient,
       subject,
       text: body,
+      html: htmlBody,
     });
 
     if (error) {
