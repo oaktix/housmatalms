@@ -5,6 +5,19 @@ import { BookOpen, CheckCircle2, Award, Clock, HelpCircle } from "lucide-react";
 import { db } from "@/lib/db";
 import { phase1Curriculum } from "@/lib/curriculum";
 
+const PROGRESS_WIDTHS: Record<number, string> = {
+  0: "w-0",
+  1: "w-[11.11%]",
+  2: "w-[22.22%]",
+  3: "w-[33.33%]",
+  4: "w-[44.44%]",
+  5: "w-[55.56%]",
+  6: "w-[66.67%]",
+  7: "w-[77.78%]",
+  8: "w-[88.89%]",
+  9: "w-full",
+};
+
 interface StudentProgressSectionProps {
   studentId: string;
 }
@@ -68,8 +81,9 @@ export default function StudentProgressSection({ studentId }: StudentProgressSec
         </div>
         <div className="w-full bg-bg-main h-2.5 rounded-full overflow-hidden border border-border-main">
           <div
-            className="bg-primary h-full transition-all duration-500 rounded-full"
-            style={{ width: `${(completedCount / 9) * 100}%` }}
+            className={`bg-primary h-full transition-all duration-500 rounded-full ${
+              PROGRESS_WIDTHS[completedCount] || "w-0"
+            }`}
           />
         </div>
       </div>
