@@ -164,20 +164,28 @@ export default function StudentDashboard() {
     e.preventDefault();
     if (!activeAssessment?.assignment || !currentUser || !assignmentFile) return;
     
-    // Simulate file upload with mock URL
-    const mockFileUrl = `https://housmata-storage.mock/${currentUser.id}/${encodeURIComponent(assignmentFile.name)}`;
+    const assignmentId = activeAssessment.assignment.id;
+    const userId = currentUser.id;
+    const fileName = assignmentFile.name;
+    const text = assignmentText;
 
-    db.createSubmission({
-      assignment_id: activeAssessment.assignment.id,
-      user_id: currentUser.id,
-      content_link: mockFileUrl,
-      content_file_name: assignmentFile.name,
-      content_text: assignmentText
-    });
-    
-    setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true } : null);
-    loadStudentData();
-    confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const fileDataUrl = event.target?.result as string;
+
+      db.createSubmission({
+        assignment_id: assignmentId,
+        user_id: userId,
+        content_link: fileDataUrl,
+        content_file_name: fileName,
+        content_text: text
+      });
+      
+      setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true } : null);
+      loadStudentData();
+      confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
+    };
+    reader.readAsDataURL(assignmentFile);
   };
 
   if (!currentUser || !progress) {return null;}

@@ -273,8 +273,7 @@ export default function InstructorGrading() {
                     </div>
                     <a
                       href={selectedSub.content_link}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      download={selectedSub.content_file_name || "submission"}
                       className="inline-flex items-center gap-1 text-primary hover:underline"
                     >
                       Download / View
