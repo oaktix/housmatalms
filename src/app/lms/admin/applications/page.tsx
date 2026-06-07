@@ -60,6 +60,34 @@ export default function AdminApplications() {
     }, 2000);
   };
 
+  const handleRescind = () => {
+    if (!selectedApp) return;
+
+    db.rescindApplicationApproval(selectedApp.id);
+    
+    setMessage(`Application for ${selectedApp.applicant_name} has been rescinded.`);
+    loadApplications();
+
+    setTimeout(() => {
+      setMessage("");
+      setSelectedApp(null);
+    }, 2000);
+  };
+
+  const handleResetToPending = () => {
+    if (!selectedApp) return;
+
+    db.resetApplicationToPending(selectedApp.id);
+    
+    setMessage(`Application for ${selectedApp.applicant_name} reset to pending.`);
+    loadApplications();
+
+    setTimeout(() => {
+      setMessage("");
+      setSelectedApp(null);
+    }, 2000);
+  };
+
   const pendingApps = apps.filter((a) => a.status === "pending");
   const reviewedApps = apps.filter((a) => a.status !== "pending");
 
@@ -123,9 +151,14 @@ export default function AdminApplications() {
             {reviewedApps.length > 0 ? (
               <div className="space-y-2">
                 {reviewedApps.map((a) => (
-                  <div
+                  <button
                     key={a.id}
-                    className="p-4 rounded-2xl bg-bg-card/50 border border-border-main flex items-center justify-between text-xs"
+                    onClick={() => setSelectedApp(a)}
+                    className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                      selectedApp?.id === a.id
+                        ? "bg-primary-glow border-primary text-text-main"
+                        : "bg-bg-card/50 border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover"
+                    }`}
                   >
                     <div className="space-y-1 min-w-0 flex-grow pr-4">
                       <h4 className="font-bold text-text-main truncate">{a.applicant_name}</h4>
@@ -140,7 +173,7 @@ export default function AdminApplications() {
                     >
                       {a.status}
                     </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             ) : (
@@ -148,7 +181,7 @@ export default function AdminApplications() {
             )}
           </div>
         </div>
-
+ 
         {/* Right Column: Application Details Panel (7 cols) */}
         <div className="lg:col-span-7">
           {selectedApp ? (
@@ -164,7 +197,7 @@ export default function AdminApplications() {
                   Email: {selectedApp.email} • Phone: {selectedApp.phone}
                 </p>
               </div>
-
+ 
               {/* Specifications */}
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
@@ -176,7 +209,7 @@ export default function AdminApplications() {
                   <span className="font-semibold text-text-main">{selectedApp.experience_level || "Beginner"}</span>
                 </div>
               </div>
-
+ 
               {/* Motivation */}
               <div className="space-y-2">
                 <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
@@ -186,44 +219,85 @@ export default function AdminApplications() {
                   {selectedApp.motivation || "No statement submitted."}
                 </div>
               </div>
-
+ 
               {/* Action buttons with Cohort Selector */}
               <div className="pt-6 border-t border-border-main space-y-4">
-                <div className="form-group">
-                  <label htmlFor="targetCohort" className="text-[10px] font-bold text-text-muted block mb-1">
-                    Assign to Active Cohort
-                  </label>
-                  <select
-                    id="targetCohort"
-                    value={targetCohortId}
-                    onChange={(e) => setTargetCohortId(e.target.value)}
-                    className="max-w-xs"
-                    aria-label="Assign to Active Cohort"
-                  >
-                    {cohorts.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleApprove}
-                    className="btn bg-primary text-text-inverse hover:brightness-110 flex-grow py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
-                  >
-                    <UserCheck className="w-4 h-4" />
-                    Approve & Onboard Student
-                  </button>
-                  <button
-                    onClick={handleReject}
-                    className="btn btn-secondary border border-border-main hover:bg-error/5 hover:text-error hover:border-error/20 text-text-muted px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5"
-                  >
-                    <XCircle className="w-4 h-4" />
-                    Reject
-                  </button>
-                </div>
+                {selectedApp.status === "pending" ? (
+                  <>
+                    <div className="form-group">
+                      <label htmlFor="targetCohort" className="text-[10px] font-bold text-text-muted block mb-1">
+                        Assign to Active Cohort
+                      </label>
+                      <select
+                        id="targetCohort"
+                        value={targetCohortId}
+                        onChange={(e) => setTargetCohortId(e.target.value)}
+                        className="max-w-xs"
+                        aria-label="Assign to Active Cohort"
+                      >
+                        {cohorts.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+ 
+                    <div className="flex gap-4">
+                      <button
+                        onClick={handleApprove}
+                        className="btn bg-primary text-text-inverse hover:brightness-110 flex-grow py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
+                      >
+                        <UserCheck className="w-4 h-4" />
+                        Approve & Onboard Student
+                      </button>
+                      <button
+                        onClick={handleReject}
+                        className="btn btn-secondary border border-border-main hover:bg-error/5 hover:text-error hover:border-error/20 text-text-muted px-6 py-3 rounded-xl font-bold text-xs flex items-center gap-1.5"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Reject
+                      </button>
+                    </div>
+                  </>
+                ) : selectedApp.status === "approved" ? (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-xl bg-primary-glow/20 border border-primary/25 text-xs text-text-muted space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <span className="font-bold text-text-main">Currently Approved</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        This student is actively enrolled. Rescinding approval will deactivate their access credentials, remove them from their cohort, and reset all of their course progress, quizzes, and submissions.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleRescind}
+                      className="btn bg-error text-text-inverse hover:brightness-110 w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
+                    >
+                      <XCircle className="w-4 h-4" />
+                      Rescind Approval & Reset Progress
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-xl bg-error/5 border border-error/10 text-xs text-text-muted space-y-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-error" />
+                        <span className="font-bold text-text-main">Currently Rejected</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        This application has been rejected. You can reset it to pending to place it back in the review queue.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleResetToPending}
+                      className="btn btn-secondary border border-border-main hover:bg-bg-card-hover w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5"
+                    >
+                      Reset to Pending Status
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ) : (

@@ -276,6 +276,11 @@ class LocalStorageDB {
     this.deleteInstructorByProfile(id);
     this.deleteCohortMember(id);
     this.deleteGraduateStatus(id);
+    this.deleteStudentProgress(id);
+    this.deleteStudentSubmissions(id);
+    this.deleteStudentQuizAttempts(id);
+    this.deleteStudentCertificates(id);
+    this.deleteStudentAttendance(id);
 
     if (supabase) {
       supabase
@@ -314,6 +319,81 @@ class LocalStorageDB {
         .eq("user_id", userId)
         .then(({ error }) => {
           if (error) console.error(`Failed to delete graduate status for ${userId} from Supabase:`, error);
+        });
+    }
+  }
+
+  deleteStudentProgress(userId: string): void {
+    const list = this.get<seeds.StudentProgress>("lms_progress", []);
+    const updatedList = list.filter((p) => p.user_id !== userId);
+    this.set("lms_progress", updatedList);
+    if (supabase) {
+      supabase
+        .from("student_progress")
+        .delete()
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.error(`Failed to delete student progress for ${userId} from Supabase:`, error);
+        });
+    }
+  }
+
+  deleteStudentSubmissions(userId: string): void {
+    const list = this.get<seeds.Submission>("lms_submissions", []);
+    const updatedList = list.filter((s) => s.user_id !== userId);
+    this.set("lms_submissions", updatedList);
+    if (supabase) {
+      supabase
+        .from("submissions")
+        .delete()
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.error(`Failed to delete submissions for ${userId} from Supabase:`, error);
+        });
+    }
+  }
+
+  deleteStudentQuizAttempts(userId: string): void {
+    const list = this.get<seeds.QuizAttempt>("lms_quiz_attempts", []);
+    const updatedList = list.filter((a) => a.user_id !== userId);
+    this.set("lms_quiz_attempts", updatedList);
+    if (supabase) {
+      supabase
+        .from("quiz_attempts")
+        .delete()
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.error(`Failed to delete quiz attempts for ${userId} from Supabase:`, error);
+        });
+    }
+  }
+
+  deleteStudentCertificates(userId: string): void {
+    const list = this.get<seeds.Certificate>("lms_certificates", []);
+    const updatedList = list.filter((c) => c.user_id !== userId);
+    this.set("lms_certificates", updatedList);
+    if (supabase) {
+      supabase
+        .from("certificates")
+        .delete()
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.error(`Failed to delete certificates for ${userId} from Supabase:`, error);
+        });
+    }
+  }
+
+  deleteStudentAttendance(userId: string): void {
+    const list = this.get<seeds.Attendance>("lms_attendance", []);
+    const updatedList = list.filter((a) => a.user_id !== userId);
+    this.set("lms_attendance", updatedList);
+    if (supabase) {
+      supabase
+        .from("attendance")
+        .delete()
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.error(`Failed to delete attendance for ${userId} from Supabase:`, error);
         });
     }
   }
@@ -406,6 +486,43 @@ class LocalStorageDB {
         );
       }
       return list[idx];
+    }
+    return undefined;
+  }
+
+  rescindApplicationApproval(id: string): seeds.Application | undefined {
+    const list = this.getApplications();
+    const idx = list.findIndex((a) => a.id === id);
+    if (idx !== -1) {
+      const app = list[idx];
+      if (app.status === "approved") {
+        app.status = "pending";
+        delete app.reviewed_at;
+        this.set("lms_applications", list);
+        this.saveToSupabase("applications", app);
+
+        // Find the profile for this applicant by email
+        const email = app.email;
+        const profile = this.getProfileByEmail(email);
+        if (profile) {
+          this.deleteProfile(profile.id);
+        }
+      }
+      return app;
+    }
+    return undefined;
+  }
+
+  resetApplicationToPending(id: string): seeds.Application | undefined {
+    const list = this.getApplications();
+    const idx = list.findIndex((a) => a.id === id);
+    if (idx !== -1) {
+      const app = list[idx];
+      app.status = "pending";
+      delete app.reviewed_at;
+      this.set("lms_applications", list);
+      this.saveToSupabase("applications", app);
+      return app;
     }
     return undefined;
   }
