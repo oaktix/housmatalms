@@ -761,8 +761,19 @@ class LocalStorageDB {
 
       return list[idx];
     }
-    return undefined;
   }
+
+  updateSubmission(sub: seeds.Submission): seeds.Submission {
+    const list = this.getSubmissions();
+    const idx = list.findIndex((s) => s.id === sub.id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...sub };
+      this.set("lms_submissions", list);
+      this.saveToSupabase("submissions", sub);
+    }
+    return sub;
+  }
+
 
 
   // --- Quizzes & Attempts ---

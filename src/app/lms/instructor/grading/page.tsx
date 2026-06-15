@@ -74,6 +74,49 @@ export default function InstructorGrading() {
     return db.subscribe(loadData);
   }, [currentUser, loadData]);
 
+  useEffect(() => {
+    // Auto-heal legacy PowerPoint submissions by converting them to PDF
+    const allSubs = db.getSubmissions();
+    const pptxSubs = allSubs.filter((sub) => 
+      sub.content_link && 
+      (sub.content_file_name?.toLowerCase().endsWith(".pptx") || sub.content_file_name?.toLowerCase().endsWith(".ppt")) &&
+      !sub.content_link.startsWith("data:application/pdf")
+    );
+
+    if (pptxSubs.length > 0) {
+      console.log(`[PPTX Auto-Heal] Found ${pptxSubs.length} legacy PowerPoint submissions to convert to PDF.`);
+      pptxSubs.forEach(async (sub) => {
+        try {
+          const res = await fetch("/api/convert-pptx", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fileDataUrl: sub.content_link,
+              fileName: sub.content_file_name,
+            }),
+          });
+          
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.pdfDataUrl) {
+              db.updateSubmission({
+                ...sub,
+                content_link: data.pdfDataUrl,
+                content_file_name: sub.content_file_name!.replace(/\.pptx?$/i, ".pdf")
+              });
+              loadData();
+            }
+          }
+        } catch (err) {
+          console.error("Auto-conversion of legacy presentation failed:", sub.id, err);
+        }
+      });
+    }
+  }, [submissions, loadData]);
+
+
   const handleGradeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSub) return;
