@@ -22,10 +22,10 @@ function LoginContent() {
   const [showForgotTip, setShowForgotTip] = useState(false);
 
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && !token) {
       router.push("/lms");
     }
-  }, [currentUser, router]);
+  }, [currentUser, token, router]);
 
   useEffect(() => {
     if (token) {

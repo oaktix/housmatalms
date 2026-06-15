@@ -156,14 +156,21 @@ export function generateEmailHtml(
     : `${siteUrl}/lms/login`;
 
   // Update any occurrence of the login link in the plain text body to use the token URL
-  const updatedBodyText = bodyText.replace(/https:\/\/academy\.housmata\.com\/lms\/login/g, loginUrl);
+  let updatedBodyText = bodyText.replace(/https:\/\/academy\.housmata\.com\/lms\/login/g, loginUrl);
   
+  // Replace "please log in" and "log in" with placeholders in the plain text body
+  updatedBodyText = updatedBodyText.replace(/please log in/gi, "__PLEASE_LOGIN_LINK__");
+  updatedBodyText = updatedBodyText.replace(/log in/gi, "__LOGIN_LINK__");
+
   // Format the text body into responsive styled components
   let formattedContent = parseBodyToHtml(updatedBodyText);
   
-  // Replace plain text "please log in" (case-insensitive) with a bolded HTML link to the token login URL
+  // Replace placeholders with clean HTML links
   const loginLinkHtml = `<a href="${loginUrl}" target="_blank" style="color: #10b981; text-decoration: underline; font-weight: 700;"><b>please log in</b></a>`;
-  formattedContent = formattedContent.replace(/please log in/gi, loginLinkHtml);
+  const plainLoginLinkHtml = `<a href="${loginUrl}" target="_blank" style="color: #10b981; text-decoration: underline; font-weight: 700;"><b>log in</b></a>`;
+  
+  formattedContent = formattedContent.replace(/__PLEASE_LOGIN_LINK__/g, loginLinkHtml);
+  formattedContent = formattedContent.replace(/__LOGIN_LINK__/g, plainLoginLinkHtml);
   
   // Extract the first link to create a beautiful, primary CTA button at the bottom of the card
   const urlRegex = /(https?:\/\/[^\s]+)/;
