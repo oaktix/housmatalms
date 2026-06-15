@@ -177,14 +177,14 @@ export default function StudentDashboard() {
     
     const assignmentId = activeAssessment.assignment.id;
     const userId = currentUser.id;
-    let fileName = assignmentFile.name;
+    const fileName = assignmentFile.name;
     const text = assignmentText;
 
     setSubmittingAssignment(true);
 
     const reader = new FileReader();
     reader.onload = async (event) => {
-      let fileDataUrl = event.target?.result as string;
+      const fileDataUrl = event.target?.result as string;
 
       db.createSubmission({
         assignment_id: assignmentId,
