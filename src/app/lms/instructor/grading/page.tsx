@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { ClipboardList, CheckCircle2, ChevronRight, FileText, ExternalLink, GraduationCap, Award } from "lucide-react";
+import { ClipboardList, CheckCircle2, ChevronRight, GraduationCap, Award } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Submission, Assignment, Profile, StudentProgress } from "@/lib/mockData";
@@ -294,19 +294,17 @@ export default function InstructorGrading() {
                 </div>
 
                 {selectedSub.content_link && (
-                  <div className="p-4 rounded-xl bg-bg-main/50 border border-border-main flex items-center justify-between text-xs font-semibold text-text-muted">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-primary" />
-                      <span>{selectedSub.content_file_name || "Attachment"}</span>
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
+                      Submitted Document ({selectedSub.content_file_name || "Attachment"}):
+                    </span>
+                    <div className="border border-border-main rounded-xl overflow-hidden bg-bg-main h-[300px] sm:h-[450px] md:h-[550px] relative shadow-inner">
+                      <iframe
+                        src={selectedSub.content_link}
+                        className="w-full h-full border-0"
+                        title="Document Viewer"
+                      />
                     </div>
-                    <a
-                      href={selectedSub.content_link}
-                      download={selectedSub.content_file_name || "submission"}
-                      className="inline-flex items-center gap-1 text-primary hover:underline"
-                    >
-                      Download / View
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
                   </div>
                 )}
 
