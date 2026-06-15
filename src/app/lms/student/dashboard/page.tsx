@@ -39,7 +39,7 @@ export default function StudentDashboard() {
     questions: QuizQuestion[], 
     assignment: Assignment | null 
   } | null>(null);
-  const [assessmentStatus, setAssessmentStatus] = useState<{ passedQuiz: boolean, submittedAssignment: boolean } | null>(null);
+  const [assessmentStatus, setAssessmentStatus] = useState<{ passedQuiz: boolean, submittedAssignment: boolean, isGraded: boolean } | null>(null);
   
   // Quiz State
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
@@ -118,9 +118,11 @@ export default function StudentDashboard() {
     
     const attempts = q ? db.getQuizAttempts(currentUser.id).filter(att => att.quiz_id === q!.id) : [];
     const passedQuiz = q ? attempts.some(att => att.passed) : true;
-    const submittedAssignment = a ? db.getStudentSubmissions(currentUser.id).some(s => s.assignment_id === a.id) : true;
+    const studentSubmissions = a ? db.getStudentSubmissions(currentUser.id).filter(s => s.assignment_id === a.id) : [];
+    const isGraded = studentSubmissions.some(s => s.status === "graded");
+    const submittedAssignment = a ? studentSubmissions.length > 0 : true;
     
-    setAssessmentStatus({ passedQuiz, submittedAssignment });
+    setAssessmentStatus({ passedQuiz, submittedAssignment, isGraded });
     setQuizAnswers({});
     setQuizResult(null);
     setCurrentQuestionIndex(0);
@@ -181,7 +183,7 @@ export default function StudentDashboard() {
         content_text: text
       });
       
-      setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true } : null);
+      setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true, isGraded: false } : null);
       loadStudentData();
       confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
     };
@@ -422,8 +424,17 @@ export default function StudentDashboard() {
                           );
                         } else {
                           return (
-                            <div className="w-full mt-2 py-2 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
-                              Module Completed. Awaiting assignment grading.
+                            <div className="w-full mt-2 space-y-2">
+                              <div className="py-2 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
+                                Module Completed. Awaiting assignment grading.
+                              </div>
+                              <button
+                                onClick={() => handleOpenAssessment(mod.id)}
+                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-bold text-primary transition-all duration-300 flex items-center justify-center gap-2 group"
+                              >
+                                <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                View or Resubmit Assessment
+                              </button>
                             </div>
                           );
                         }
@@ -808,12 +819,22 @@ export default function StudentDashboard() {
                     )}
                   </div>
                 </div>
-              ) : !assessmentStatus.submittedAssignment && activeAssessment.assignment ? (
+              ) : (!assessmentStatus.submittedAssignment || !assessmentStatus.isGraded) && activeAssessment.assignment ? (
                 <div className="space-y-6 animate-fade-in">
-                  <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl mb-6">
-                    <h4 className="text-primary font-bold mb-2">Assignment Required</h4>
-                    <p className="text-sm text-text-muted">You have passed the quiz. To complete this module, please submit your final assignment.</p>
-                  </div>
+                  {assessmentStatus.submittedAssignment ? (
+                    <div className="bg-warning/10 border border-warning/20 p-4 rounded-xl mb-6">
+                      <h4 className="text-warning font-bold mb-1">Resubmission Notice</h4>
+                      <p className="text-xs text-text-muted">
+                        You have already submitted this assignment, but the instructor has not graded it yet.
+                        You can upload a new version below, which will <strong>completely replace</strong> your previous submission.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl mb-6">
+                      <h4 className="text-primary font-bold mb-2">Assignment Required</h4>
+                      <p className="text-sm text-text-muted">You have passed the quiz. To complete this module, please submit your final assignment.</p>
+                    </div>
+                  )}
                   <div>
                     <h3 className="text-xl font-bold text-text-main">{activeAssessment.assignment.title}</h3>
                     <p className="text-sm text-text-muted mt-2">{activeAssessment.assignment.description}</p>

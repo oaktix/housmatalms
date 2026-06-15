@@ -656,6 +656,19 @@ class LocalStorageDB {
 
   createSubmission(sub: Omit<seeds.Submission, "id" | "submitted_at" | "status">): seeds.Submission {
     const list = this.getSubmissions();
+    
+    // Find the existing submission so we can delete it from Supabase if configured
+    const existing = list.find((s) => s.assignment_id === sub.assignment_id && s.user_id === sub.user_id);
+    if (existing && supabase) {
+      supabase
+        .from("submissions")
+        .delete()
+        .eq("id", existing.id)
+        .then(({ error }) => {
+          if (error) console.error(`Failed to delete old submission ${existing.id} from Supabase:`, error);
+        });
+    }
+
     // Remove existing submission for the same assignment and user to overwrite it (resubmission)
     const filtered = list.filter((s) => !(s.assignment_id === sub.assignment_id && s.user_id === sub.user_id));
     
