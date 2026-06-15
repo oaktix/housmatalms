@@ -173,7 +173,7 @@ export default function StudentDashboard() {
 
   const submitAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeAssessment?.assignment || !currentUser || !assignmentFile) return;
+    if (submittingAssignment || !activeAssessment?.assignment || !currentUser || !assignmentFile) return;
     
     const assignmentId = activeAssessment.assignment.id;
     const userId = currentUser.id;
