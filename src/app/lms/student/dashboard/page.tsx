@@ -39,7 +39,13 @@ export default function StudentDashboard() {
     questions: QuizQuestion[], 
     assignment: Assignment | null 
   } | null>(null);
-  const [assessmentStatus, setAssessmentStatus] = useState<{ passedQuiz: boolean, submittedAssignment: boolean, isGraded: boolean } | null>(null);
+  const [assessmentStatus, setAssessmentStatus] = useState<{ 
+    passedQuiz: boolean, 
+    submittedAssignment: boolean, 
+    isGraded: boolean,
+    isRejected?: boolean,
+    feedback?: string
+  } | null>(null);
   
   // Quiz State
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number>>({});
@@ -120,9 +126,11 @@ export default function StudentDashboard() {
     const passedQuiz = q ? attempts.some(att => att.passed) : true;
     const studentSubmissions = a ? db.getStudentSubmissions(currentUser.id).filter(s => s.assignment_id === a.id) : [];
     const isGraded = studentSubmissions.some(s => s.status === "graded");
+    const isRejected = studentSubmissions.some(s => s.status === "rejected");
     const submittedAssignment = a ? studentSubmissions.length > 0 : true;
+    const feedback = studentSubmissions.length > 0 ? (studentSubmissions[0].feedback || "") : "";
     
-    setAssessmentStatus({ passedQuiz, submittedAssignment, isGraded });
+    setAssessmentStatus({ passedQuiz, submittedAssignment, isGraded, isRejected, feedback });
     setQuizAnswers({});
     setQuizResult(null);
     setCurrentQuestionIndex(0);
@@ -835,7 +843,19 @@ export default function StudentDashboard() {
                 </div>
               ) : (!assessmentStatus.submittedAssignment || !assessmentStatus.isGraded) && activeAssessment.assignment ? (
                 <div className="space-y-6 animate-fade-in">
-                  {assessmentStatus.submittedAssignment ? (
+                  {assessmentStatus.isRejected ? (
+                    <div className="bg-error/10 border border-error/20 p-4 rounded-xl mb-6">
+                      <h4 className="text-error font-bold mb-1">Resubmission Requested by Instructor</h4>
+                      <p className="text-xs text-text-muted mb-2">
+                        Your previous submission was not accepted. Please read the instructor&apos;s feedback below and upload a revised assignment.
+                      </p>
+                      {assessmentStatus.feedback && (
+                        <div className="p-3 bg-bg-main border border-border-main rounded-lg text-xs font-mono text-text-main">
+                          <strong>Feedback:</strong> {assessmentStatus.feedback}
+                        </div>
+                      )}
+                    </div>
+                  ) : assessmentStatus.submittedAssignment ? (
                     <div className="bg-warning/10 border border-warning/20 p-4 rounded-xl mb-6">
                       <h4 className="text-warning font-bold mb-1">Resubmission Notice</h4>
                       <p className="text-xs text-text-muted">

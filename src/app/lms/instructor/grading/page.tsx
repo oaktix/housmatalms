@@ -90,6 +90,25 @@ export default function InstructorGrading() {
     }, 1500);
   };
 
+  const handleRequestResubmission = () => {
+    if (!selectedSub) return;
+    if (!feedback.trim()) {
+      alert("Please provide feedback explaining why resubmission is requested.");
+      return;
+    }
+
+    db.requestResubmission(selectedSub.id, feedback);
+
+    setSuccessMsg("Resubmission requested successfully!");
+    setFeedback("");
+    loadData();
+    
+    setTimeout(() => {
+      setSuccessMsg("");
+      setSelectedSub(null);
+    }, 1500);
+  };
+
   const handlePromoteToPhase3 = (studentId: string) => {
     db.promoteToPhase3(studentId);
     confetti({
@@ -325,12 +344,21 @@ export default function InstructorGrading() {
                       </div>
                     </div>
 
-                    <button
-                      type="submit"
-                      className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-xs hover:shadow-[0_10px_20px_-10px_rgba(43,108,176,0.5)] hover:-translate-y-0.5 transition-all duration-300"
-                    >
-                      {selectedSub.status === "graded" ? "Update Score & Save Assessment" : "Submit Score & Save Assessment"}
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        type="submit"
+                        className="flex-grow py-4 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-xs hover:shadow-[0_10px_20px_-10px_rgba(43,108,176,0.5)] hover:-translate-y-0.5 transition-all duration-300"
+                      >
+                        {selectedSub.status === "graded" ? "Update Score & Save Assessment" : "Submit Score & Save Assessment"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRequestResubmission}
+                        className="py-4 px-6 rounded-xl bg-error/10 hover:bg-error hover:text-white border border-error/20 text-error font-bold text-xs transition-all duration-300"
+                      >
+                        Request Resubmission
+                      </button>
+                    </div>
                   </form>
                 ) : (
                   <div className="p-8 text-center space-y-3 bg-primary-glow/20 border border-primary/20 rounded-xl animate-fade-in">

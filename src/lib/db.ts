@@ -727,8 +727,43 @@ class LocalStorageDB {
       }
       return list[idx];
     }
+  }
+
+  requestResubmission(id: string, feedback: string): seeds.Submission | undefined {
+    const list = this.getSubmissions();
+    const idx = list.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      list[idx].grade = undefined;
+      list[idx].feedback = feedback;
+      list[idx].status = "rejected";
+      this.set("lms_submissions", list);
+      this.saveToSupabase("submissions", list[idx]);
+
+      // Remove from completed modules for the student
+      const assignment = this.getAssignment(list[idx].assignment_id);
+      if (assignment) {
+        const uiModuleId = normalizeToUiModuleId(assignment.module_id) || "";
+        const progress = this.getProgress(list[idx].user_id);
+        progress.completed_modules = progress.completed_modules.filter(m => m !== uiModuleId);
+        this.updateProgress(progress);
+      }
+
+      // Trigger email simulation
+      const profile = this.getProfile(list[idx].user_id);
+      const assignmentObj = this.getAssignment(list[idx].assignment_id);
+      if (profile && assignmentObj) {
+        this.logEmail(
+          profile.email,
+          `Resubmission Requested: ${assignmentObj.title}`,
+          `Hello ${profile.full_name},\n\nYour instructor has requested a resubmission for "${assignmentObj.title}".\nFeedback: ${feedback}\n\nPlease log in to your student dashboard to submit your revised assignment.\n\nBest regards,\nHousmata Academy Grading Team`
+        );
+      }
+
+      return list[idx];
+    }
     return undefined;
   }
+
 
   // --- Quizzes & Attempts ---
   getQuizzes(moduleId?: string): seeds.Quiz[] {
