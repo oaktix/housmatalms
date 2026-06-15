@@ -210,36 +210,50 @@ export default function StudentDashboard() {
         {/* Phase Progress Indicators */}
         <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-2">
           {/* Phase 1 */}
-          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+          <button 
+            type="button"
+            onClick={() => setActiveTab("phase1")}
+            className="flex flex-col items-center gap-1.5 min-w-[80px] cursor-pointer hover:scale-105 transition-transform"
+          >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
               progress.current_phase >= 1 ? 'bg-primary text-white shadow-[0_0_15px_rgba(38,196,150,0.4)]' : 'bg-bg-main border border-border-main text-text-muted'
             }`}>
               1
             </div>
             <span className={`text-[9px] uppercase tracking-wider font-bold ${progress.current_phase >= 1 ? 'text-primary' : 'text-text-muted'}`}>Foundation</span>
-          </div>
+          </button>
           <div className={`h-1 w-8 sm:w-12 rounded-full ${progress.current_phase >= 2 ? 'bg-primary' : 'bg-border-main'}`} />
           
           {/* Phase 2 */}
-          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+          <button 
+            type="button"
+            disabled={progress.current_phase < 2}
+            onClick={() => { if (progress.current_phase >= 2) setActiveTab("phase2"); }}
+            className={`flex flex-col items-center gap-1.5 min-w-[80px] ${progress.current_phase >= 2 ? 'cursor-pointer hover:scale-105 transition-transform' : 'cursor-not-allowed'}`}
+          >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
               progress.current_phase >= 2 ? 'bg-secondary text-white shadow-[0_0_15px_rgba(43,108,176,0.4)]' : 'bg-bg-main border border-border-main text-text-muted'
             }`}>
               2
             </div>
             <span className={`text-[9px] uppercase tracking-wider font-bold ${progress.current_phase >= 2 ? 'text-secondary' : 'text-text-muted'}`}>Bootcamp</span>
-          </div>
+          </button>
           <div className={`h-1 w-8 sm:w-12 rounded-full ${progress.current_phase >= 3 ? 'bg-accent' : 'bg-border-main'}`} />
 
           {/* Phase 3 */}
-          <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+          <button 
+            type="button"
+            disabled={progress.current_phase < 3}
+            onClick={() => { if (progress.current_phase >= 3) setActiveTab("phase3"); }}
+            className={`flex flex-col items-center gap-1.5 min-w-[80px] ${progress.current_phase >= 3 ? 'cursor-pointer hover:scale-105 transition-transform' : 'cursor-not-allowed'}`}
+          >
             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
               progress.current_phase >= 3 ? 'bg-accent text-white shadow-[0_0_15px_rgba(246,173,85,0.4)]' : 'bg-bg-main border border-border-main text-text-muted'
             }`}>
               3
             </div>
             <span className={`text-[9px] uppercase tracking-wider font-bold ${progress.current_phase >= 3 ? 'text-accent' : 'text-text-muted'}`}>Practicals</span>
-          </div>
+          </button>
         </div>
       </div>
 

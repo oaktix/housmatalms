@@ -59,55 +59,55 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary-glow text-primary">
+        <Link href="/lms/admin/applications" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-primary/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-primary-glow text-primary group-hover:scale-110 transition-transform">
             <ClipboardList className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Applications</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-primary transition-colors">Applications</span>
             <span className="text-xl font-heading font-black text-text-main">{appsCount}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary-glow text-primary">
+        <Link href="/lms/admin/students" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-primary/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-primary-glow text-primary group-hover:scale-110 transition-transform">
             <GraduationCap className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Trainees</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-primary transition-colors">Trainees</span>
             <span className="text-xl font-heading font-black text-text-main">{studentsCount}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary-glow text-primary">
+        <Link href="/lms/admin/users" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-primary/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-primary-glow text-primary group-hover:scale-110 transition-transform">
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Instructors</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-primary transition-colors">Instructors</span>
             <span className="text-xl font-heading font-black text-text-main">{instructorsCount}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary-glow text-primary">
+        <Link href="/lms/admin/cohorts" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-primary/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-primary-glow text-primary group-hover:scale-110 transition-transform">
             <Layers className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Cohorts</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-primary transition-colors">Cohorts</span>
             <span className="text-xl font-heading font-black text-text-main">{cohortsCount}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-accent-glow text-accent">
+        <Link href="/lms/admin/students" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-primary/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-accent-glow text-accent group-hover:scale-110 transition-transform">
             <Award className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Certificates</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-accent transition-colors">Certificates</span>
             <span className="text-xl font-heading font-black text-text-main">{certsCount}</span>
           </div>
-        </div>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

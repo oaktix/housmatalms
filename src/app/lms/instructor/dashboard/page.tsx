@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Users,
   Calendar,
@@ -121,37 +122,37 @@ export default function InstructorDashboard() {
           </div>
         </div>
 
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-primary-glow text-primary">
+        <Link href="/lms/instructor/attendance" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-primary/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-primary-glow text-primary group-hover:scale-110 transition-transform">
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Total Students</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-primary transition-colors">Total Students</span>
             <span className="text-xl font-heading font-black text-text-main">
               {cohorts.reduce((sum, c) => sum + db.getStudentsInCohort(c.id).length, 0)}
             </span>
           </div>
-        </div>
+        </Link>
 
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-warning/10 text-warning">
+        <Link href="/lms/instructor/grading" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-warning/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-warning/10 text-warning group-hover:scale-110 transition-transform">
             <ClipboardCheck className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Pending Grading</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-warning transition-colors">Pending Grading</span>
             <span className="text-xl font-heading font-black text-text-main">{pendingGradingCount}</span>
           </div>
-        </div>
+        </Link>
 
-        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-accent-glow text-accent">
+        <Link href="#meetings-section" className="premium-card rounded-2xl bg-bg-card border-border-main p-5 flex items-center gap-4 hover:border-accent/50 transition-all duration-300 group cursor-pointer">
+          <div className="p-3 rounded-xl bg-accent-glow text-accent group-hover:scale-110 transition-transform">
             <Calendar className="w-5 h-5" />
           </div>
           <div>
-            <span className="text-[10px] text-text-muted font-bold block uppercase">Live Meets Scheduled</span>
+            <span className="text-[10px] text-text-muted font-bold block uppercase group-hover:text-accent transition-colors">Live Meets Scheduled</span>
             <span className="text-xl font-heading font-black text-text-main">{meetings.length}</span>
           </div>
-        </div>
+        </Link>
       </div>
 
       {notification && (
@@ -331,7 +332,7 @@ export default function InstructorDashboard() {
           </div>
 
           {/* Scheduled Meetings list */}
-          <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4">
+          <div id="meetings-section" className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4">
             <h3 className="font-heading font-bold text-sm text-text-main flex items-center gap-2 border-b border-border-main pb-2">
               <Clock className="w-4 h-4 text-primary" />
               Upcoming Meetings

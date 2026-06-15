@@ -194,9 +194,18 @@ export default function InstructorGrading() {
               {gradedSubs.length > 0 ? (
                 <div className="space-y-2">
                   {gradedSubs.map((sub) => (
-                    <div
+                    <button
                       key={sub.id}
-                      className="p-4 rounded-2xl bg-bg-card/50 border border-border-main flex items-center justify-between text-xs"
+                      onClick={() => {
+                        setSelectedSub(sub);
+                        setGrade(sub.grade ?? 85);
+                        setFeedback(sub.feedback ?? "");
+                      }}
+                      className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                        selectedSub?.id === sub.id
+                          ? "bg-primary-glow border-primary text-text-main"
+                          : "bg-bg-card border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover"
+                      }`}
                     >
                       <div className="space-y-1 min-w-0 flex-grow pr-4">
                         <h4 className="font-bold text-text-main truncate">
@@ -216,7 +225,7 @@ export default function InstructorGrading() {
                           </span>
                         )}
                       </div>
-                    </div>
+                    </button>
                   ))}
                 </div>
               ) : (
@@ -233,7 +242,7 @@ export default function InstructorGrading() {
                 
                 <div className="border-b border-border-main pb-6">
                   <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
-                    Active Assessment
+                    {selectedSub.status === "graded" ? "Graded Assessment Detail" : "Active Assessment"}
                   </span>
                   <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
                     {selectedSub.assignment?.title}
@@ -320,7 +329,7 @@ export default function InstructorGrading() {
                       type="submit"
                       className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-xs hover:shadow-[0_10px_20px_-10px_rgba(43,108,176,0.5)] hover:-translate-y-0.5 transition-all duration-300"
                     >
-                      Submit Score & Save Assessment
+                      {selectedSub.status === "graded" ? "Update Score & Save Assessment" : "Submit Score & Save Assessment"}
                     </button>
                   </form>
                 ) : (
