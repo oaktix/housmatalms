@@ -1,3 +1,5 @@
+import { db } from "./db";
+
 /**
  * Email Template Utility for Housmata Academy
  * Generates beautiful, responsive HTML email wrappers for all outgoing messages.
@@ -147,20 +149,34 @@ export function generateEmailHtml(
   const logoUrl = `${siteUrl}/logo-light.png`;
   const currentYear = new Date().getFullYear();
   
+  // Find recipient profile to construct passwordless token link
+  const profile = db.getProfileByEmail(recipient);
+  const loginUrl = profile 
+    ? `${siteUrl}/lms/login?token=${profile.id}`
+    : `${siteUrl}/lms/login`;
+
+  // Update any occurrence of the login link in the plain text body to use the token URL
+  const updatedBodyText = bodyText.replace(/https:\/\/academy\.housmata\.com\/lms\/login/g, loginUrl);
+  
   // Format the text body into responsive styled components
-  const formattedContent = parseBodyToHtml(bodyText);
+  let formattedContent = parseBodyToHtml(updatedBodyText);
+  
+  // Replace plain text "please log in" (case-insensitive) with a bolded HTML link to the token login URL
+  const loginLinkHtml = `<a href="${loginUrl}" target="_blank" style="color: #10b981; text-decoration: underline; font-weight: 700;"><b>please log in</b></a>`;
+  formattedContent = formattedContent.replace(/please log in/gi, loginLinkHtml);
   
   // Extract the first link to create a beautiful, primary CTA button at the bottom of the card
   const urlRegex = /(https?:\/\/[^\s]+)/;
-  const match = bodyText.match(urlRegex);
+  const match = updatedBodyText.match(urlRegex);
   let ctaButtonHtml = "";
   
   if (match && match[0]) {
     // Clean trailing punctuation
-    const primaryUrl = match[0].replace(/[.,;)]+$/, "");
+    let primaryUrl = match[0].replace(/[.,;)]+$/, "");
     let btnLabel = "Access Portal";
     
     if (primaryUrl.includes("/lms/login")) {
+      primaryUrl = loginUrl;
       btnLabel = "Log In to LMS";
     } else if (primaryUrl.includes("/verify")) {
       btnLabel = "Verify Certificate";

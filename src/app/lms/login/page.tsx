@@ -1,14 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ShieldAlert, LogIn, Eye, EyeOff } from "lucide-react";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/lib/useAuth";
+import { db } from "@/lib/db";
 
-export default function LmsLogin() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams ? searchParams.get("token") : null;
   const { login, currentUser } = useAuth();
 
   const [email, setEmail] = useState("");
@@ -23,6 +26,26 @@ export default function LmsLogin() {
       router.push("/lms");
     }
   }, [currentUser, router]);
+
+  useEffect(() => {
+    if (token) {
+      let profile = db.getProfile(token);
+      if (!profile) {
+        profile = db.getProfileByEmail(token);
+      }
+      
+      if (profile) {
+        const res = login(profile.email);
+        if (res.success) {
+          router.push("/lms");
+        } else {
+          setError(res.error || "Token login failed.");
+        }
+      } else {
+        setError("Invalid or expired login token.");
+      }
+    }
+  }, [token, login, router]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,5 +202,13 @@ export default function LmsLogin() {
         <span>© {new Date().getFullYear()} Housmata Technologies Ltd. Powered by Property Max Results Ltd.</span>
       </footer>
     </div>
+  );
+}
+
+export default function LmsLogin() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-bg-main text-text-muted font-sans">Loading Private Portal...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }
