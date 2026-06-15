@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ClipboardList, CheckCircle2, ChevronRight, GraduationCap, Award } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
@@ -34,6 +34,9 @@ export default function InstructorGrading() {
   const [grade, setGrade] = useState<number>(85);
   const [feedback, setFeedback] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Track in-progress conversions to prevent duplicate parallel requests
+  const convertingIds = useRef<Set<string>>(new Set());
 
   const loadData = useCallback(() => {
     // 1. Fetch Submissions
@@ -80,12 +83,14 @@ export default function InstructorGrading() {
     const pptxSubs = allSubs.filter((sub) => 
       sub.content_link && 
       (sub.content_file_name?.toLowerCase().endsWith(".pptx") || sub.content_file_name?.toLowerCase().endsWith(".ppt")) &&
-      !sub.content_link.startsWith("data:application/pdf")
+      !sub.content_link.startsWith("data:application/pdf") &&
+      !convertingIds.current.has(sub.id)
     );
 
     if (pptxSubs.length > 0) {
       console.log(`[PPTX Auto-Heal] Found ${pptxSubs.length} legacy PowerPoint submissions to convert to PDF.`);
       pptxSubs.forEach(async (sub) => {
+        convertingIds.current.add(sub.id);
         try {
           const res = await fetch("/api/convert-pptx", {
             method: "POST",
@@ -111,6 +116,8 @@ export default function InstructorGrading() {
           }
         } catch (err) {
           console.error("Auto-conversion of legacy presentation failed:", sub.id, err);
+        } finally {
+          convertingIds.current.delete(sub.id);
         }
       });
     }
