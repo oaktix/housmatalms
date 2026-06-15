@@ -186,38 +186,6 @@ export default function StudentDashboard() {
     reader.onload = async (event) => {
       let fileDataUrl = event.target?.result as string;
 
-      // Convert PowerPoint files to PDF using our API
-      if (fileName.toLowerCase().endsWith(".ppt") || fileName.toLowerCase().endsWith(".pptx")) {
-        try {
-          const res = await fetch("/api/convert-pptx", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              fileDataUrl,
-              fileName,
-            }),
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.pdfDataUrl) {
-              fileDataUrl = data.pdfDataUrl;
-              fileName = fileName.replace(/\.pptx?$/i, ".pdf");
-            } else {
-              console.warn("Conversion warning:", data.error);
-              alert("PowerPoint to PDF conversion failed because iLovePDF API keys are not configured. Uploading raw presentation instead.");
-            }
-          } else {
-            console.warn("Conversion API failed:", await res.text());
-            alert("PowerPoint to PDF conversion failed because iLovePDF API keys are not configured. Uploading raw presentation instead.");
-          }
-        } catch (err) {
-          console.error("Failed to convert PowerPoint:", err);
-        }
-      }
-
       db.createSubmission({
         assignment_id: assignmentId,
         user_id: userId,
