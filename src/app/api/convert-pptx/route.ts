@@ -25,11 +25,27 @@ export async function POST(request: Request) {
 
     console.log(`[ILOVEPDF] Starting conversion for file: ${fileName}`);
 
-    // 1. Start conversion task
-    const startResponse = await fetch("https://api.ilovepdf.com/v1/start/powerpointtopdf", {
+    // 1. Authenticate with iLovePDF to get a JWT token
+    const authResponse = await fetch("https://api.ilovepdf.com/v1/auth", {
       method: "POST",
       headers: {
-        "Authorization": `Basic ${Buffer.from(publicKey).toString("base64")}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ public_key: publicKey }),
+    });
+
+    if (!authResponse.ok) {
+      const errorText = await authResponse.text();
+      throw new Error(`Failed to authenticate with iLovePDF: ${errorText}`);
+    }
+
+    const { token } = await authResponse.json();
+
+    // 2. Start conversion task using the Bearer token
+    const startResponse = await fetch("https://api.ilovepdf.com/v1/start/officepdf", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
       },
     });
 
@@ -40,7 +56,7 @@ export async function POST(request: Request) {
 
     const { server, task: taskId } = await startResponse.json();
 
-    // 2. Prepare file upload
+    // 3. Prepare file upload
     const base64Data = fileDataUrl.split(";base64,").pop() || "";
     const fileBuffer = Buffer.from(base64Data, "base64");
     const fileBlob = new Blob([fileBuffer], { 
@@ -54,6 +70,9 @@ export async function POST(request: Request) {
     // Upload file
     const uploadResponse = await fetch(`https://${server}/v1/upload`, {
       method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
       body: formData,
     });
 
@@ -64,15 +83,16 @@ export async function POST(request: Request) {
 
     const { server_filename: serverFilename } = await uploadResponse.json();
 
-    // 3. Process the PDF conversion
+    // 4. Process the PDF conversion
     const processResponse = await fetch(`https://${server}/v1/process`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
         task: taskId,
-        tool: "powerpointtopdf",
+        tool: "officepdf",
         files: [
           {
             server_filename: serverFilename,
@@ -90,9 +110,12 @@ export async function POST(request: Request) {
     // Wait for the task to finish (usually synchronous for process endpoint)
     await processResponse.json();
 
-    // 4. Download converted PDF file
+    // 5. Download converted PDF file
     const downloadResponse = await fetch(`https://${server}/v1/download/${taskId}`, {
       method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
     });
 
     if (!downloadResponse.ok) {
