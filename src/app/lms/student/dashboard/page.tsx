@@ -56,6 +56,7 @@ export default function StudentDashboard() {
   // Assignment State
   const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
   const [assignmentText, setAssignmentText] = useState("");
+  const [submittingAssignment, setSubmittingAssignment] = useState(false);
 
   // Load Data
   const loadStudentData = useCallback(() => {
@@ -170,18 +171,52 @@ export default function StudentDashboard() {
     }
   };
 
-  const submitAssignment = (e: React.FormEvent) => {
+  const submitAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeAssessment?.assignment || !currentUser || !assignmentFile) return;
     
     const assignmentId = activeAssessment.assignment.id;
     const userId = currentUser.id;
-    const fileName = assignmentFile.name;
+    let fileName = assignmentFile.name;
     const text = assignmentText;
 
+    setSubmittingAssignment(true);
+
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const fileDataUrl = event.target?.result as string;
+    reader.onload = async (event) => {
+      let fileDataUrl = event.target?.result as string;
+
+      // Convert PowerPoint files to PDF using our API
+      if (fileName.toLowerCase().endsWith(".ppt") || fileName.toLowerCase().endsWith(".pptx")) {
+        try {
+          const res = await fetch("/api/convert-pptx", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              fileDataUrl,
+              fileName,
+            }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.pdfDataUrl) {
+              fileDataUrl = data.pdfDataUrl;
+              fileName = fileName.replace(/\.pptx?$/i, ".pdf");
+            } else {
+              console.warn("Conversion warning:", data.error);
+              alert("PowerPoint to PDF conversion failed because iLovePDF API keys are not configured. Uploading raw presentation instead.");
+            }
+          } else {
+            console.warn("Conversion API failed:", await res.text());
+            alert("PowerPoint to PDF conversion failed because iLovePDF API keys are not configured. Uploading raw presentation instead.");
+          }
+        } catch (err) {
+          console.error("Failed to convert PowerPoint:", err);
+        }
+      }
 
       db.createSubmission({
         assignment_id: assignmentId,
@@ -191,6 +226,7 @@ export default function StudentDashboard() {
         content_text: text
       });
       
+      setSubmittingAssignment(false);
       setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true, isGraded: false } : null);
       loadStudentData();
       confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
@@ -920,8 +956,13 @@ export default function StudentDashboard() {
                       />
                     </div>
                     <div className="flex justify-end pt-4">
-                      <button type="submit" className="btn bg-primary text-white px-8 py-3 rounded-xl font-bold hover:brightness-110 shadow-sm">
-                        Submit Assignment
+                      <button 
+                        type="submit" 
+                        disabled={submittingAssignment}
+                        className="btn bg-primary text-white px-8 py-3 rounded-xl font-bold hover:brightness-110 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {submittingAssignment && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                        {submittingAssignment ? "Processing & Submitting..." : "Submit Assignment"}
                       </button>
                     </div>
                   </form>
