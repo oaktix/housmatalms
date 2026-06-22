@@ -176,11 +176,10 @@ export default function StudentDashboard() {
     e.preventDefault();
     if (submittingAssignment || !activeAssessment?.assignment || !currentUser || !assignmentFile) return;
 
-    // Validate file size — base64 encoding inflates by ~33%, so 4 MB raw ≈ 5.3 MB stored.
-    // localStorage cap is ~5 MB per origin, so reject files above 4 MB to prevent silent quota failures.
-    const MAX_FILE_SIZE_MB = 4;
+    // Validate file size against the configured upload limit.
+    const MAX_FILE_SIZE_MB = 20;
     if (assignmentFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setSubmissionError(`File is too large (${(assignmentFile.size / 1024 / 1024).toFixed(2)} MB). Please upload a PDF smaller than ${MAX_FILE_SIZE_MB} MB.`);
+      setSubmissionError(`File is too large (${(assignmentFile.size / 1024 / 1024).toFixed(2)} MB). Please upload a file smaller than ${MAX_FILE_SIZE_MB} MB.`);
       return;
     }
 
@@ -919,7 +918,7 @@ export default function StudentDashboard() {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                               </div>
                               <p className="text-sm font-bold text-primary">Click to browse or drag and drop</p>
-                              <p className="text-xs text-text-muted">PDF, PPT, or PPTX up to 4MB</p>
+                              <p className="text-xs text-text-muted">PDF, PPT, or PPTX up to 20MB</p>
                             </div>
                           ) : (
                             <div className="text-center space-y-2 pointer-events-none">
