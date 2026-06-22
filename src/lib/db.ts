@@ -231,7 +231,14 @@ class LocalStorageDB {
 
   private set<T>(key: string, value: T[]): void {
     if (!isBrowser) return;
-    localStorage.setItem(key, JSON.stringify(value));
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "QuotaExceededError") {
+        throw new Error("Storage quota exceeded. Your file may be too large. Please try a smaller file (under 4 MB).");
+      }
+      throw err;
+    }
   }
 
   getProfiles(): seeds.Profile[] {

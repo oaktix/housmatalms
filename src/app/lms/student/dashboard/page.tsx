@@ -57,6 +57,7 @@ export default function StudentDashboard() {
   const [assignmentFile, setAssignmentFile] = useState<File | null>(null);
   const [assignmentText, setAssignmentText] = useState("");
   const [submittingAssignment, setSubmittingAssignment] = useState(false);
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
 
   // Load Data
   const loadStudentData = useCallback(() => {
@@ -174,30 +175,49 @@ export default function StudentDashboard() {
   const submitAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingAssignment || !activeAssessment?.assignment || !currentUser || !assignmentFile) return;
-    
+
+    // Validate file size — base64 encoding inflates by ~33%, so 4 MB raw ≈ 5.3 MB stored.
+    // localStorage cap is ~5 MB per origin, so reject files above 4 MB to prevent silent quota failures.
+    const MAX_FILE_SIZE_MB = 4;
+    if (assignmentFile.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setSubmissionError(`File is too large (${(assignmentFile.size / 1024 / 1024).toFixed(2)} MB). Please upload a PDF smaller than ${MAX_FILE_SIZE_MB} MB.`);
+      return;
+    }
+
     const assignmentId = activeAssessment.assignment.id;
     const userId = currentUser.id;
     const fileName = assignmentFile.name;
     const text = assignmentText;
 
     setSubmittingAssignment(true);
+    setSubmissionError(null);
 
     const reader = new FileReader();
     reader.onload = async (event) => {
       const fileDataUrl = event.target?.result as string;
 
-      db.createSubmission({
-        assignment_id: assignmentId,
-        user_id: userId,
-        content_link: fileDataUrl,
-        content_file_name: fileName,
-        content_text: text
-      });
-      
+      try {
+        db.createSubmission({
+          assignment_id: assignmentId,
+          user_id: userId,
+          content_link: fileDataUrl,
+          content_file_name: fileName,
+          content_text: text
+        });
+
+        setSubmittingAssignment(false);
+        setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true, isGraded: false } : null);
+        loadStudentData();
+        confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
+      } catch (err) {
+        setSubmittingAssignment(false);
+        const message = err instanceof Error ? err.message : "Submission failed. Please try again.";
+        setSubmissionError(message);
+      }
+    };
+    reader.onerror = () => {
       setSubmittingAssignment(false);
-      setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true, isGraded: false } : null);
-      loadStudentData();
-      confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
+      setSubmissionError("Could not read the selected file. Please try selecting it again.");
     };
     reader.readAsDataURL(assignmentFile);
   };
@@ -890,7 +910,7 @@ export default function StudentDashboard() {
                             title="Upload presentation or slides"
                             placeholder="Upload presentation or slides"
                             aria-label="Upload presentation or slides"
-                            onChange={e => setAssignmentFile(e.target.files?.[0] || null)} 
+                            onChange={e => { setAssignmentFile(e.target.files?.[0] || null); setSubmissionError(null); }}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
                           />
                           {!assignmentFile ? (
@@ -899,7 +919,7 @@ export default function StudentDashboard() {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                               </div>
                               <p className="text-sm font-bold text-primary">Click to browse or drag and drop</p>
-                              <p className="text-xs text-text-muted">PDF, PPT, or PPTX up to 10MB</p>
+                              <p className="text-xs text-text-muted">PDF, PPT, or PPTX up to 4MB</p>
                             </div>
                           ) : (
                             <div className="text-center space-y-2 pointer-events-none">
@@ -923,9 +943,14 @@ export default function StudentDashboard() {
                         placeholder="Any additional context for the instructor..." 
                       />
                     </div>
+                    {submissionError && (
+                      <div className="bg-error/10 border border-error/20 text-error text-sm p-3 rounded-xl">
+                        {submissionError}
+                      </div>
+                    )}
                     <div className="flex justify-end pt-4">
-                      <button 
-                        type="submit" 
+                      <button
+                        type="submit"
                         disabled={submittingAssignment}
                         className="btn bg-primary text-white px-8 py-3 rounded-xl font-bold hover:brightness-110 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >

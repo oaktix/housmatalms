@@ -303,6 +303,9 @@ create policy "Admins can manage assignments" on public.assignments for all usin
 drop policy if exists "Students can insert their own submissions" on public.submissions;
 create policy "Students can insert their own submissions" on public.submissions
     for insert with check (auth.uid() = user_id);
+drop policy if exists "Students can delete their own submissions" on public.submissions;
+create policy "Students can delete their own submissions" on public.submissions
+    for delete using (auth.uid() = user_id);
 drop policy if exists "Students can view their own submissions" on public.submissions;
 create policy "Students can view their own submissions" on public.submissions
     for select using (auth.uid() = user_id or public.is_instructor(auth.uid()) or public.is_admin(auth.uid()));
