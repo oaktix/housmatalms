@@ -120,7 +120,24 @@ class LocalStorageDB {
         tables.map(async (t) => {
           const { data, error } = await supabase!.from(t.name).select("*");
           if (!error && data) {
-            this.set(t.key, data);
+            if (t.name === "submissions") {
+              // Deduplicate: keep only the most recent submission per (assignment_id, user_id).
+              // Supabase may accumulate duplicate rows when resubmissions occur because
+              // the student DELETE RLS policy may not be present. We resolve that here
+              // so the client always works with a clean, deduplicated set.
+              const deduped = Object.values(
+                (data as seeds.Submission[]).reduce<Record<string, seeds.Submission>>((acc, sub) => {
+                  const key = `${sub.assignment_id}__${sub.user_id}`;
+                  if (!acc[key] || new Date(sub.submitted_at) > new Date(acc[key].submitted_at)) {
+                    acc[key] = sub;
+                  }
+                  return acc;
+                }, {})
+              );
+              this.set(t.key, deduped);
+            } else {
+              this.set(t.key, data);
+            }
           }
         })
       );
@@ -664,19 +681,11 @@ class LocalStorageDB {
   createSubmission(sub: Omit<seeds.Submission, "id" | "submitted_at" | "status">): seeds.Submission {
     const list = this.getSubmissions();
     
-    // Find the existing submission so we can delete it from Supabase if configured
-    const existing = list.find((s) => s.assignment_id === sub.assignment_id && s.user_id === sub.user_id);
-    if (existing && supabase) {
-      supabase
-        .from("submissions")
-        .delete()
-        .eq("id", existing.id)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete old submission ${existing.id} from Supabase:`, error);
-        });
-    }
-
-    // Remove existing submission for the same assignment and user to overwrite it (resubmission)
+    // Remove existing submission for the same assignment and user to overwrite it (resubmission).
+    // Note: we intentionally do NOT attempt to DELETE the old row from Supabase here because
+    // the student RLS policy only grants INSERT, not DELETE. Supabase may accumulate duplicate
+    // rows on resubmission, but syncFromSupabase() deduplicates them on every sync so the
+    // client always works with the latest submission per (assignment_id, user_id).
     const filtered = list.filter((s) => !(s.assignment_id === sub.assignment_id && s.user_id === sub.user_id));
     
     const newSub: seeds.Submission = {
