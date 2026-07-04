@@ -439,9 +439,9 @@ on conflict do nothing;
 insert into public.cohorts (id, name, start_date, end_date, active, capacity, instructor_id)
 values (
     'dddddddd-dddd-dddd-dddd-dddddddddddd',
-    'Cohort Alpha — 2025',
-    '2025-01-06',
-    '2025-06-30',
+    'Cohort Alpha — 2026',
+    '2026-01-06',
+    '2026-06-30',
     true,
     25,
     'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'

@@ -74,14 +74,16 @@ export default function StudentDashboard() {
     setAnnouncements(db.getAnnouncements(studentCohort?.id || ""));
 
     // Pre & Post Survey trigger checks
-    const hasPre = db.getSurveyResponse(studentId, "pre");
+    const localPreFlag = typeof window !== "undefined" && localStorage.getItem(`survey_completed_pre_${studentId}`);
+    const hasPre = localPreFlag === "true" || !!db.getSurveyResponse(studentId, "pre");
     if (!hasPre) {
       setShowPreSurvey(true);
     } else {
       setShowPreSurvey(false);
       const finishedAllModules = activeCurriculum.every(mod => studentProgress?.completed_modules?.includes(mod.id));
       if (finishedAllModules) {
-        const hasPost = db.getSurveyResponse(studentId, "post");
+        const localPostFlag = typeof window !== "undefined" && localStorage.getItem(`survey_completed_post_${studentId}`);
+        const hasPost = localPostFlag === "true" || !!db.getSurveyResponse(studentId, "post");
         if (!hasPost) {
           setShowPostSurvey(true);
         } else {
@@ -114,6 +116,9 @@ export default function StudentDashboard() {
 
     try {
       await db.createSurveyResponse(currentUser.id, type, surveyAnswers);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`survey_completed_${type}_${currentUser.id}`, "true");
+      }
       setSurveySubmitting(false);
       setSurveyAnswers({});
       if (type === "pre") {

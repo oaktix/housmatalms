@@ -130,27 +130,35 @@ class LocalStorageDB {
 
       await Promise.all(
         tables.map(async (t) => {
-          const { data, error } = await supabase!.from(t.name).select("*");
-          if (!error && data) {
-            if (t.name === "submissions") {
-              // Deduplicate: keep only the most recent submission per (assignment_id, user_id).
-              // Supabase may accumulate duplicate rows when resubmissions occur because
-              // the student DELETE RLS policy may not be present. We resolve that here
-              // so the client always works with a clean, deduplicated set.
-              const deduped = Object.values(
-                (data as seeds.Submission[]).reduce<Record<string, seeds.Submission>>((acc, sub) => {
-                  const key = `${sub.assignment_id}__${sub.user_id}`;
-                  if (!acc[key] || new Date(sub.submitted_at) > new Date(acc[key].submitted_at)) {
-                    acc[key] = sub;
-                  }
-                  return acc;
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                }, {} as any)
-              );
-              this.set(t.key, deduped);
-            } else {
-              this.set(t.key, data);
+          try {
+            const { data, error } = await supabase!.from(t.name).select("*");
+            if (error) {
+              console.error(`Error syncing table ${t.name} from Supabase:`, error);
+              return;
             }
+            if (data) {
+              if (t.name === "submissions") {
+                // Deduplicate: keep only the most recent submission per (assignment_id, user_id).
+                // Supabase may accumulate duplicate rows when resubmissions occur because
+                // the student DELETE RLS policy may not be present. We resolve that here
+                // so the client always works with a clean, deduplicated set.
+                const deduped = Object.values(
+                  (data as seeds.Submission[]).reduce<Record<string, seeds.Submission>>((acc, sub) => {
+                    const key = `${sub.assignment_id}__${sub.user_id}`;
+                    if (!acc[key] || new Date(sub.submitted_at) > new Date(acc[key].submitted_at)) {
+                      acc[key] = sub;
+                    }
+                    return acc;
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  }, {} as any)
+                );
+                this.set(t.key, deduped);
+              } else {
+                this.set(t.key, data);
+              }
+            }
+          } catch (tblErr) {
+            console.error(`Exception while syncing table ${t.name}:`, tblErr);
           }
         })
       );
@@ -598,6 +606,29 @@ class LocalStorageDB {
     this.set("lms_cohorts", list);
     this.saveToSupabase("cohorts", newCohort);
     return newCohort;
+  }
+
+  updateCohort(cohort: seeds.Cohort): seeds.Cohort {
+    const list = this.getCohorts();
+    const idx = list.findIndex((c) => c.id === cohort.id);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...cohort };
+      this.set("lms_cohorts", list);
+      this.saveToSupabase("cohorts", cohort);
+    }
+    return cohort;
+  }
+
+  async deleteCohort(id: string): Promise<void> {
+    const list = this.getCohorts();
+    const filtered = list.filter((c) => c.id !== id);
+    this.set("lms_cohorts", filtered);
+    if (this.isSupabase && supabase) {
+      const { error } = await supabase.from("cohorts").delete().eq("id", id);
+      if (error) {
+        console.error("Error deleting cohort from Supabase:", error);
+      }
+    }
   }
 
   // --- Cohort Members ---
