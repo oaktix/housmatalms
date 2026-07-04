@@ -92,6 +92,8 @@ export default function StudentDashboard() {
   const [surveyAnswers, setSurveyAnswers] = useState<Record<number, number>>({});
   const [surveySubmitting, setSurveySubmitting] = useState(false);
   const [surveyError, setSurveyError] = useState<string | null>(null);
+  const [currentPreSurveyStep, setCurrentPreSurveyStep] = useState(0);
+  const [currentPostSurveyStep, setCurrentPostSurveyStep] = useState(0);
 
   // Curriculum Display State
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>("module-1");
@@ -1411,138 +1413,323 @@ export default function StudentDashboard() {
       )}
 
       {/* Pre-Course Survey Modal Overlay */}
-      {showPreSurvey && (
-        <div className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="text-center space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
-                Outcome Harvesting Survey
-              </span>
-              <h2 className="text-xl sm:text-2xl font-heading font-black text-text-main">
-                {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Pre-Survey" : "Real Estate Knowledge Pre-Survey"}
-              </h2>
-              <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
-                Before taking this course, what is your knowledge level on the following topics? Your answers are evaluated for outcome harvesting to track educational impact.
-              </p>
-            </div>
+      {showPreSurvey && (() => {
+        const activeQuestions = progress?.course_id === "property-advisor-hcpa" ? HCPA_SURVEY_QUESTIONS : SURVEY_QUESTIONS;
+        const currentQ = currentPreSurveyStep > 0 && currentPreSurveyStep <= 10 ? activeQuestions[currentPreSurveyStep - 1] : null;
+        const percentComplete = Math.round(((currentPreSurveyStep) / 11) * 100);
 
-            <div className="space-y-6 pt-4 border-t border-border-main/50">
-              {(progress?.course_id === "property-advisor-hcpa" ? HCPA_SURVEY_QUESTIONS : SURVEY_QUESTIONS).map((q) => (
-                <div key={q.id} className="space-y-3">
-                  <p className="text-xs sm:text-sm font-extrabold text-text-main leading-snug">
-                    {q.id}. {q.text}
-                  </p>
-                  <div className="flex justify-between items-center gap-1 sm:gap-2">
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => setSurveyAnswers(prev => ({ ...prev, [q.id]: val }))}
-                        className={`flex-1 py-2 sm:py-2.5 text-center text-xs font-bold border rounded-xl transition-all duration-300 ${
-                          surveyAnswers[q.id] === val
-                            ? 'bg-primary border-primary text-white shadow-[0_0_12px_var(--primary)] hover:brightness-110'
-                            : 'bg-bg-main border-border-main text-text-muted hover:border-primary/45 hover:bg-bg-card-hover'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-[9px] text-text-muted px-1 font-bold">
-                    <span>No Knowledge</span>
-                    <span>Expert</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {surveyError && (
-              <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-semibold">
-                {surveyError}
+        return (
+          <div className="fixed inset-0 bg-bg-main/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl animate-scale-in relative">
+              <div className="text-center space-y-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary-glow border border-primary/20 px-3 py-1 rounded-full">
+                  Outcome Harvesting — Step {currentPreSurveyStep} of 11
+                </span>
+                <h2 className="text-lg sm:text-xl font-heading font-black text-text-main">
+                  {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Pre-Survey" : "Real Estate Manager (HCEM) Pre-Survey"}
+                </h2>
               </div>
-            )}
 
-            <div className="pt-4 border-t border-border-main/50">
-              <button
-                type="button"
-                disabled={surveySubmitting}
-                onClick={() => handleSurveySubmit("pre")}
-                className="w-full py-3 rounded-xl bg-primary text-white font-extrabold hover:brightness-110 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {surveySubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                {surveySubmitting ? 'Saving Survey...' : 'Submit Survey & Start Course'}
-              </button>
+              {/* Progress Tracking Bar */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-[10px] font-extrabold text-text-muted">
+                  <span>Progress Check</span>
+                  <span>{percentComplete}% Complete</span>
+                </div>
+                <div className="h-2 w-full bg-bg-main rounded-full overflow-hidden border border-border-main/50">
+                  <div 
+                    className="h-full bg-primary transition-all duration-500 shadow-[0_0_8px_var(--primary)]"
+                    style={{ width: `${percentComplete}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Survey Content Screens */}
+              <div className="py-4 border-t border-b border-border-main/40 min-h-[220px] flex flex-col justify-center">
+                {currentPreSurveyStep === 0 ? (
+                  /* Welcome Slide (Step 0) */
+                  <div className="space-y-4 text-center animate-fade-in">
+                    <div className="w-12 h-12 rounded-xl bg-primary-glow flex items-center justify-center text-primary mx-auto">
+                      <BookOpen className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs sm:text-sm text-text-muted leading-relaxed max-w-md mx-auto">
+                      Before starting your certification journey, we want to assess your current knowledge level. 
+                    </p>
+                    <div className="p-4 rounded-xl bg-primary-glow/40 border border-primary/20 text-left text-xs space-y-2 max-w-md mx-auto">
+                      <p className="font-extrabold text-primary flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4" />
+                        Important Note:
+                      </p>
+                      <p className="text-text-muted leading-relaxed">
+                        This pre-survey is <strong>NOT a graded test</strong>. It does not impact your academic score or module completion metrics in any way. It is purely designed to record baseline levels so we can measure educational impact at graduation. Please answer honestly!
+                      </p>
+                    </div>
+                    <p className="text-[10px] text-text-muted/80 font-bold italic">
+                      &ldquo;Every expert operator started right where you are today.&rdquo;
+                    </p>
+                  </div>
+                ) : currentPreSurveyStep <= 10 && currentQ ? (
+                  /* Question Slides (Step 1-10) */
+                  <div className="space-y-5 animate-fade-in">
+                    <div className="text-center space-y-2">
+                      <span className="text-[10px] text-primary uppercase font-bold tracking-widest">
+                        Assessment Topic {currentQ.id}
+                      </span>
+                      <p className="text-sm sm:text-base font-bold text-text-main leading-snug">
+                        {currentQ.text}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <p className="text-[10px] uppercase tracking-wider font-extrabold text-text-muted text-center">
+                        Select Your Pre-Course Knowledge Level:
+                      </p>
+                      <div className="flex justify-between items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((val) => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setSurveyAnswers(prev => ({ ...prev, [currentQ.id]: val }))}
+                            className={`flex-1 py-3 text-center text-xs font-black border rounded-xl transition-all duration-300 ${
+                              surveyAnswers[currentQ.id] === val
+                                ? 'bg-primary border-primary text-white shadow-[0_0_12px_rgba(2,184,117,0.4)] scale-105'
+                                : 'bg-bg-main border-border-main text-text-muted hover:border-primary/45 hover:bg-bg-card-hover'
+                            }`}
+                          >
+                            {val}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex justify-between text-[10px] text-text-muted px-1 font-bold">
+                        <span>1 — No Knowledge</span>
+                        <span>5 — Expert Profile</span>
+                      </div>
+                    </div>
+                    
+                    {/* Encouraging caption based on selection */}
+                    {surveyAnswers[currentQ.id] && (
+                      <p className="text-[10px] text-center font-bold text-primary animate-pulse">
+                        {surveyAnswers[currentQ.id] >= 4 ? "Impressive starting level! Let's continue." : "Perfect! We will cover this in detail."}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  /* Final Slide (Step 11) */
+                  <div className="text-center space-y-4 animate-fade-in">
+                    <div className="w-12 h-12 rounded-xl bg-primary-glow flex items-center justify-center text-primary mx-auto animate-bounce">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-extrabold text-text-main">
+                      You are ready to begin!
+                    </h3>
+                    <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
+                      All questions have been evaluated. Click submit below to save your responses and unlock your learning timeline. Let&apos;s build some systems!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {surveyError && (
+                <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-semibold text-center">
+                  {surveyError}
+                </div>
+              )}
+
+              {/* Navigation Controls */}
+              <div className="flex items-center justify-between gap-4 pt-2">
+                {currentPreSurveyStep > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPreSurveyStep(prev => prev - 1)}
+                    className="btn border border-border-main text-text-muted hover:text-text-main px-5 py-2.5 rounded-xl text-xs font-bold transition-all"
+                  >
+                    Back
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                {currentPreSurveyStep < 11 ? (
+                  <button
+                    type="button"
+                    disabled={currentPreSurveyStep > 0 && currentQ ? !surveyAnswers[currentQ.id] : false}
+                    onClick={() => setCurrentPreSurveyStep(prev => prev + 1)}
+                    className="btn bg-primary text-white hover:brightness-110 px-6 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                  >
+                    {currentPreSurveyStep === 0 ? "Start Survey" : "Next Topic"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={surveySubmitting}
+                    onClick={() => handleSurveySubmit("pre")}
+                    className="btn bg-primary text-white hover:brightness-110 px-8 py-2.5 rounded-xl text-xs font-extrabold shadow-md disabled:opacity-50 flex items-center gap-1.5 ml-auto"
+                  >
+                    {surveySubmitting && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                    {surveySubmitting ? 'Saving...' : 'Submit & Start Course'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Post-Course Survey Modal Overlay */}
-      {showPostSurvey && (
-        <div className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
-            <div className="text-center space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-secondary bg-secondary/10 px-3 py-1 rounded-full">
-                Final Evaluation
-              </span>
-              <h2 className="text-xl sm:text-2xl font-heading font-black text-text-main">
-                {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Post-Survey" : "Real Estate Knowledge Post-Survey"}
-              </h2>
-              <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
-                Congratulations on completing all modules! After completing this course, what is your knowledge level on the following topics?
-              </p>
-            </div>
+      {showPostSurvey && (() => {
+        const activeQuestions = progress?.course_id === "property-advisor-hcpa" ? HCPA_SURVEY_QUESTIONS : SURVEY_QUESTIONS;
+        const currentQ = currentPostSurveyStep > 0 && currentPostSurveyStep <= 10 ? activeQuestions[currentPostSurveyStep - 1] : null;
+        const percentComplete = Math.round(((currentPostSurveyStep) / 11) * 100);
 
-            <div className="space-y-6 pt-4 border-t border-border-main/50">
-              {(progress?.course_id === "property-advisor-hcpa" ? HCPA_SURVEY_QUESTIONS : SURVEY_QUESTIONS).map((q) => (
-                <div key={q.id} className="space-y-3">
-                  <p className="text-xs sm:text-sm font-extrabold text-text-main leading-snug">
-                    {q.id}. {q.text}
-                  </p>
-                  <div className="flex justify-between items-center gap-1 sm:gap-2">
-                    {[1, 2, 3, 4, 5].map((val) => (
-                      <button
-                        key={val}
-                        type="button"
-                        onClick={() => setSurveyAnswers(prev => ({ ...prev, [q.id]: val }))}
-                        className={`flex-1 py-2 sm:py-2.5 text-center text-xs font-bold border rounded-xl transition-all duration-300 ${
-                          surveyAnswers[q.id] === val
-                            ? 'bg-secondary border-secondary text-white shadow-[0_0_12px_var(--secondary)] hover:brightness-110'
-                            : 'bg-bg-main border-border-main text-text-muted hover:border-secondary/45 hover:bg-bg-card-hover'
-                        }`}
-                      >
-                        {val}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="flex justify-between text-[9px] text-text-muted px-1 font-bold">
-                    <span>No Knowledge</span>
-                    <span>Expert</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {surveyError && (
-              <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-semibold">
-                {surveyError}
+        return (
+          <div className="fixed inset-0 bg-bg-main/85 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl animate-scale-in relative">
+              <div className="text-center space-y-1">
+                <span className="text-[9px] font-black uppercase tracking-widest text-secondary bg-secondary/10 px-3 py-1 rounded-full">
+                  Post-Course Assessment — Step {currentPostSurveyStep} of 11
+                </span>
+                <h2 className="text-lg sm:text-xl font-heading font-black text-text-main">
+                  {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Post-Survey" : "Real Estate Manager (HCEM) Post-Survey"}
+                </h2>
               </div>
-            )}
 
-            <div className="pt-4 border-t border-border-main/50">
-              <button
-                type="button"
-                disabled={surveySubmitting}
-                onClick={() => handleSurveySubmit("post")}
-                className="w-full py-3 rounded-xl bg-secondary text-white font-extrabold hover:brightness-110 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {surveySubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                {surveySubmitting ? 'Saving Final Survey...' : 'Submit Survey & Unlock Certification'}
-              </button>
+              {/* Progress Tracking Bar */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-[10px] font-extrabold text-text-muted">
+                  <span>Verification Progress</span>
+                  <span>{percentComplete}% Complete</span>
+                </div>
+                <div className="h-2 w-full bg-bg-main rounded-full overflow-hidden border border-border-main/50">
+                  <div 
+                    className="h-full bg-secondary transition-all duration-500 shadow-[0_0_8px_var(--secondary)]"
+                    style={{ width: `${percentComplete}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Survey Content Screens */}
+              <div className="py-4 border-t border-b border-border-main/40 min-h-[220px] flex flex-col justify-center">
+                {currentPostSurveyStep === 0 ? (
+                  /* Welcome Slide (Step 0) */
+                  <div className="space-y-4 text-center animate-fade-in">
+                    <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary mx-auto">
+                      <Award className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-extrabold text-text-main">
+                      Congratulations on completing the curriculum!
+                    </h3>
+                    <p className="text-xs sm:text-sm text-text-muted leading-relaxed max-w-md mx-auto">
+                      Before we issue your official professional credentials, let&apos;s re-assess your knowledge level across the core modules.
+                    </p>
+                    <div className="p-4 rounded-xl bg-secondary/10 border border-secondary/20 text-left text-xs space-y-2 max-w-md mx-auto">
+                      <p className="font-extrabold text-secondary flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 animate-spin-slow" />
+                        Final Evaluation Note:
+                      </p>
+                      <p className="text-text-muted leading-relaxed">
+                        Like the pre-survey, this final survey is <strong>NOT a test</strong> and has no impact on your completed module grades. It helps the academic board verify your overall growth.
+                      </p>
+                    </div>
+                  </div>
+                ) : currentPostSurveyStep <= 10 && currentQ ? (
+                  /* Question Slides (Step 1-10) */
+                  <div className="space-y-5 animate-fade-in">
+                    <div className="text-center space-y-2">
+                      <span className="text-[10px] text-secondary uppercase font-bold tracking-widest">
+                        Module Verification {currentQ.id}
+                      </span>
+                      <p className="text-sm sm:text-base font-bold text-text-main leading-snug">
+                        {currentQ.text}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <p className="text-[10px] uppercase tracking-wider font-extrabold text-text-muted text-center">
+                        Select Your Current Knowledge Level:
+                      </p>
+                      <div className="flex justify-between items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((val) => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setSurveyAnswers(prev => ({ ...prev, [currentQ.id]: val }))}
+                            className={`flex-1 py-3 text-center text-xs font-black border rounded-xl transition-all duration-300 ${
+                              surveyAnswers[currentQ.id] === val
+                                ? 'bg-secondary border-secondary text-white shadow-[0_0_12px_rgba(43,108,176,0.4)] scale-105'
+                                : 'bg-bg-main border-border-main text-text-muted hover:border-secondary/45 hover:bg-bg-card-hover'
+                            }`}
+                          >
+                            {val}
+                          </button>
+                        ))}
+                      </div>
+                      <div className="flex justify-between text-[10px] text-text-muted px-1 font-bold">
+                        <span>1 — No Knowledge</span>
+                        <span>5 — Expert Profile</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Final Slide (Step 11) */
+                  <div className="text-center space-y-4 animate-fade-in">
+                    <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary mx-auto animate-bounce">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-sm sm:text-base font-extrabold text-text-main">
+                      Ready to unlock your Certification!
+                    </h3>
+                    <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
+                      All verification parameters are now logged. Click the submit button below to finalize your records and harvest your official certificate credentials!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {surveyError && (
+                <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-semibold text-center">
+                  {surveyError}
+                </div>
+              )}
+
+              {/* Navigation Controls */}
+              <div className="flex items-center justify-between gap-4 pt-2">
+                {currentPostSurveyStep > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPostSurveyStep(prev => prev - 1)}
+                    className="btn border border-border-main text-text-muted hover:text-text-main px-5 py-2.5 rounded-xl text-xs font-bold transition-all"
+                  >
+                    Back
+                  </button>
+                ) : (
+                  <div />
+                )}
+
+                {currentPostSurveyStep < 11 ? (
+                  <button
+                    type="button"
+                    disabled={currentPostSurveyStep > 0 && currentQ ? !surveyAnswers[currentQ.id] : false}
+                    onClick={() => setCurrentPostSurveyStep(prev => prev + 1)}
+                    className="btn bg-secondary text-white hover:brightness-110 px-6 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ml-auto"
+                  >
+                    {currentPostSurveyStep === 0 ? "Start Survey" : "Next Topic"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={surveySubmitting}
+                    onClick={() => handleSurveySubmit("post")}
+                    className="btn bg-secondary text-white hover:brightness-110 px-8 py-2.5 rounded-xl text-xs font-extrabold shadow-md disabled:opacity-50 flex items-center gap-1.5 ml-auto"
+                  >
+                    {surveySubmitting && <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                    {surveySubmitting ? 'Saving...' : 'Submit & Unlock Certification'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </>
   );
 }
