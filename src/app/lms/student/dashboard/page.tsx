@@ -19,18 +19,21 @@ import { useAuth } from "@/lib/useAuth";
 import { Cohort, StudentProgress, Meeting, Quiz, QuizQuestion, Assignment, Announcement } from "@/lib/mockData";
 import { phase1Curriculum, Lesson } from "@/lib/curriculum";
 
+const SURVEY_QUESTIONS = [
+  { id: 1, text: "Agent vs. Manager Roles: Distinguishing the transaction-focused role of an Agent/Broker from the asset-custodian role of a professional Estate Manager." },
+  { id: 2, text: "Nigerian Land Regulations: Navigating occupancy rights, Certificates of Occupancy, and governor's consent under the Land Use Act of 1978." },
+  { id: 3, text: "Digital Management Platforms: Operating cloud-based tools (e.g. Housmata) to centralize property records and automate workflows." },
+  { id: 4, text: "Listing Disclosure Protocols: Proactively disclosing historical defects (like flooding or plumbing damage) before viewings." },
+  { id: 5, text: "Separation of Client Funds: Managing dedicated client rent accounts and preventing the comingling of client and personal funds." },
+  { id: 6, text: "Move-in Inventory Checks: Designing detailed, timestamped inventory checklists with photographic proof to prevent tenant disputes." },
+  { id: 7, text: "Habitability & Tenant Rights: Compelling landlords to fund structural repairs while firmly enforcing lease guidelines." },
+  { id: 8, text: "Utility & Generator Operations: Coordinating diesel generators, boreholes, and water treatment systems for Nigerian properties." },
+  { id: 9, text: "Real Estate Financials: Calculating rental yields, managing maintenance reserves, and auditing landlord ledgers." },
+  { id: 10, text: "Eviction & Contract Dispute Mediation: Systematically navigating tenancy laws and resolving tenant payment defaults through legal channels." }
+];
+
 export default function StudentDashboard() {
   const { currentUser } = useAuth();
-  
-  const delays = [
-    "[animation-delay:0ms]",
-    "[animation-delay:60ms]",
-    "[animation-delay:120ms]",
-    "[animation-delay:180ms]",
-    "[animation-delay:240ms]",
-    "[animation-delay:300ms]",
-    "[animation-delay:360ms]"
-  ];
   
   // States
   const [cohort, setCohort] = useState<Cohort | null>(null);
@@ -70,6 +73,16 @@ export default function StudentDashboard() {
   const [submittingAssignment, setSubmittingAssignment] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
+  // Survey States
+  const [showPreSurvey, setShowPreSurvey] = useState(false);
+  const [showPostSurvey, setShowPostSurvey] = useState(false);
+  const [surveyAnswers, setSurveyAnswers] = useState<Record<number, number>>({});
+  const [surveySubmitting, setSurveySubmitting] = useState(false);
+  const [surveyError, setSurveyError] = useState<string | null>(null);
+
+  // Curriculum Display State
+  const [expandedModuleId, setExpandedModuleId] = useState<string | null>("module-1");
+
   // Load Data
   const loadStudentData = useCallback(() => {
     if (!currentUser) return;
@@ -91,6 +104,20 @@ export default function StudentDashboard() {
     }
     
     setAnnouncements(db.getAnnouncements(studentCohort?.id || ""));
+
+    // Pre & Post Survey trigger checks
+    const hasPre = db.getSurveyResponse(studentId, "pre");
+    if (!hasPre) {
+      setShowPreSurvey(true);
+    } else {
+      const finishedAllModules = phase1Curriculum.every(mod => studentProgress?.completed_modules?.includes(mod.id));
+      if (finishedAllModules) {
+        const hasPost = db.getSurveyResponse(studentId, "post");
+        if (!hasPost) {
+          setShowPostSurvey(true);
+        }
+      }
+    }
   }, [currentUser]);
 
   useEffect(() => {
@@ -163,7 +190,7 @@ export default function StudentDashboard() {
     setAssignmentText("");
   };
 
-  const submitQuiz = () => {
+  const submitQuiz = async () => {
     if (!activeAssessment?.quiz || !currentUser) return;
     const { quiz, questions } = activeAssessment;
     
@@ -176,21 +203,25 @@ export default function StudentDashboard() {
 
     const rawScore = (correctCount / questions.length) * 100;
     
-    const attempt = db.createQuizAttempt({
-      quiz_id: quiz.id,
-      user_id: currentUser.id,
-      score: rawScore,
-      passed: false, // passed gets computed inside db.ts with penalty
-    });
+    try {
+      const attempt = await db.createQuizAttempt({
+        quiz_id: quiz.id,
+        user_id: currentUser.id,
+        score: rawScore,
+        passed: false, // passed gets computed inside db.ts with penalty
+      });
 
-    setQuizResult({ score: attempt.score, passed: attempt.passed, penaltyApplied: attempt.score < rawScore });
-    
-    if (attempt.passed) {
-      setAssessmentStatus(prev => prev ? { ...prev, passedQuiz: true } : null);
-      loadStudentData();
-      confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
-    } else {
-      loadStudentData();
+      setQuizResult({ score: attempt.score, passed: attempt.passed, penaltyApplied: attempt.score < rawScore });
+      
+      if (attempt.passed) {
+        setAssessmentStatus(prev => prev ? { ...prev, passedQuiz: true } : null);
+        loadStudentData();
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      } else {
+        loadStudentData();
+      }
+    } catch (err) {
+      console.error("Quiz submission failed:", err);
     }
   };
 
@@ -224,7 +255,7 @@ export default function StudentDashboard() {
       const fileDataUrl = event.target?.result as string;
 
       try {
-        db.createSubmission({
+        await db.createSubmission({
           assignment_id: assignmentId,
           user_id: userId,
           content_link: fileDataUrl,
@@ -247,6 +278,36 @@ export default function StudentDashboard() {
       setSubmissionError("Could not read the selected file. Please try selecting it again.");
     };
     reader.readAsDataURL(assignmentFile);
+  };
+
+  // Survey submission helper
+  const handleSurveySubmit = async (type: "pre" | "post") => {
+    if (!currentUser) return;
+    const unanswered = SURVEY_QUESTIONS.some(q => !surveyAnswers[q.id]);
+    if (unanswered) {
+      setSurveyError("Please answer all questions before submitting.");
+      return;
+    }
+
+    setSurveySubmitting(true);
+    setSurveyError(null);
+
+    try {
+      await db.createSurveyResponse(currentUser.id, type, surveyAnswers);
+      setSurveySubmitting(false);
+      setSurveyAnswers({});
+      if (type === "pre") {
+        setShowPreSurvey(false);
+      } else {
+        setShowPostSurvey(false);
+      }
+      loadStudentData();
+      confetti({ particleCount: 150, spread: 60, origin: { y: 0.5 } });
+    } catch (err) {
+      setSurveySubmitting(false);
+      const message = err instanceof Error ? err.message : "Failed to submit survey. Please try again.";
+      setSurveyError(message);
+    }
   };
 
   if (!currentUser || !progress) {return null;}
@@ -316,6 +377,101 @@ export default function StudentDashboard() {
         </div>
       </div>
 
+      {/* Onboarding Checklist & Growth Tracking */}
+      <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+          <div>
+            <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              Verified Operator Career Journey
+            </h3>
+            <p className="text-xs text-text-muted mt-0.5">Track your progress from a candidate to a premium Partner Agency.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase text-text-muted bg-bg-main border border-border-main px-3 py-1 rounded-full">
+              Overall Progress: {Math.round((progress.current_phase / 4) * 100)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Global Progress Bar */}
+        <div className="w-full bg-bg-main h-2.5 rounded-full overflow-hidden border border-border-main">
+          <style>{`
+            .global-progress-bar-fill {
+              width: ${(progress.current_phase / 4) * 100}%;
+            }
+          `}</style>
+          <div 
+            className="bg-gradient-to-r from-primary via-secondary to-accent h-full rounded-full transition-all duration-1000 shadow-[0_0_12px_var(--primary)] global-progress-bar-fill"
+          />
+        </div>
+
+        {/* Stepper Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            {
+              level: "Level 1",
+              name: "Foundation Operator",
+              requirement: "Phase 1 - Curriculums",
+              desc: "Master the real estate ethics & professional ecosystems.",
+              isCompleted: progress.current_phase > 1 || progress.completed_modules.length === phase1Curriculum.length,
+              isActive: progress.current_phase === 1
+            },
+            {
+              level: "Level 2",
+              name: "Digital Systems Specialist",
+              requirement: "Phase 2 - Live stream slots",
+              desc: "Learn to automate generator operations, maintenance logs, and separation of client funds.",
+              isCompleted: progress.current_phase > 2,
+              isActive: progress.current_phase === 2
+            },
+            {
+              level: "Level 3",
+              name: "Operational Specialist",
+              requirement: "Phase 3 - Field Practicals",
+              desc: "Perform real inspection checklists and submit landlord listing yields.",
+              isCompleted: progress.current_phase > 3,
+              isActive: progress.current_phase === 3
+            },
+            {
+              level: "Level 4",
+              name: "Partner Agency",
+              requirement: "Graduation & Verification Badge",
+              desc: "Acquire client mandates and listing partnerships with Property Max.",
+              isCompleted: progress.current_phase === 4,
+              isActive: progress.current_phase === 4
+            }
+          ].map((step, idx) => (
+            <div 
+              key={idx} 
+              className={`p-4 rounded-xl border transition-all duration-300 relative overflow-hidden flex flex-col justify-between ${
+                step.isCompleted ? 'bg-primary/5 border-primary/20 hover:bg-primary/10' :
+                step.isActive ? 'bg-secondary/5 border-secondary/30 hover:bg-secondary/10 shadow-[0_0_15px_rgba(43,108,176,0.15)]' :
+                'bg-bg-main border-border-main/50 opacity-60'
+              }`}
+            >
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className={`text-[10px] font-black uppercase tracking-wider ${
+                    step.isCompleted ? 'text-primary' : step.isActive ? 'text-secondary' : 'text-text-muted'
+                  }`}>{step.level}</span>
+                  {step.isCompleted && <CheckCircle2 className="w-4 h-4 text-primary" />}
+                  {step.isActive && <div className="w-2.5 h-2.5 rounded-full bg-secondary animate-ping" />}
+                </div>
+                <h4 className="font-bold text-xs text-text-main">{step.name}</h4>
+                <p className="text-[10px] text-text-muted leading-relaxed">{step.desc}</p>
+              </div>
+              <div className="pt-3 mt-3 border-t border-border-main/40 flex justify-between items-center text-[9px] font-extrabold uppercase">
+                <span className="text-text-muted">{step.requirement}</span>
+                <span className={step.isCompleted ? 'text-primary' : step.isActive ? 'text-secondary' : 'text-text-muted'}>
+                  {step.isCompleted ? 'Unlocked' : step.isActive ? 'In Progress' : 'Locked'}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Announcements Widget */}
       {announcements.length > 0 && (
         <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
@@ -371,159 +527,206 @@ export default function StudentDashboard() {
 
       {/* Phase 1 View */}
       {activeTab === "phase1" && (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-8 animate-fade-in">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-heading font-extrabold text-text-main">Foundation Curriculum</h2>
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-bg-main border border-border-main text-text-muted">
               {progress.completed_modules.length} / {phase1Curriculum.length} Modules Completed
             </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          {/* Vertical Timeline Curriculum Layout */}
+          <div className="relative border-l border-border-main/60 ml-4 sm:ml-8 pl-8 sm:pl-12 space-y-8 py-4">
+            {/* Animated progress track on timeline */}
+            <style>{`
+              .timeline-progress-track-fill {
+                width: 3px;
+                height: ${Math.min(100, (progress.completed_modules.length / phase1Curriculum.length) * 100)}%;
+              }
+            `}</style>
+            <div 
+              className="absolute left-[-1.5px] top-0 bg-gradient-to-b from-primary via-primary-light to-secondary transition-all duration-1000 shadow-[0_0_8px_var(--primary)] timeline-progress-track-fill"
+            />
+
             {phase1Curriculum.map((mod, index) => {
               const isCompleted = progress.completed_modules.includes(mod.id);
               const isUnlocked = index === 0 || progress.completed_modules.includes(phase1Curriculum[index - 1].id);
-              
+              const isExpanded = expandedModuleId === mod.id;
+
               return (
                 <div 
                   key={mod.id} 
-                  className={`premium-card rounded-2xl border p-6 space-y-4 transition-all relative overflow-hidden animate-slide-up opacity-0 [animation-fill-mode:forwards] ${delays[index] || ""} ${isCompleted ? 'bg-primary-glow/5 border-primary/30' : isUnlocked ? 'bg-bg-card border-border-main' : 'bg-bg-main border-border-main/50 opacity-70'}`}
+                  className="relative group transition-all duration-300"
                 >
-                  {!isUnlocked && (
-                    <div className="absolute inset-0 bg-bg-main/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center">
-                      <div className="bg-bg-card p-3 rounded-full border border-border-main shadow-lg mb-2">
-                        <Lock className="w-6 h-6 text-text-muted" />
+                  {/* Timeline Node Dot */}
+                  <div className={`absolute left-[-45px] sm:left-[-61px] top-4 w-9 h-9 rounded-full border-4 border-bg-main flex items-center justify-center font-bold text-xs transition-all duration-500 z-10 ${
+                    isCompleted ? 'bg-primary text-white shadow-[0_0_12px_var(--primary)]' :
+                    isUnlocked ? 'bg-bg-card border-primary text-primary shadow-[0_0_8px_rgba(38,196,150,0.2)]' : 'bg-bg-main text-text-muted border-border-main'
+                  }`}>
+                    {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : index + 1}
+                  </div>
+
+                  <div 
+                    className={`premium-card rounded-2xl border p-5 sm:p-6 space-y-4 transition-all duration-300 overflow-hidden ${
+                      isCompleted ? 'bg-primary-glow/5 border-primary/20' : 
+                      isUnlocked ? 'bg-bg-card border-border-main hover:border-border-main-hover' : 'bg-bg-main border-border-main/50 opacity-60'
+                    }`}
+                  >
+                    {/* Header Row */}
+                    <div 
+                      className="flex justify-between items-center cursor-pointer select-none"
+                      onClick={() => {
+                        if (isUnlocked) {
+                          setExpandedModuleId(isExpanded ? null : mod.id);
+                        }
+                      }}
+                    >
+                      <div className="space-y-1">
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${isCompleted ? 'text-primary' : 'text-text-muted'}`}>
+                          Module {index + 1} • {isCompleted ? 'Completed' : isUnlocked ? 'Available' : 'Locked'}
+                        </span>
+                        <h3 className="font-heading font-bold text-sm sm:text-base text-text-main leading-snug">
+                          {mod.title.split(': ')[1] || mod.title}
+                        </h3>
                       </div>
-                      <span className="text-xs font-bold text-text-muted bg-bg-card px-3 py-1 rounded-full border border-border-main">Locked</span>
+                      <div className="flex items-center gap-2">
+                        {isCompleted && <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />}
+                        {isUnlocked ? (
+                          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full group-hover:brightness-110 transition-all">
+                            {isExpanded ? 'Collapse' : 'Expand'}
+                          </span>
+                        ) : (
+                          <Lock className="w-4 h-4 text-text-muted flex-shrink-0" />
+                        )}
+                      </div>
                     </div>
-                  )}
-                  <div className="flex justify-between items-start">
-                    <span className={`text-[10px] font-extrabold uppercase tracking-wider ${isCompleted ? 'text-primary' : 'text-text-muted'}`}>
-                      Module {index + 1}
-                    </span>
-                    {isCompleted && <CheckCircle2 className="w-5 h-5 text-primary" />}
-                  </div>
-                  <h3 className="font-heading font-bold text-sm sm:text-base text-text-main leading-snug">
-                    {mod.title.split(': ')[1] || mod.title}
-                  </h3>
-                  <p className="text-xs text-text-muted line-clamp-2">
-                    {mod.objective}
-                  </p>
 
-                  <div className="pt-4 border-t border-border-main/50 space-y-2">
-                    {mod.lessons.map((lesson, idx) => {
-                      const lessonId = `${mod.id}-lesson-${idx}`;
-                      const isRead = progress.read_lessons?.includes(lessonId) || false;
-                      const prevLessonId = idx > 0 ? `${mod.id}-lesson-${idx - 1}` : null;
-                      const isUnlockedLesson = prevLessonId ? progress.read_lessons?.includes(prevLessonId) : true;
+                    {isExpanded && (
+                      <div className="pt-4 border-t border-border-main/50 space-y-4 animate-in fade-in duration-300">
+                        <p className="text-xs text-text-muted leading-relaxed">
+                          <strong className="text-text-main">Objective:</strong> {mod.objective}
+                        </p>
 
-                      return (
-                        <button
-                          key={idx}
-                          disabled={!isUnlockedLesson}
-                          onClick={() => setSelectedLesson({ lesson, moduleId: mod.id, lessonIndex: idx })}
-                          className={`w-full text-left p-3 rounded-xl border flex items-center justify-between text-xs font-semibold transition-all group ${
-                            isRead ? 'bg-primary/5 border-primary/20 text-text-main' : 
-                            isUnlockedLesson ? 'bg-bg-main border-border-main hover:border-primary/40 hover:bg-bg-card-hover text-text-muted hover:text-text-main' : 
-                            'bg-bg-main border-border-main/30 text-text-muted/40 cursor-not-allowed'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <BookOpen className={`w-3.5 h-3.5 flex-shrink-0 ${isRead ? 'text-primary' : isUnlockedLesson ? 'text-primary/70 group-hover:text-primary' : 'text-text-muted/40'}`} />
-                            <span className="truncate">{lesson.title}</span>
-                          </div>
-                          {isRead ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                          ) : !isUnlockedLesson ? (
-                            <Lock className="w-3.5 h-3.5 opacity-50 flex-shrink-0" />
-                          ) : (
-                            <ChevronRight className="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 flex-shrink-0" />
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        {/* Lessons Grid */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {mod.lessons.map((lesson, idx) => {
+                            const lessonId = `${mod.id}-lesson-${idx}`;
+                            const isRead = progress.read_lessons?.includes(lessonId) || false;
+                            const prevLessonId = idx > 0 ? `${mod.id}-lesson-${idx - 1}` : null;
+                            const isUnlockedLesson = prevLessonId ? progress.read_lessons?.includes(prevLessonId) : true;
 
-                  {(() => {
-                    const quizzes = db.getQuizzes(mod.id);
-                    const assignments = db.getAssignments(mod.id);
-                    const hasAssessment = quizzes.length > 0 || assignments.length > 0;
-                    
-                    const allLessonsRead = mod.lessons.every((_, idx) => progress.read_lessons?.includes(`${mod.id}-lesson-${idx}`));
-                    
-                    if (!isCompleted && isUnlocked) {
-                      if (hasAssessment) {
-                        if (allLessonsRead) {
-                          return (
-                            <button
-                              onClick={() => handleOpenAssessment(mod.id)}
-                              className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-bold text-primary transition-all duration-300 hover:shadow-[0_0_20px_rgba(43,108,176,0.3)] hover:-translate-y-0.5 flex items-center justify-center gap-2 group"
-                            >
-                              <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                              End of Module Assessment
-                            </button>
-                          );
-                        } else {
-                          return (
-                            <button disabled className="w-full mt-2 py-2.5 rounded-xl border border-border-main bg-bg-main text-text-muted/50 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-not-allowed">
-                              <Lock className="w-4 h-4" />
-                              Complete Lessons to Unlock Assessment
-                            </button>
-                          );
-                        }
-                      } else {
-                        return (
-                          <div className="w-full mt-2 py-2 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
-                            Read all lessons to complete this module.
-                          </div>
-                        );
-                      }
-                    } else if (isCompleted) {
-                      if (hasAssessment) {
-                        const grades = db.getFinalModuleGrade(currentUser.id, mod.id);
-                        if (grades) {
-                          return (
-                            <div className="w-full mt-2 p-3 rounded-xl border border-border-main bg-bg-main space-y-2">
-                              <h4 className="text-[10px] font-extrabold uppercase text-text-muted tracking-widest text-center">Final Grades</h4>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-text-muted">Quiz (30%)</span>
-                                <span className="font-bold text-text-main">{grades.quizScore.toFixed(0)}%</span>
-                              </div>
-                              <div className="flex justify-between items-center text-xs">
-                                <span className="text-text-muted">Assignment (70%)</span>
-                                <span className="font-bold text-text-main">{grades.assignmentGrade.toFixed(0)}%</span>
-                              </div>
-                              <div className="pt-2 mt-2 border-t border-border-main flex justify-between items-center text-xs font-bold">
-                                <span className="text-primary">Module Score</span>
-                                <span className="text-primary">{grades.finalGrade.toFixed(0)}%</span>
-                              </div>
-                            </div>
-                          );
-                        } else {
-                          return (
-                            <div className="w-full mt-2 space-y-2">
-                              <div className="py-2 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
-                                Module Completed. Awaiting assignment grading.
-                              </div>
+                            return (
                               <button
-                                onClick={() => handleOpenAssessment(mod.id)}
-                                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-bold text-primary transition-all duration-300 flex items-center justify-center gap-2 group"
+                                key={idx}
+                                disabled={!isUnlockedLesson}
+                                onClick={() => setSelectedLesson({ lesson, moduleId: mod.id, lessonIndex: idx })}
+                                className={`text-left p-3.5 rounded-xl border flex items-center justify-between text-xs font-bold transition-all duration-300 group ${
+                                  isRead ? 'bg-primary/5 border-primary/20 text-text-main hover:bg-primary/10' : 
+                                  isUnlockedLesson ? 'bg-bg-main border-border-main hover:border-primary/45 hover:bg-bg-card-hover text-text-muted hover:text-text-main shadow-sm' : 
+                                  'bg-bg-main border-border-main/30 text-text-muted/40 cursor-not-allowed'
+                                }`}
                               >
-                                <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                View or Resubmit Assessment
+                                <div className="flex items-center gap-2 truncate">
+                                  <BookOpen className={`w-4 h-4 flex-shrink-0 ${isRead ? 'text-primary' : isUnlockedLesson ? 'text-primary/70 group-hover:text-primary' : 'text-text-muted/40'}`} />
+                                  <span className="truncate">{lesson.title}</span>
+                                </div>
+                                {isRead ? (
+                                  <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                                ) : !isUnlockedLesson ? (
+                                  <Lock className="w-3.5 h-3.5 opacity-40 flex-shrink-0" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4 opacity-55 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                                )}
                               </button>
-                            </div>
-                          );
-                        }
-                      } else {
-                        return (
-                          <div className="w-full mt-2 py-2 p-3 rounded-xl border border-primary/20 bg-primary/5 text-xs font-semibold text-primary text-center">
-                            Module Completed ✓
-                          </div>
-                        );
-                      }
-                    }
-                    return null;
-                  })()}
+                            );
+                          })}
+                        </div>
+
+                        {/* Assessment Area */}
+                        {(() => {
+                          const quizzes = db.getQuizzes(mod.id);
+                          const assignments = db.getAssignments(mod.id);
+                          const hasAssessment = quizzes.length > 0 || assignments.length > 0;
+                          
+                          const allLessonsRead = mod.lessons.every((_, idx) => progress.read_lessons?.includes(`${mod.id}-lesson-${idx}`));
+                          
+                          if (!isCompleted && isUnlocked) {
+                            if (hasAssessment) {
+                              if (allLessonsRead) {
+                                return (
+                                  <button
+                                    onClick={() => handleOpenAssessment(mod.id)}
+                                    className="w-full py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-black text-primary transition-all duration-300 hover:shadow-[0_0_20px_rgba(38,196,150,0.3)] flex items-center justify-center gap-2 group"
+                                  >
+                                    <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    Launch End-of-Module Assessment
+                                  </button>
+                                );
+                              } else {
+                                return (
+                                  <button disabled className="w-full py-2.5 rounded-xl border border-border-main bg-bg-main text-text-muted/50 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-not-allowed">
+                                    <Lock className="w-4 h-4 opacity-75" />
+                                    Read all lessons above to unlock assessment
+                                  </button>
+                                );
+                              }
+                            } else {
+                              return (
+                                <div className="w-full py-2.5 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
+                                  Read all lessons to complete this module.
+                                </div>
+                              );
+                            }
+                          } else if (isCompleted) {
+                            if (hasAssessment) {
+                              const grades = db.getFinalModuleGrade(currentUser.id, mod.id);
+                              if (grades) {
+                                return (
+                                  <div className="w-full p-4 rounded-xl border border-border-main bg-bg-main space-y-2">
+                                    <h4 className="text-[10px] font-black uppercase text-text-muted tracking-widest text-center">Module Evaluation</h4>
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-text-muted">Quiz (30%)</span>
+                                      <span className="font-bold text-text-main">{grades.quizScore.toFixed(0)}%</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-xs">
+                                      <span className="text-text-muted">Assignment (70%)</span>
+                                      <span className="font-bold text-text-main">{grades.assignmentGrade.toFixed(0)}%</span>
+                                    </div>
+                                    <div className="pt-2 mt-2 border-t border-border-main flex justify-between items-center text-xs font-black">
+                                      <span className="text-primary">Weighted Score</span>
+                                      <span className="text-primary">{grades.finalGrade.toFixed(0)}%</span>
+                                    </div>
+                                  </div>
+                                );
+                              } else {
+                                return (
+                                  <div className="w-full space-y-2">
+                                    <div className="py-2.5 p-3 rounded-xl border border-border-main bg-bg-main text-xs font-semibold text-text-muted text-center">
+                                      Module Completed. Awaiting assignment grading.
+                                    </div>
+                                    <button
+                                      onClick={() => handleOpenAssessment(mod.id)}
+                                      className="w-full py-2.5 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-bold text-primary transition-all duration-300 flex items-center justify-center gap-2 group"
+                                    >
+                                      <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                      View / Resubmit Assignment
+                                    </button>
+                                  </div>
+                                );
+                              }
+                            } else {
+                              return (
+                                <div className="w-full py-2 p-3 rounded-xl border border-primary/20 bg-primary/5 text-xs font-bold text-primary text-center">
+                                  Module Completed ✓
+                                </div>
+                              );
+                            }
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -1140,6 +1343,140 @@ export default function StudentDashboard() {
                   <p className="text-text-muted max-w-sm mx-auto">You have successfully passed the quiz and submitted your assignment. The module is now marked as complete and the instructor will grade your assignment soon.</p>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pre-Course Survey Modal Overlay */}
+      {showPreSurvey && (
+        <div className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+            <div className="text-center space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-primary bg-primary/10 px-3 py-1 rounded-full">
+                Outcome Harvesting Survey
+              </span>
+              <h2 className="text-xl sm:text-2xl font-heading font-black text-text-main">
+                Real Estate Knowledge Pre-Survey
+              </h2>
+              <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+                Before taking this course, what is your knowledge level on the following topics? Your answers are evaluated for outcome harvesting to track educational impact.
+              </p>
+            </div>
+
+            <div className="space-y-6 pt-4 border-t border-border-main/50">
+              {SURVEY_QUESTIONS.map((q) => (
+                <div key={q.id} className="space-y-3">
+                  <p className="text-xs sm:text-sm font-extrabold text-text-main leading-snug">
+                    {q.id}. {q.text}
+                  </p>
+                  <div className="flex justify-between items-center gap-1 sm:gap-2">
+                    {[1, 2, 3, 4, 5].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setSurveyAnswers(prev => ({ ...prev, [q.id]: val }))}
+                        className={`flex-1 py-2 sm:py-2.5 text-center text-xs font-bold border rounded-xl transition-all duration-300 ${
+                          surveyAnswers[q.id] === val
+                            ? 'bg-primary border-primary text-white shadow-[0_0_12px_var(--primary)] hover:brightness-110'
+                            : 'bg-bg-main border-border-main text-text-muted hover:border-primary/45 hover:bg-bg-card-hover'
+                        }`}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[9px] text-text-muted px-1 font-bold">
+                    <span>No Knowledge</span>
+                    <span>Expert</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {surveyError && (
+              <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-semibold">
+                {surveyError}
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-border-main/50">
+              <button
+                type="button"
+                disabled={surveySubmitting}
+                onClick={() => handleSurveySubmit("pre")}
+                className="w-full py-3 rounded-xl bg-primary text-white font-extrabold hover:brightness-110 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {surveySubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {surveySubmitting ? 'Saving Survey...' : 'Submit Survey & Start Course'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Post-Course Survey Modal Overlay */}
+      {showPostSurvey && (
+        <div className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto animate-scale-in">
+            <div className="text-center space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-secondary bg-secondary/10 px-3 py-1 rounded-full">
+                Final Evaluation
+              </span>
+              <h2 className="text-xl sm:text-2xl font-heading font-black text-text-main">
+                Real Estate Knowledge Post-Survey
+              </h2>
+              <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
+                Congratulations on completing all modules! After completing this course, what is your knowledge level on the following topics?
+              </p>
+            </div>
+
+            <div className="space-y-6 pt-4 border-t border-border-main/50">
+              {SURVEY_QUESTIONS.map((q) => (
+                <div key={q.id} className="space-y-3">
+                  <p className="text-xs sm:text-sm font-extrabold text-text-main leading-snug">
+                    {q.id}. {q.text}
+                  </p>
+                  <div className="flex justify-between items-center gap-1 sm:gap-2">
+                    {[1, 2, 3, 4, 5].map((val) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setSurveyAnswers(prev => ({ ...prev, [q.id]: val }))}
+                        className={`flex-1 py-2 sm:py-2.5 text-center text-xs font-bold border rounded-xl transition-all duration-300 ${
+                          surveyAnswers[q.id] === val
+                            ? 'bg-secondary border-secondary text-white shadow-[0_0_12px_var(--secondary)] hover:brightness-110'
+                            : 'bg-bg-main border-border-main text-text-muted hover:border-secondary/45 hover:bg-bg-card-hover'
+                        }`}
+                      >
+                        {val}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-[9px] text-text-muted px-1 font-bold">
+                    <span>No Knowledge</span>
+                    <span>Expert</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {surveyError && (
+              <div className="p-3 rounded-xl bg-error/10 border border-error/20 text-error text-xs font-semibold">
+                {surveyError}
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-border-main/50">
+              <button
+                type="button"
+                disabled={surveySubmitting}
+                onClick={() => handleSurveySubmit("post")}
+                className="w-full py-3 rounded-xl bg-secondary text-white font-extrabold hover:brightness-110 transition-all shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {surveySubmitting && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+                {surveySubmitting ? 'Saving Final Survey...' : 'Submit Survey & Unlock Certification'}
+              </button>
             </div>
           </div>
         </div>

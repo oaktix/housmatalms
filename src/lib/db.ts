@@ -2,6 +2,14 @@ import { createClient } from "@supabase/supabase-js";
 import * as seeds from "./mockData";
 import { phase1Curriculum } from "./curriculum";
 
+export interface SurveyResponse {
+  id: string;
+  user_id: string;
+  type: "pre" | "post";
+  answers: Record<string, number>;
+  submitted_at: string;
+}
+
 // Retrieve keys from environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -113,7 +121,8 @@ class LocalStorageDB {
         { name: "graduate_status", key: "lms_graduate_status" },
         { name: "student_progress", key: "lms_progress" },
         { name: "email_logs", key: "lms_email_logs" },
-        { name: "announcements", key: "lms_announcements" }
+        { name: "announcements", key: "lms_announcements" },
+        { name: "survey_responses", key: "lms_survey_responses" }
       ];
 
       await Promise.all(
@@ -215,20 +224,17 @@ class LocalStorageDB {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async saveToSupabase(table: string, record: any, isInsert: boolean = false) {
     if (!this.isSupabase || !supabase) return;
-    try {
-      const { error } = isInsert
-        ? await supabase.from(table).insert(record)
-        : await supabase.from(table).upsert(record);
-      if (error) {
-        console.error(`Supabase ${isInsert ? 'insert' : 'upsert'} error on '${table}':`, {
-          message: error.message,
-          code: error.code,
-          hint: error.hint,
-          details: error.details,
-        });
-      }
-    } catch (e) {
-      console.error(`Failed to ${isInsert ? 'insert' : 'upsert'} to Supabase table ${table}:`, e);
+    const { error } = isInsert
+      ? await supabase.from(table).insert(record)
+      : await supabase.from(table).upsert(record);
+    if (error) {
+      console.error(`Supabase ${isInsert ? 'insert' : 'upsert'} error on '${table}':`, {
+        message: error.message,
+        code: error.code,
+        hint: error.hint,
+        details: error.details,
+      });
+      throw new Error(error.message);
     }
   }
 
@@ -678,7 +684,7 @@ class LocalStorageDB {
     return this.getSubmissions().filter((s) => s.user_id === userId);
   }
 
-  createSubmission(sub: Omit<seeds.Submission, "id" | "submitted_at" | "status">): seeds.Submission {
+  async createSubmission(sub: Omit<seeds.Submission, "id" | "submitted_at" | "status">): Promise<seeds.Submission> {
     const list = this.getSubmissions();
     
     // Remove existing submission for the same assignment and user to overwrite it (resubmission).
@@ -696,7 +702,7 @@ class LocalStorageDB {
     };
     filtered.push(newSub);
     this.set("lms_submissions", filtered);
-    this.saveToSupabase("submissions", newSub, true);
+    await this.saveToSupabase("submissions", newSub, true);
     
     const assignment = this.getAssignment(newSub.assignment_id);
     if (assignment) {
@@ -816,7 +822,7 @@ class LocalStorageDB {
     return list;
   }
 
-  createQuizAttempt(attempt: Omit<seeds.QuizAttempt, "id" | "attempted_at">): seeds.QuizAttempt {
+  async createQuizAttempt(attempt: Omit<seeds.QuizAttempt, "id" | "attempted_at">): Promise<seeds.QuizAttempt> {
     const list = this.getQuizAttempts();
     
     // Calculate penalty based on previous attempts for this specific quiz
@@ -837,13 +843,41 @@ class LocalStorageDB {
     };
     list.push(newAttempt);
     this.set("lms_quiz_attempts", list);
-    this.saveToSupabase("quiz_attempts", newAttempt, true);
+    await this.saveToSupabase("quiz_attempts", newAttempt, true);
     
     if (quiz) {
       this.checkAndPromoteModule(newAttempt.user_id, quiz.module_id);
     }
     
     return newAttempt;
+  }
+
+  // --- Survey Responses ---
+  getSurveyResponses(): SurveyResponse[] {
+    return this.get<SurveyResponse>("lms_survey_responses", []);
+  }
+
+  getSurveyResponse(userId: string, type: "pre" | "post"): SurveyResponse | undefined {
+    return this.getSurveyResponses().find((r) => r.user_id === userId && r.type === type);
+  }
+
+  async createSurveyResponse(userId: string, type: "pre" | "post", answers: Record<string, number>): Promise<SurveyResponse> {
+    const list = this.getSurveyResponses();
+    const filtered = list.filter((r) => !(r.user_id === userId && r.type === type));
+
+    const newResponse: SurveyResponse = {
+      id: generateUUID(),
+      user_id: userId,
+      type: type,
+      answers: answers,
+      submitted_at: new Date().toISOString()
+    };
+
+    filtered.push(newResponse);
+    this.set("lms_survey_responses", filtered);
+    await this.saveToSupabase("survey_responses", newResponse, true);
+
+    return newResponse;
   }
 
   // --- Grading Helper ---
