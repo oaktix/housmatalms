@@ -11,7 +11,6 @@ import {
   Megaphone,
   ArrowRight,
   Shield,
-  ExternalLink,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";

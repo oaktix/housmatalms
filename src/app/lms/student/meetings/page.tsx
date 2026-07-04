@@ -7,7 +7,6 @@ import {
   ExternalLink,
   CheckCircle2,
   Lock,
-  Sparkles,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";

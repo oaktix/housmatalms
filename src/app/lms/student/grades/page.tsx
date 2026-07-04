@@ -3,10 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Award,
-  CheckCircle2,
-  Lock,
   Clock,
-  Sparkles,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";

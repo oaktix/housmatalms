@@ -204,9 +204,9 @@ export default function StudentCurriculum() {
         await db.createSubmission({
           user_id: currentUser.id,
           assignment_id: activeAssessment.assignment!.id,
-          file_name: assignmentFile.name,
-          file_data: base64,
-          notes: assignmentText
+          content_file_name: assignmentFile.name,
+          content_link: base64,
+          content_text: assignmentText
         });
         
         setSubmittingAssignment(false);
@@ -481,7 +481,7 @@ export default function StudentCurriculum() {
                     <a
                       href="https://simulator.housmata.com"
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="btn w-full mt-4 bg-secondary text-white text-xs font-bold py-3 rounded-xl text-center flex items-center justify-center gap-1 hover:brightness-110 shadow-sm"
                     >
                       Access Sandbox Simulator
