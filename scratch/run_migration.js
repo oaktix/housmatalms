@@ -25,7 +25,7 @@ async function run() {
 
   // Try direct connection first
   {
-    const host = "[2a05:d016:dd0:9401:9b9e:6609:3219:d398]";
+    const host = "db.ryzarcduqfhbvzilithu.supabase.co";
     console.log(`Trying direct connection to: ${host} on port 5432...`);
     const client = new Client({
       host: host,
