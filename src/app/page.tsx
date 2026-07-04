@@ -91,7 +91,7 @@ export default function Home() {
         <div className="absolute bottom-[25%] left-[5%] w-[45vw] h-[45vw] rounded-full bg-primary/8 blur-[180px] animate-pulse-slow pointer-events-none [animation-delay:6s]" />
 
         {/* Floating Real Estate Vector Animations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-10 select-none">
           <style>{`
             @keyframes float-slow {
               0%, 100% { transform: translateY(0px) rotate(0deg); }
