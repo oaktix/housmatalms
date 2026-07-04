@@ -62,6 +62,8 @@ function generateUUID(): string {
 class LocalStorageDB {
   private isSupabase = false;
   private listeners = new Set<() => void>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private memoryCache: Record<string, any> = {};
 
   constructor() {
     if (isSupabaseConfigured && supabase) {
@@ -141,7 +143,8 @@ class LocalStorageDB {
                     acc[key] = sub;
                   }
                   return acc;
-                }, {})
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                }, {} as any)
               );
               this.set(t.key, deduped);
             } else {
@@ -239,28 +242,44 @@ class LocalStorageDB {
   }
 
   private get<T>(key: string, defaultValue: T[]): T[] {
+    if (this.memoryCache[key] !== undefined) {
+      return this.memoryCache[key];
+    }
     if (!isBrowser) return defaultValue;
     const data = localStorage.getItem(key);
     if (!data) {
-      localStorage.setItem(key, JSON.stringify(defaultValue));
+      try {
+        localStorage.setItem(key, JSON.stringify(defaultValue));
+      } catch (err) {
+        console.warn(`[LocalStorage Write Failed in Get] key: ${key}`, err);
+      }
+      this.memoryCache[key] = defaultValue;
       return defaultValue;
     }
     try {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      this.memoryCache[key] = parsed;
+      return parsed;
     } catch {
+      this.memoryCache[key] = defaultValue;
       return defaultValue;
     }
   }
 
   private set<T>(key: string, value: T[]): void {
+    this.memoryCache[key] = value;
     if (!isBrowser) return;
     try {
       localStorage.setItem(key, JSON.stringify(value));
     } catch (err) {
       if (err instanceof DOMException && err.name === "QuotaExceededError") {
-        throw new Error("Storage quota exceeded. Your file may be too large. Please try a smaller file (under 4 MB).");
+        console.warn(`[LocalStorage Quota Exceeded] Could not write key '${key}' to LocalStorage. Relying on Supabase/in-memory cache.`);
+        if (!this.isSupabase) {
+          throw new Error("Storage quota exceeded. Your file may be too large. Please try a smaller file (under 4 MB).");
+        }
+      } else {
+        throw err;
       }
-      throw err;
     }
   }
 
