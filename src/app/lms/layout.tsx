@@ -16,7 +16,8 @@ import {
   ListTodo,
   Menu,
   X,
-  Megaphone
+  Megaphone,
+  Globe
 } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import Logo from "@/components/Logo";
@@ -129,7 +130,9 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
         <div className="flex flex-col flex-grow overflow-y-auto">
           {/* Sidebar Brand Header */}
           <div className="p-6 border-b border-border-main space-y-2 relative">
-            <Logo height={24} showText={true} />
+            <Link href="/" className="block hover:opacity-80 transition-opacity">
+              <Logo height={24} showText={true} />
+            </Link>
             <span className="inline-block text-[9px] font-black text-primary bg-primary-glow border border-primary/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
               Verified Operator LMS
             </span>
@@ -211,8 +214,15 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
           </nav>
         </div>
 
-        {/* Sidebar Footer with Logout */}
-        <div className="p-4 border-t border-border-main bg-bg-main/40">
+        {/* Sidebar Footer with Logout & Website Button */}
+        <div className="p-4 border-t border-border-main bg-bg-main/40 space-y-2">
+          <Link
+            href="/"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border border-border-main bg-bg-card hover:bg-bg-card-hover text-text-main transition-all active:scale-[0.98]"
+          >
+            <Globe className="w-4 h-4 text-primary" />
+            Exit to Website
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border border-border-main hover:bg-red-500/5 hover:text-red-500 hover:border-red-500/20 text-text-muted transition-all active:scale-[0.98]"
@@ -247,9 +257,10 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
           <div className="flex items-center gap-4 text-xs font-semibold text-text-muted">
             <Link
               href="/"
-              className="text-[10px] font-bold border border-border-main hover:bg-bg-card-hover px-3 py-1.5 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 text-[10px] font-extrabold bg-primary text-text-inverse hover:brightness-110 px-3.5 py-2 rounded-lg shadow-sm shadow-primary/20 transition-all active:scale-[0.97]"
             >
-              Public Home
+              <Globe className="w-3.5 h-3.5" />
+              Main Website
             </Link>
             <span className="text-[10px] font-bold py-1 px-3 bg-primary-glow border border-primary/20 text-primary rounded-lg capitalize">
               Role: {role}
