@@ -18,7 +18,7 @@ export async function GET(request: Request) {
   `;
 
   const client = new Client({
-    host: "db.ryzarcduqfhbvzilithu.supabase.co",
+    host: "[2a05:d016:dd0:9401:9b9e:6609:3219:d398]",
     port: 5432,
     database: "postgres",
     user: "postgres",
