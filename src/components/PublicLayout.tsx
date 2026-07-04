@@ -18,8 +18,6 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "Programs", href: "/programs" },
-    { name: "HCEM Curriculum", href: "/curriculum" },
-    { name: "HCPA Curriculum", href: "/curriculum/hcpa" },
     { name: "Instructors", href: "/instructors" },
     { name: "Certification", href: "/certification" },
     { name: "FAQ", href: "/faq" },

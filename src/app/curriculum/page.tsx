@@ -27,11 +27,26 @@ export default function Curriculum() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(38,196,150,0.08),transparent_40%)]" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight text-text-main">
-            Dynamic Academy Curriculum
+            Housmata Certified Estate Manager
           </h1>
           <p className="text-text-muted text-sm sm:text-base max-w-xl mx-auto mt-4 leading-relaxed">
-            Directly generated from the official Property Max Handbooks and ecosystem training workflows.
+            Directly generated from the official Property Max Handbooks and ecosystem training workflows. Focuses on Rent Management &amp; Property Operations.
           </p>
+          <div className="flex justify-center gap-4 mt-6">
+            <Link
+              href="/programs"
+              className="btn border border-border-main text-text-muted hover:text-text-main px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all"
+            >
+              Compare Tracks
+            </Link>
+            <Link
+              href="/apply"
+              className="btn bg-primary text-text-inverse hover:brightness-110 px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all"
+            >
+              Apply — HCEM
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
       </section>
 

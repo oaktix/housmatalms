@@ -9,42 +9,42 @@ export default function FAQ() {
   const faqs = [
     {
       q: "What is Housmata Academy?",
-      a: "Housmata Academy is a specialized training platform designed to produce certified digital estate managers and operators who run property management workflows under the Property Max Results Ltd ecosystem.",
+      a: "Housmata Academy is a specialized training platform designed to produce certified digital real estate operators under the Property Max Results Ltd ecosystem. We now offer two distinct certification tracks: Housmata Certified Estate Manager (HCEM) and Housmata Certified Property Advisor (HCPA).",
     },
     {
-      q: "Is this a generic real estate agent course?",
-      a: "No. Unlike courses focused solely on sales commissions, we train you to operate property assets over their lifecycle: listing standardisation, KYC vetting, rent ledgers reconciliation, maintenance logs, and document auto-generation.",
+      q: "What is the difference between the HCEM and HCPA tracks?",
+      a: "The Housmata Certified Estate Manager (HCEM) track focuses on Rent Management & Property Operations (tenancy agreements, rent tracking ledgers, maintenance tickets, and landlord reports). The Housmata Certified Property Advisor (HCPA) track focuses on Property Advisory, Verification & Investment (due diligence, coordinate charting to check for forest reserves/committed acquisitions, Lands Registry search reports, property finance, and client brokerage).",
     },
     {
-      q: "What is the difference between Phase 1 and Phase 2?",
-      a: "Phase 1 covers the theoretical foundations (9 modules including ethics, inspection checklist design, and property accounting). Phase 2 is a 7-Day Intensive Bootcamp where you execute actual operations inside a digital sandbox environment to prove your hands-on competence.",
+      q: "Who is each certification track designed for?",
+      a: "HCEM is for property managers, letting agents, facility operators, and estate administrators. HCPA is for property consultants, sales agents, investment brokers, and independent consultants advising clients on safe acquisitions.",
     },
     {
-      q: "How does the Admission Workflow work?",
-      a: "Once you submit an application, the admin reviews it. If approved, the system creates your student credentials and assigns you to an active cohort. You will receive an automated email simulation with your access credentials.",
+      q: "Can I take both the HCEM and HCPA courses at the same time?",
+      a: "No. Trainees are allowed to enroll in only one track at a time. Each track requires a separate application, individual review, and approval from the admissions panel. You may apply for the second track after completing your current program.",
     },
     {
-      q: "What are the Certification Levels?",
-      a: "Level 1: Digital Property Management Operator (earned upon graduation). Level 2: Certified Estate Manager (requires 6 months of tracked operations). Level 3: Verified Independent Property Consultant (requires managing 15+ active units). Level 4: Housmata Partner Agency (tier to set up local franchise offices).",
+      q: "What is the training progression for each track?",
+      a: "Both courses share a similar three-phase template: Phase 1 (Self-Paced Modules & Quizzes) → Phase 2 (Live Intensive Bootcamp Sessions) → Phase 3 (Supervised Field Practicals & Final Portfolio Submission).",
     },
     {
-      q: "Does the Academy provide job placements?",
-      a: "We do not build job boards or placement networks. Instead, we maintain a simple, transparent Graduate Deployment status ('Active', 'Available', 'Assigned', 'Suspended', 'Alumni') so our real estate partner network can verify credentials and engage certified professionals immediately.",
+      q: "What are the grading requirements for passing modules?",
+      a: "Every module in Phase 1 requires you to read all lessons, pass a 10-question multiple-choice assessment with a score of 75% or higher, and submit a practical assignment. Your final module grade is weighted: 30% from the Quiz and 70% from the Instructor's assignment score.",
     },
     {
-      q: "How are certificates verified?",
-      a: "Every certificate contains a unique ID and a QR code pointing to our public verification portal. Anyone can verify the authenticity of a graduate's certificate by searching the certificate ID.",
+      q: "How does the Admission process work?",
+      a: "You submit an application indicating your selected track. Our admissions team reviews it. Upon approval, you will receive login details for the Student LMS dashboard, and you must complete a Pre-Course Knowledge Survey before beginning.",
+    },
+    {
+      q: "How do certificate verifications work?",
+      a: "All graduates receive a verified credential with a unique ID and a QR code linked to our central verification portal, letting developers, banks, and clients confirm active certification status.",
     },
   ];
 
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
   const toggleFaq = (idx: number) => {
-    if (expandedIndex === idx) {
-      setExpandedIndex(null);
-    } else {
-      setExpandedIndex(idx);
-    }
+    setExpandedIndex(expandedIndex === idx ? null : idx);
   };
 
   return (
@@ -56,12 +56,12 @@ export default function FAQ() {
             Frequently Asked Questions
           </h1>
           <p className="text-text-muted text-sm sm:text-base max-w-xl mx-auto mt-4 leading-relaxed">
-            Get clear, direct answers about Housmata Academy&apos;s curriculum, certification, and admissions.
+            Get clear, direct answers about Housmata Academy&apos;s certification tracks, admissions, and grading.
           </p>
         </div>
       </section>
 
-      <section className="py-20 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 bg-bg-main">
         <div className="space-y-4">
           {faqs.map((faq, index) => {
             const isOpen = expandedIndex === index;
@@ -98,17 +98,23 @@ export default function FAQ() {
         </div>
 
         {/* CTA */}
-        <div className="text-center pt-20 space-y-4">
-          <h3 className="text-lg font-heading font-bold text-text-main">Have other questions?</h3>
+        <div className="text-center pt-16 space-y-4">
+          <h3 className="text-lg font-heading font-bold text-text-main">Ready to Start?</h3>
           <p className="text-text-muted text-xs max-w-sm mx-auto leading-relaxed">
-            Get in touch with our admissions office for details on the next bootcamp start date.
+            Apply to begin either the Estate Manager or Property Advisor track. Admissions undergo panel review.
           </p>
-          <div className="pt-2">
+          <div className="pt-2 flex justify-center gap-4">
             <Link
-              href="/contact"
-              className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3 rounded-xl font-bold inline-flex items-center gap-2 transition-all"
+              href="/programs"
+              className="btn border border-border-main text-text-muted hover:text-text-main px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all"
             >
-              Contact Support
+              View Programs
+            </Link>
+            <Link
+              href="/apply"
+              className="btn bg-primary text-text-inverse hover:brightness-110 px-6 py-2.5 rounded-xl text-sm font-bold inline-flex items-center gap-2 transition-all"
+            >
+              Start Application
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

@@ -46,6 +46,16 @@ export default function Apply() {
       return;
     }
 
+    // Check if user is already enrolled and has not reached Phase 3
+    const existingProfile = db.getProfileByEmail(formData.email);
+    if (existingProfile && existingProfile.role === "student") {
+      const progress = db.getProgress(existingProfile.id);
+      if (progress && progress.current_phase < 3) {
+        setError(`You are already enrolled in a course track (${progress.course_id === "property-advisor-hcpa" ? "HCPA" : "HCEM"}) and have not completed Phase 2. You must reach Phase 3 (Field Practicals) before you are permitted to apply for another track.`);
+        return;
+      }
+    }
+
     try {
       // Save application
       db.createApplication({
