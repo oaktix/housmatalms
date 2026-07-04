@@ -1128,6 +1128,9 @@ class LocalStorageDB {
       completed_modules: [],
       read_lessons: [],
       phase2_status: "locked",
+      selected_class: undefined,
+      phase2_meeting_url: undefined,
+      phase2_attendance: undefined,
     };
   }
 

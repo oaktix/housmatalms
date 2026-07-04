@@ -182,7 +182,10 @@ create table if not exists public.student_progress (
     current_phase integer not null default 1 check (current_phase in (1, 2, 3, 4)),
     completed_modules text[] not null default '{}',
     read_lessons text[] not null default '{}',
-    phase2_status text not null default 'locked' check (phase2_status in ('locked', 'in-progress', 'passed', 'failed'))
+    phase2_status text not null default 'locked' check (phase2_status in ('locked', 'in-progress', 'passed', 'failed')),
+    selected_class text,
+    phase2_meeting_url text,
+    phase2_attendance text
 );
 
 -- 11. ANNOUNCEMENTS

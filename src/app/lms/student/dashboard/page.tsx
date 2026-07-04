@@ -27,6 +27,7 @@ export default function StudentDashboard() {
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [tempSelectedClass, setTempSelectedClass] = useState<string>("");
 
   // Navigation / Modal States
   const [activeTab, setActiveTab] = useState<"phase1" | "phase2" | "phase3">("phase1");
@@ -104,6 +105,17 @@ export default function StudentDashboard() {
       setProgress(db.getProgress(currentUser.id));
     }
     setSelectedLesson(null);
+  };
+  
+  // Select Phase 2 Virtual Class
+  const handleSelectClass = (className: string) => {
+    if (!progress || !currentUser) return;
+    const updated = {
+      ...progress,
+      selected_class: className
+    };
+    db.updateProgress(updated);
+    setProgress(db.getProgress(currentUser.id));
   };
 
   // Handle Opening Assessment Modal
@@ -516,23 +528,166 @@ export default function StudentDashboard() {
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               <div className="lg:col-span-8 space-y-6">
+                {/* Welcome Card */}
                 <div className="premium-card rounded-2xl bg-secondary-glow/10 border-secondary/30 p-8 space-y-4">
                   <h2 className="text-xl font-heading font-extrabold text-text-main text-secondary">
                     Welcome to Phase 2: Bootcamp
                   </h2>
                   <p className="text-sm text-text-muted leading-relaxed">
-                    You have advanced to the Digital Property Management Systems phase. This phase consists of virtual live classes and direct assignments from your Instructor. 
+                    You have advanced to the Digital Property Management Systems phase. This phase consists of virtual live classes and direct assignments from your Instructor.
                   </p>
                   <div className="p-4 bg-bg-card rounded-xl border border-border-main text-xs space-y-2 mt-4">
                     <span className="font-bold text-text-main block">Progression Status:</span>
                     <p className="text-text-muted">
-                      Your status is currently <strong className="text-warning uppercase">{progress.phase2_status}</strong>. 
+                      Your status is currently <strong className="text-warning uppercase">{progress.phase2_status}</strong>.
                       Once you complete the live assignments, your Instructor will grade you and promote you to Phase 3.
                     </p>
                   </div>
                 </div>
+
+                {/* Virtual Class Selection / Status Card */}
+                <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 md:p-8 space-y-6 shadow-sm">
+                  <div className="flex justify-between items-start gap-4 border-b border-border-main pb-4">
+                    <div>
+                      <h3 className="font-heading font-bold text-base text-text-main flex items-center gap-2">
+                        <Calendar className="w-5 h-5 text-secondary" />
+                        Phase 2 Virtual Class Enrollment
+                      </h3>
+                      <p className="text-xs text-text-muted mt-1">Select and attend one of the four scheduled interactive live training slots.</p>
+                    </div>
+                    {progress.selected_class ? (
+                      <span className="text-[10px] uppercase font-black tracking-widest px-3 py-1 bg-secondary/10 text-secondary border border-secondary/20 rounded-full">
+                        Enrolled
+                      </span>
+                    ) : (
+                      <span className="text-[10px] uppercase font-black tracking-widest px-3 py-1 bg-warning/10 text-warning border border-warning/20 rounded-full">
+                        Action Required
+                      </span>
+                    )}
+                  </div>
+
+                  {!progress.selected_class ? (
+                    <div className="space-y-4">
+                      <p className="text-xs text-text-muted leading-relaxed">
+                        To continue with the bootcamp, choose your preferred session from the four available date options below:
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                          "Class 1: Tuesday, July 7, 2026 - 5:00 PM",
+                          "Class 2: Tuesday, July 14, 2026 - 5:00 PM",
+                          "Class 3: Tuesday, July 21, 2026 - 5:00 PM",
+                          "Class 4: Tuesday, July 28, 2026 - 5:00 PM",
+                        ].map((slot) => (
+                          <label
+                            key={slot}
+                            className={`p-4 rounded-xl border flex items-start gap-3 cursor-pointer hover:bg-bg-main/55 transition-all ${
+                              tempSelectedClass === slot
+                                ? "border-secondary bg-secondary/5 text-text-main shadow-sm"
+                                : "border-border-main bg-bg-main/30 text-text-muted"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="class-slot"
+                              className="mt-1"
+                              checked={tempSelectedClass === slot}
+                              onChange={() => setTempSelectedClass(slot)}
+                            />
+                            <div className="text-xs">
+                              <span className="font-bold block text-text-main">
+                                {slot.split(":")[0]}
+                              </span>
+                              <span className="text-[10px] text-text-muted mt-0.5 block">
+                                {slot.split(":")[1]}
+                              </span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="button"
+                          disabled={!tempSelectedClass}
+                          onClick={() => handleSelectClass(tempSelectedClass)}
+                          className="btn bg-secondary text-white hover:brightness-110 px-6 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                        >
+                          Confirm Enrollment
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <div className="p-4 rounded-xl bg-bg-main border border-border-main flex items-start gap-3">
+                        <CheckCircle2 className="w-5 h-5 text-secondary flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="text-[10px] text-text-muted font-bold block uppercase tracking-wider">Your Selected Session</span>
+                          <span className="text-xs font-bold text-text-main mt-0.5 block">{progress.selected_class}</span>
+                        </div>
+                      </div>
+
+                      {/* Meeting URL Section */}
+                      <div className="p-6 rounded-xl border border-secondary/20 bg-secondary/5 space-y-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-secondary/15 flex items-center justify-center text-secondary">
+                            <Clock className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-xs text-text-main">Live Stream / Meeting Link</h4>
+                            <p className="text-[10px] text-text-muted">The class link will be displayed below once verified by the Admin.</p>
+                          </div>
+                        </div>
+
+                        {progress.phase2_meeting_url ? (
+                          <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-border-main/50">
+                            <div className="min-w-0">
+                              <span className="text-[9px] uppercase tracking-wider font-extrabold text-text-muted block">Direct Class URL</span>
+                              <span className="text-xs text-secondary truncate font-semibold block mt-0.5">{progress.phase2_meeting_url}</span>
+                            </div>
+                            <a
+                              href={progress.phase2_meeting_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn bg-secondary text-white hover:brightness-110 px-5 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 whitespace-nowrap"
+                            >
+                              Join Meeting
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        ) : (
+                          <p className="text-xs text-warning italic bg-warning/5 border border-warning/10 p-3 rounded-lg mt-2">
+                            Awaiting meeting link from admin. You will receive an email notice when it is ready.
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Attendance Card */}
+                      <div className="p-4 rounded-xl bg-bg-main border border-border-main flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] text-text-muted font-bold block uppercase tracking-wider">Attendance Verification</span>
+                          <p className="text-[10px] text-text-muted">Your attendance status will be logged after class completion.</p>
+                        </div>
+                        <div>
+                          {progress.phase2_attendance === "present" ? (
+                            <span className="text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full flex items-center gap-1.5">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Present
+                            </span>
+                          ) : progress.phase2_attendance === "absent" ? (
+                            <span className="text-xs font-bold text-error bg-error/10 border border-error/20 px-3 py-1 rounded-full">
+                              Absent
+                            </span>
+                          ) : (
+                            <span className="text-xs font-bold text-text-muted bg-bg-card border border-border-main px-3 py-1 rounded-full">
+                              Not Marked
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              
+
               <div className="lg:col-span-4 space-y-6">
                 <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4">
                   <h2 className="text-sm font-heading font-bold text-text-main flex items-center gap-2 border-b border-border-main pb-2">

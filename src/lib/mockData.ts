@@ -16,6 +16,9 @@ export interface StudentProgress {
   completed_modules: string[];
   read_lessons?: string[]; // tracks specific lesson IDs read: e.g., "module-1-lesson-0"
   phase2_status: "locked" | "in-progress" | "passed" | "failed";
+  selected_class?: string;
+  phase2_meeting_url?: string;
+  phase2_attendance?: "present" | "absent" | "pending";
 }
 
 export interface Instructor {

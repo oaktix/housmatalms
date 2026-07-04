@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, ChevronRight, GraduationCap, Activity } from "lucide-react";
+import { ShieldCheck, ChevronRight, GraduationCap, Activity, Calendar, Mail } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Profile, GraduateStatus, Cohort, Certificate } from "@/lib/mockData";
@@ -21,12 +21,14 @@ export default function AdminStudents() {
   const [selectedStudent, setSelectedStudent] = useState<StudentWithDeployment | null>(null);
 
   // Tab State
-  const [rightTab, setRightTab] = useState<"progress" | "deployment">("progress");
+  const [rightTab, setRightTab] = useState<"progress" | "deployment" | "phase2class">("progress");
 
   // Form States
   const [status, setStatus] = useState<GraduateStatus["deployment_status"]>("Active");
   const [notes, setNotes] = useState("");
   const [message, setMessage] = useState("");
+  const [meetingUrl, setMeetingUrl] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   const loadStudents = useCallback(() => {
     // Fetch all student profiles and join with cohort and graduate status
@@ -96,6 +98,9 @@ export default function AdminStudents() {
                     setSelectedStudent(student);
                     setStatus(student.grad?.deployment_status || "Active");
                     setNotes(student.grad?.placement_notes || "");
+                    const prog = db.getProgress(student.id);
+                    setMeetingUrl(prog.phase2_meeting_url || "");
+                    setSuccessMsg("");
                     setRightTab("progress");
                   }}
                   className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
@@ -160,6 +165,18 @@ export default function AdminStudents() {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setRightTab("phase2class")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    rightTab === "phase2class"
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                  }`}
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Phase 2 Class
+                </button>
+                <button
+                  type="button"
                   onClick={() => setRightTab("deployment")}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                     rightTab === "deployment"
@@ -174,6 +191,146 @@ export default function AdminStudents() {
 
               {rightTab === "progress" ? (
                 <StudentProgressSection studentId={selectedStudent.id} />
+              ) : rightTab === "phase2class" ? (
+                /* Phase 2 Class Control Panel */
+                <div className="space-y-6">
+                  {(() => {
+                    const progress = db.getProgress(selectedStudent.id);
+                    if (progress.current_phase < 2) {
+                      return (
+                        <div className="p-8 text-center bg-bg-main border border-border-main rounded-2xl text-xs text-text-muted space-y-2">
+                          <p className="font-bold text-text-main">Phase 2 Locked</p>
+                          <p>This student is currently in Phase {progress.current_phase} and has not unlocked Phase 2 yet.</p>
+                        </div>
+                      );
+                    }
+
+                    const handleSendMeetingLink = (e: React.FormEvent) => {
+                      e.preventDefault();
+                      const updated = {
+                        ...progress,
+                        phase2_meeting_url: meetingUrl,
+                      };
+                      db.updateProgress(updated);
+                      db.logEmail(
+                        selectedStudent.email,
+                        "Meeting Link for Phase 2 Live Class",
+                        `Hello ${selectedStudent.full_name},\n\nYour instructor has uploaded and sent the meeting link for your selected Phase 2 virtual class (${progress.selected_class || "N/A"}):\n\nJoin link: ${meetingUrl}\n\nBest regards,\nHousmata Academy Admin`
+                      );
+                      setSuccessMsg("Meeting link updated and email notification sent successfully!");
+                      setTimeout(() => setSuccessMsg(""), 3000);
+                    };
+
+                    const handleMarkAttendance = (attStatus: "present" | "absent" | "pending") => {
+                      const updated = {
+                        ...progress,
+                        phase2_attendance: attStatus === "pending" ? undefined : attStatus,
+                      };
+                      db.updateProgress(updated);
+                      setSuccessMsg(`Attendance status updated to: ${attStatus.toUpperCase()}`);
+                      setTimeout(() => setSuccessMsg(""), 3000);
+                    };
+
+                    return (
+                      <div className="space-y-6">
+                        {successMsg && (
+                          <div className="p-3 bg-primary-glow border border-primary/25 text-primary text-xs font-semibold rounded-lg animate-fade-in">
+                            {successMsg}
+                          </div>
+                        )}
+
+                        <div className="p-4 bg-bg-main border border-border-main rounded-xl space-y-1">
+                          <span className="text-[10px] text-text-muted font-bold block uppercase tracking-wider">Class Selection Status</span>
+                          <span className="font-heading font-black text-xs text-text-main">
+                            {progress.selected_class ? (
+                              <span className="text-secondary flex items-center gap-1">
+                                <Calendar className="w-3.5 h-3.5" /> {progress.selected_class}
+                              </span>
+                            ) : (
+                              <span className="text-warning">No slot selected yet.</span>
+                            )}
+                          </span>
+                        </div>
+
+                        {progress.selected_class && (
+                          <>
+                            {/* Send Link Form */}
+                            <form onSubmit={handleSendMeetingLink} className="space-y-4 border border-border-main p-4 rounded-xl">
+                              <h4 className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                                <Mail className="w-4 h-4 text-primary" />
+                                Send Virtual Class Meeting Link
+                              </h4>
+                              <p className="text-[10px] text-text-muted">Enter the virtual meeting link (Google Meet, Zoom, etc.) to share with this student.</p>
+                              
+                              <div className="form-group">
+                                <input
+                                  type="url"
+                                  required
+                                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                                  value={meetingUrl}
+                                  onChange={(e) => setMeetingUrl(e.target.value)}
+                                  className="w-full text-xs"
+                                />
+                              </div>
+
+                              <button
+                                type="submit"
+                                className="btn bg-primary text-white hover:brightness-110 px-4 py-2 rounded-lg font-bold text-xs"
+                              >
+                                Send Meeting Link
+                              </button>
+                            </form>
+
+                            {/* Attendance Marking */}
+                            <div className="border border-border-main p-4 rounded-xl space-y-4">
+                              <h4 className="text-xs font-bold text-text-main flex items-center gap-1.5">
+                                <ShieldCheck className="w-4 h-4 text-primary" />
+                                Mark Live Class Attendance
+                              </h4>
+                              <p className="text-[10px] text-text-muted">Update student attendance status after class completion.</p>
+
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkAttendance("present")}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                    progress.phase2_attendance === "present"
+                                      ? "bg-primary text-white"
+                                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                                  }`}
+                                >
+                                  Mark Present
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkAttendance("absent")}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                    progress.phase2_attendance === "absent"
+                                      ? "bg-error text-white"
+                                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                                  }`}
+                                >
+                                  Mark Absent
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleMarkAttendance("pending")}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                    !progress.phase2_attendance
+                                      ? "bg-text-muted text-white"
+                                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                                  }`}
+                                >
+                                  Reset Status
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
               ) : (
                 /* Status Update Form */
                 <form onSubmit={handleUpdateStatus} className="space-y-5">
