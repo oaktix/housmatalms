@@ -68,9 +68,9 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-bg-main text-text-muted text-xs">
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p>Verifying LMS session...</p>
+          <p className="font-heading font-medium tracking-tight">Verifying LMS session...</p>
         </div>
       </div>
     );
@@ -89,21 +89,21 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
   // Contextual Navigation links by Role
   const navItems = {
     admin: [
-      { name: "Overview Hub", href: "/lms/admin/dashboard", icon: <Layers className="w-4 h-4" /> },
-      { name: "Announcements Portal", href: "/lms/admin/announcements", icon: <Megaphone className="w-4 h-4" /> },
-      { name: "User Accounts", href: "/lms/admin/users", icon: <UserCheck className="w-4 h-4" /> },
-      { name: "Admissions Review", href: "/lms/admin/applications", icon: <ClipboardList className="w-4 h-4" /> },
-      { name: "Cohort Manager", href: "/lms/admin/cohorts", icon: <Users className="w-4 h-4" /> },
-      { name: "Graduate Deployments", href: "/lms/admin/students", icon: <ShieldCheck className="w-4 h-4" /> },
+      { name: "Overview Hub", href: "/lms/admin/dashboard", icon: <Layers className="w-4.5 h-4.5" /> },
+      { name: "Announcements Portal", href: "/lms/admin/announcements", icon: <Megaphone className="w-4.5 h-4.5" /> },
+      { name: "User Accounts", href: "/lms/admin/users", icon: <UserCheck className="w-4.5 h-4.5" /> },
+      { name: "Admissions Review", href: "/lms/admin/applications", icon: <ClipboardList className="w-4.5 h-4.5" /> },
+      { name: "Cohort Manager", href: "/lms/admin/cohorts", icon: <Users className="w-4.5 h-4.5" /> },
+      { name: "Graduate Deployments", href: "/lms/admin/students", icon: <ShieldCheck className="w-4.5 h-4.5" /> },
     ],
     instructor: [
-      { name: "Instructor Hub", href: "/lms/instructor/dashboard", icon: <Layers className="w-4 h-4" /> },
-      { name: "Grading Queue", href: "/lms/instructor/grading", icon: <ClipboardList className="w-4 h-4" /> },
-      { name: "Attendance Records", href: "/lms/instructor/attendance", icon: <FileCheck2 className="w-4 h-4" /> },
+      { name: "Instructor Hub", href: "/lms/instructor/dashboard", icon: <Layers className="w-4.5 h-4.5" /> },
+      { name: "Grading Queue", href: "/lms/instructor/grading", icon: <ClipboardList className="w-4.5 h-4.5" /> },
+      { name: "Attendance Records", href: "/lms/instructor/attendance", icon: <FileCheck2 className="w-4.5 h-4.5" /> },
     ],
     student: [
-      { name: "Student Dashboard", href: "/lms/student/dashboard", icon: <ListTodo className="w-4 h-4" /> },
-      { name: "My Credentials", href: "/lms/student/credentials", icon: <GraduationCap className="w-4 h-4" /> },
+      { name: "Student Dashboard", href: "/lms/student/dashboard", icon: <ListTodo className="w-4.5 h-4.5" /> },
+      { name: "My Credentials", href: "/lms/student/credentials", icon: <GraduationCap className="w-4.5 h-4.5" /> },
     ],
   }[role];
 
@@ -117,7 +117,7 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
       {/* Dimmed backdrop for mobile sidebar */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/50 md:hidden transition-opacity duration-300"
+          className="fixed inset-0 z-20 bg-black/60 md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -128,28 +128,31 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
       }`}>
         <div className="flex flex-col flex-grow overflow-y-auto">
           {/* Sidebar Brand Header */}
-          <div className="p-6 border-b border-border-main space-y-1 relative">
+          <div className="p-6 border-b border-border-main space-y-2 relative">
             <Logo height={24} showText={true} />
-            <span className="inline-block text-[9px] font-extrabold text-primary bg-primary-glow border border-primary/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+            <span className="inline-block text-[9px] font-black text-primary bg-primary-glow border border-primary/20 px-2 py-0.5 rounded-full uppercase tracking-widest">
               Verified Operator LMS
             </span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-border-main md:hidden transition-colors"
+              className="absolute top-5 right-5 p-1.5 rounded-lg text-text-muted hover:text-text-main hover:bg-bg-card-hover md:hidden transition-colors"
               aria-label="Close sidebar"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* Student Profile Card */}
-          <div className="p-5 border-b border-border-main space-y-4">
+          {/* User Profile Card */}
+          <div className="p-6 border-b border-border-main space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-heading font-bold text-text-inverse text-base">
-                {currentUser.full_name.charAt(0)}
+              <div className="relative">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-heading font-bold text-text-inverse text-base shadow-md">
+                  {currentUser.full_name.charAt(0)}
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-primary border-2 border-bg-card shadow-sm" />
               </div>
               <div className="min-w-0 flex-grow">
-                <span className="block text-xs font-bold text-text-main truncate">
+                <span className="block text-xs font-bold text-text-main truncate tracking-tight">
                   {currentUser.full_name}
                 </span>
                 <span className="block text-[10px] text-text-muted capitalize">
@@ -160,18 +163,18 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
 
             {/* If Student, render progress trackers */}
             {role === "student" && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-[10px] text-text-muted">
+              <div className="space-y-3 pt-1">
+                <div className="flex justify-between text-[10px] font-medium text-text-muted">
                   <span>Course Progress</span>
                   <span className="font-bold text-primary">{progress}%</span>
                 </div>
                 <div className="w-full bg-border-main h-1.5 rounded-full overflow-hidden">
                   <div
                     className="bg-primary h-full rounded-full transition-all duration-500 shadow-[0_0_8px_var(--primary)]"
-                    ref={(el) => { if (el) el.style.width = `${progress}%`; }}
+                    style={{ width: `${progress}%` }}
                   />
                 </div>
-                <div className="flex justify-between items-center text-[10px] text-text-muted pt-1">
+                <div className="flex justify-between items-center text-[10px] text-text-muted">
                   <span>Earned Points</span>
                   <span className="font-bold text-secondary">{points} Points</span>
                 </div>
@@ -180,8 +183,8 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
           </div>
 
           {/* Sidebar Menu */}
-          <nav className="p-4 space-y-1.5 flex-grow">
-            <span className="text-[9px] font-extrabold text-text-muted uppercase tracking-wider block px-3 mb-2">
+          <nav className="p-4 space-y-1 flex-grow">
+            <span className="text-[9px] font-black text-text-muted uppercase tracking-widest block px-3 mb-2">
               Menu Navigation
             </span>
             {navItems.map((item) => {
@@ -191,7 +194,7 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
                   key={item.name}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 ${
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.98] ${
                     active
                       ? "bg-primary-glow text-primary border-l-2 border-primary pl-2.5"
                       : "text-text-muted hover:text-text-main hover:bg-bg-card-hover"
@@ -209,10 +212,10 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
         </div>
 
         {/* Sidebar Footer with Logout */}
-        <div className="p-4 border-t border-border-main bg-bg-main/55">
+        <div className="p-4 border-t border-border-main bg-bg-main/40">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border border-border-main hover:bg-error/5 hover:text-error hover:border-error/20 text-text-muted transition-all"
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border border-border-main hover:bg-red-500/5 hover:text-red-500 hover:border-red-500/20 text-text-muted transition-all active:scale-[0.98]"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -233,7 +236,7 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
               <Menu className="w-5 h-5" />
             </button>
             <div className="space-y-0.5">
-              <h2 className="text-sm font-heading font-bold text-text-main capitalize">
+              <h2 className="text-sm font-heading font-extrabold tracking-tight text-text-main capitalize">
                 {role} Workspace
               </h2>
               <span className="text-[10px] text-text-muted hidden sm:inline-block">
@@ -244,11 +247,11 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
           <div className="flex items-center gap-4 text-xs font-semibold text-text-muted">
             <Link
               href="/"
-              className="text-[10px] border border-border-main hover:bg-bg-card-hover px-3 py-1.5 rounded-lg transition-colors"
+              className="text-[10px] font-bold border border-border-main hover:bg-bg-card-hover px-3 py-1.5 rounded-lg transition-colors"
             >
               Public Home
             </Link>
-            <span className="text-[10px] py-1 px-3 bg-primary-glow border border-primary/20 text-primary rounded-lg capitalize">
+            <span className="text-[10px] font-bold py-1 px-3 bg-primary-glow border border-primary/20 text-primary rounded-lg capitalize">
               Role: {role}
             </span>
           </div>
