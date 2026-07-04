@@ -333,8 +333,9 @@ export default function StudentDashboard() {
 
   // Survey submission helper
   const handleSurveySubmit = async (type: "pre" | "post") => {
-    if (!currentUser) return;
-    const unanswered = SURVEY_QUESTIONS.some(q => !surveyAnswers[q.id]);
+    if (!currentUser || !progress) return;
+    const activeQuestions = progress.course_id === "property-advisor-hcpa" ? HCPA_SURVEY_QUESTIONS : SURVEY_QUESTIONS;
+    const unanswered = activeQuestions.some(q => !surveyAnswers[q.id]);
     if (unanswered) {
       setSurveyError("Please answer all questions before submitting.");
       return;
