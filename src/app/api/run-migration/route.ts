@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     await client.end();
     return NextResponse.json({ success: true, message: "Migration executed successfully!", details: res });
   } catch (err: unknown) {
-    try { await client.end(); } catch (_e) {}
+    try { await client.end(); } catch {}
     const errorMessage = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
