@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ClipboardList, CheckCircle2, ChevronRight, GraduationCap, Award } from "lucide-react";
+import { ClipboardList, CheckCircle2, ChevronRight, GraduationCap, FileText } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Submission, Assignment, Profile, StudentProgress } from "@/lib/mockData";
@@ -123,7 +123,6 @@ export default function InstructorGrading() {
     }
   }, [submissions, loadData]);
 
-
   const handleGradeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSub) return;
@@ -174,28 +173,32 @@ export default function InstructorGrading() {
   const gradedSubs = submissions.filter((s) => s.status === "graded");
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-border-main pb-4">
-        <h1 className="text-lg font-heading font-bold text-text-main flex items-center gap-2">
-          <ClipboardList className="w-5 h-5 text-primary" />
-          Instructor Assessments
-        </h1>
-        <div className="flex gap-2 p-1 bg-bg-card border border-border-main rounded-xl text-xs font-bold">
+    <div className="space-y-6 max-w-7xl mx-auto px-4 py-6">
+      {/* Header bar */}
+      <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+        <div className="space-y-1">
+          <h1 className="text-xl font-heading font-black text-text-main flex items-center gap-2">
+            <ClipboardList className="w-5.5 h-5.5 text-primary" />
+            Instructor Assessment Desk
+          </h1>
+          <p className="text-xs text-text-muted">Grade assignments, request student resubmissions, and promote students into Phase 3.</p>
+        </div>
+        <div className="flex gap-2 p-1.5 bg-bg-main border border-border-main rounded-xl text-xs font-bold">
           <button
-            onClick={() => setActiveTab("assignments")}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
-              activeTab === "assignments" ? "bg-primary text-white" : "text-text-muted hover:text-text-main"
+            onClick={() => { setActiveTab("assignments"); setSelectedSub(null); }}
+            className={`px-4 py-2 rounded-lg transition-all ${
+              activeTab === "assignments" ? "bg-primary text-text-inverse shadow-sm" : "text-text-muted hover:text-text-main"
             }`}
           >
-            Digital Assignments
+            Digital Assignments ({pendingSubs.length})
           </button>
           <button
-            onClick={() => setActiveTab("promotions")}
-            className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
-              activeTab === "promotions" ? "bg-accent text-white" : "text-text-muted hover:text-text-main"
+            onClick={() => { setActiveTab("promotions"); setSelectedSub(null); }}
+            className={`px-4 py-2 rounded-lg transition-all flex items-center gap-1.5 ${
+              activeTab === "promotions" ? "bg-accent text-text-inverse shadow-sm" : "text-text-muted hover:text-text-main"
             }`}
           >
-            <GraduationCap className="w-3.5 h-3.5" />
+            <GraduationCap className="w-4 h-4" />
             Phase 2 Promotions
             {phase2Students.length > 0 && (
               <span className="w-4 h-4 bg-error text-white rounded-full flex items-center justify-center text-[9px]">
@@ -206,18 +209,24 @@ export default function InstructorGrading() {
         </div>
       </div>
 
+      {successMsg && (
+        <div className="p-4 bg-primary-glow border border-primary/25 text-primary text-xs font-semibold rounded-xl animate-fade-in shadow-sm">
+          {successMsg}
+        </div>
+      )}
+
       {activeTab === "assignments" ? (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start animate-fade-in">
           {/* Left Column: Submissions Queue List (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
             {/* Pending Queue */}
             <div className="space-y-3">
-              <h3 className="text-xs font-extrabold text-text-muted uppercase tracking-wider pl-2">
+              <h3 className="text-xs font-black text-text-muted uppercase tracking-widest pl-2">
                 Waiting for Assessment ({pendingSubs.length})
               </h3>
               
               {pendingSubs.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {pendingSubs.map((sub) => (
                     <button
                       key={sub.id}
@@ -228,7 +237,7 @@ export default function InstructorGrading() {
                       }}
                       className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
                         selectedSub?.id === sub.id
-                          ? "bg-primary-glow border-primary text-text-main"
+                          ? "bg-primary-glow border-primary text-text-main shadow-sm"
                           : "bg-bg-card border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover"
                       }`}
                     >
@@ -236,11 +245,8 @@ export default function InstructorGrading() {
                         <h4 className="font-bold text-text-main text-xs truncate">
                           {sub.assignment?.title || "Assignment"}
                         </h4>
-                        <p className="text-[10px] text-text-muted">
+                        <p className="text-[10px] text-text-muted mt-0.5">
                           Submitted by: <strong className="text-text-main">{sub.student?.full_name}</strong>
-                        </p>
-                        <p className="text-[9px] text-text-muted">
-                          On: {new Date(sub.submitted_at).toLocaleDateString()}
                         </p>
                       </div>
                       <ChevronRight className="w-4 h-4 text-text-muted flex-shrink-0" />
@@ -248,222 +254,183 @@ export default function InstructorGrading() {
                   ))}
                 </div>
               ) : (
-                <div className="p-6 rounded-2xl bg-bg-card border border-border-main text-center text-xs text-text-muted italic">
-                  All submissions graded!
+                <div className="p-8 rounded-2xl bg-bg-card border border-border-main text-center text-xs text-text-muted italic space-y-2 shadow-sm">
+                  <CheckCircle2 className="w-6 h-6 text-primary mx-auto" />
+                  <p>All clean! No pending assignments remaining.</p>
                 </div>
               )}
             </div>
 
-            {/* Graded History */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-extrabold text-text-muted uppercase tracking-wider pl-2">
-                Graded Submissions History ({gradedSubs.length})
-              </h3>
-              
-              {gradedSubs.length > 0 ? (
-                <div className="space-y-2">
+            {/* Graded Log */}
+            {gradedSubs.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-border-main/50">
+                <h3 className="text-xs font-black text-text-muted uppercase tracking-widest pl-2">
+                  Recently Graded ({gradedSubs.length})
+                </h3>
+                <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
                   {gradedSubs.map((sub) => (
-                    <button
+                    <div
                       key={sub.id}
-                      onClick={() => {
-                        setSelectedSub(sub);
-                        setGrade(sub.grade ?? 85);
-                        setFeedback(sub.feedback ?? "");
-                      }}
-                      className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                        selectedSub?.id === sub.id
-                          ? "bg-primary-glow border-primary text-text-main"
-                          : "bg-bg-card border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover"
-                      }`}
+                      className="p-4 rounded-xl border border-border-main bg-bg-card/40 flex items-center justify-between text-xs"
                     >
-                      <div className="space-y-1 min-w-0 flex-grow pr-4">
-                        <h4 className="font-bold text-text-main truncate">
-                          {sub.assignment?.title}
-                        </h4>
-                        <p className="text-[10px] text-text-muted">
-                          Student: <strong>{sub.student?.full_name}</strong>
+                      <div className="min-w-0 pr-4">
+                        <h4 className="font-bold text-text-main truncate">{sub.assignment?.title}</h4>
+                        <p className="text-[10px] text-text-muted mt-0.5">
+                          Student: <strong className="text-text-main">{sub.student?.full_name}</strong>
                         </p>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="text-[10px] font-extrabold bg-primary-glow border border-primary/20 text-primary px-2 py-0.5 rounded-full">
-                          Assign: {sub.grade}/100
-                        </span>
-                        {sub.finalGrades && (
-                          <span className="text-[10px] font-extrabold bg-accent/10 border border-accent/20 text-accent px-2 py-0.5 rounded-full">
-                            Final: {sub.finalGrades.finalGrade.toFixed(0)}%
-                          </span>
-                        )}
-                      </div>
-                    </button>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                        Grade: {sub.grade}%
+                      </span>
+                    </div>
                   ))}
                 </div>
-              ) : (
-                <p className="text-xs text-text-muted italic pl-2">No graded history recorded yet.</p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Right Column: Active Grading Form (7 cols) */}
+          {/* Right Column: Detailed grading desk (7 cols) */}
           <div className="lg:col-span-7">
             {selectedSub ? (
-              <div className="premium-card rounded-3xl bg-bg-card/80 backdrop-blur-xl border border-primary/20 p-8 space-y-8 shadow-[0_20px_60px_-15px_rgba(43,108,176,0.15)] animate-fade-in relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none"></div>
-                
-                <div className="border-b border-border-main pb-6">
-                  <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
-                    {selectedSub.status === "graded" ? "Graded Assessment Detail" : "Active Assessment"}
+              <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 sm:p-8 space-y-6 shadow-md animate-fade-in">
+                <div className="border-b border-border-main/50 pb-4 space-y-1">
+                  <span className="text-[9px] font-black uppercase text-primary tracking-widest block">
+                    Submission Grading Desk
                   </span>
-                  <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
+                  <h2 className="text-lg font-heading font-black text-text-main leading-snug">
                     {selectedSub.assignment?.title}
-                  </h3>
-                  <p className="text-[10px] text-text-muted mt-1">
-                    Candidate: <strong className="text-text-main">{selectedSub.student?.full_name}</strong> ({selectedSub.student?.email})
+                  </h2>
+                  <p className="text-xs text-text-muted">
+                    Student: <strong className="text-text-main">{selectedSub.student?.full_name}</strong> • Completed: {new Date(selectedSub.submitted_at).toLocaleString()}
                   </p>
-                  
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="p-3 bg-bg-main border border-border-main rounded-xl">
-                      <span className="text-[10px] text-text-muted font-bold block uppercase tracking-wider mb-1">Quiz Score (30%)</span>
-                      <span className="text-lg font-bold text-text-main">{selectedSub.quizScore.toFixed(0)}%</span>
-                    </div>
-                    {selectedSub.finalGrades && (
-                      <div className="p-3 bg-primary/10 border border-primary/20 rounded-xl">
-                        <span className="text-[10px] text-primary font-bold block uppercase tracking-wider mb-1">Final Module Grade</span>
-                        <span className="text-lg font-bold text-primary">{selectedSub.finalGrades.finalGrade.toFixed(0)}%</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
-                    Student Submission Content:
-                  </span>
-                  <div className="p-4 rounded-xl bg-bg-main border border-border-main text-xs sm:text-sm text-text-muted leading-relaxed whitespace-pre-line">
-                    {selectedSub.content_text || "No text explanation submitted."}
-                  </div>
-                </div>
-
+                {/* PDF Viewer Block */}
                 {selectedSub.content_link && (
                   <div className="space-y-2">
-                    <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider block">
-                      Submitted Document ({selectedSub.content_file_name || "Attachment"}):
-                    </span>
-                    <div className="border border-border-main rounded-xl overflow-hidden bg-bg-main h-[300px] sm:h-[450px] md:h-[550px] relative shadow-inner">
+                    <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest text-text-muted">
+                      <span>Submitted Document Panel</span>
+                      {selectedSub.content_file_name && <span className="text-primary truncate max-w-xs">{selectedSub.content_file_name}</span>}
+                    </div>
+                    <div className="border border-border-main rounded-2xl overflow-hidden bg-bg-main h-[400px]">
                       <iframe
                         src={selectedSub.content_link}
                         className="w-full h-full border-0"
-                        title="Document Viewer"
+                        title="PDF Submission Viewer"
                       />
                     </div>
                   </div>
                 )}
 
-                {!successMsg ? (
-                  <form onSubmit={handleGradeSubmit} className="space-y-4 pt-4 border-t border-border-main">
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="form-group col-span-1">
-                        <label htmlFor="grade" className="text-[10px] font-bold text-text-muted block mb-1">
-                          Score (0-100)
-                        </label>
-                        <input
-                          type="number"
-                          id="grade"
-                          min={0}
-                          max={100}
-                          value={grade}
-                          onChange={(e) => setGrade(Number(e.target.value))}
-                          className="w-full p-3 rounded-xl border border-border-main bg-bg-main focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-text-main font-bold"
-                          required
-                        />
-                      </div>
-                      <div className="form-group col-span-2">
-                        <label htmlFor="feedback" className="text-[10px] font-bold text-text-muted block mb-2">
-                          Feedback / Remarks
-                        </label>
-                        <input
-                          type="text"
-                          id="feedback"
-                          placeholder="Add constructive comments for the student..."
-                          value={feedback}
-                          onChange={(e) => setFeedback(e.target.value)}
-                          className="w-full p-3 rounded-xl border border-border-main bg-bg-main focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-text-main"
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <button
-                        type="submit"
-                        className="flex-grow py-4 rounded-xl bg-gradient-to-r from-primary to-primary-light text-white font-bold text-xs hover:shadow-[0_10px_20px_-10px_rgba(43,108,176,0.5)] hover:-translate-y-0.5 transition-all duration-300"
-                      >
-                        {selectedSub.status === "graded" ? "Update Score & Save Assessment" : "Submit Score & Save Assessment"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleRequestResubmission}
-                        className="py-4 px-6 rounded-xl bg-error/10 hover:bg-error hover:text-white border border-error/20 text-error font-bold text-xs transition-all duration-300"
-                      >
-                        Request Resubmission
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  <div className="p-8 text-center space-y-3 bg-primary-glow/20 border border-primary/20 rounded-xl animate-fade-in">
-                    <CheckCircle2 className="w-8 h-8 text-primary mx-auto animate-bounce" />
-                    <h4 className="font-bold text-text-main text-sm">{successMsg}</h4>
+                {/* Additional remarks by student */}
+                {selectedSub.content_text && (
+                  <div className="p-4 bg-bg-main border border-border-main rounded-xl space-y-1">
+                    <span className="text-[9px] uppercase tracking-wider font-extrabold text-text-muted block">Student remarks:</span>
+                    <p className="text-xs text-text-main leading-relaxed italic">&ldquo;{selectedSub.content_text}&rdquo;</p>
                   </div>
                 )}
+
+                {/* Form to submit grade */}
+                <form onSubmit={handleGradeSubmit} className="space-y-4 pt-4 border-t border-border-main/50">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="form-group flex flex-col gap-1">
+                      <label htmlFor="grade" className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Assign Score (0-100)</label>
+                      <input
+                        type="number"
+                        id="grade"
+                        min="0"
+                        max="100"
+                        value={grade}
+                        onChange={(e) => setGrade(Number(e.target.value))}
+                        required
+                        className="w-full px-4 py-2 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary transition-all font-bold"
+                      />
+                    </div>
+                    <div className="form-group flex flex-col justify-end">
+                      <p className="text-[10px] text-text-muted leading-relaxed pb-1.5">
+                        Minimum passing score is <strong>75%</strong>. Non-passing grades will flag the module as incomplete.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="form-group flex flex-col gap-1">
+                    <label htmlFor="feedback" className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Evaluation &amp; Feedback Notes</label>
+                    <textarea
+                      id="feedback"
+                      rows={3}
+                      placeholder="Add coaching tips, corrections, or encouraging remarks..."
+                      value={feedback}
+                      onChange={(e) => setFeedback(e.target.value)}
+                      className="w-full px-4 py-2 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={handleRequestResubmission}
+                      className="btn border border-error/30 hover:bg-error/5 text-error px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1"
+                    >
+                      Request Resubmission
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-2.5 rounded-xl text-xs font-extrabold shadow-sm transition-all flex-1"
+                    >
+                      Submit Grade &amp; Complete
+                    </button>
+                  </div>
+                </form>
               </div>
             ) : (
-              <div className="p-12 text-center text-xs text-text-muted bg-bg-card border border-border-main rounded-2xl italic">
-                Select a student submission from the queue to start grading.
+              <div className="p-12 text-center bg-bg-card border border-border-main rounded-2xl text-xs text-text-muted italic space-y-2 shadow-sm">
+                <FileText className="w-10 h-10 text-text-muted mx-auto opacity-50" />
+                <p>Select a student assignment from the queue to start assessing.</p>
               </div>
             )}
           </div>
         </div>
       ) : (
-        <div className="space-y-6 animate-fade-in">
-          <div className="premium-card rounded-2xl bg-accent-glow/5 border-accent/20 p-8 space-y-2">
-            <h2 className="text-lg font-heading font-extrabold text-text-main flex items-center gap-2">
-              <Award className="w-5 h-5 text-accent" />
-              Phase 2 Bootcamp Promotions
-            </h2>
-            <p className="text-xs text-text-muted max-w-2xl">
-              Students listed below have completed Phase 1 and are currently participating in the live Phase 2 Bootcamp. Once you have graded their live practical assignments outside the LMS, click &quot;Promote&quot; to unlock their access to Phase 3 Field Practicals.
+        /* Promotions Tab View */
+        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 sm:p-8 space-y-6 shadow-sm animate-fade-in">
+          <div>
+            <h3 className="font-heading font-black text-base text-text-main flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-accent" />
+              Phase 2 Promotions Desk
+            </h3>
+            <p className="text-xs text-text-muted mt-1">
+              Verify completion of sandbox live streams and promote eligible students into Phase 3 Field Practicals.
             </p>
           </div>
 
           {phase2Students.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {phase2Students.map((student) => (
-                <div key={student.profile.id} className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div className="space-y-0.5">
-                      <h3 className="font-bold text-sm text-text-main">{student.profile.full_name}</h3>
-                      <p className="text-[10px] text-text-muted">{student.profile.email}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border-main/50">
+              {phase2Students.map((s) => (
+                <div
+                  key={s.profile.id}
+                  className="p-5 rounded-2xl border border-border-main bg-bg-main/30 flex flex-col justify-between space-y-4 hover:border-accent/40 transition-all duration-300"
+                >
+                  <div className="space-y-1">
+                    <h4 className="font-bold text-xs text-text-main">{s.profile.full_name}</h4>
+                    <p className="text-[10px] text-text-muted">{s.profile.email}</p>
+                    <div className="pt-2 text-[10px] text-text-muted space-y-1">
+                      <p>Selected Slot: <strong className="text-text-main">{s.progress.selected_class || "Not Enrolled"}</strong></p>
+                      <p>Completed Modules: <strong className="text-text-main">{s.progress.completed_modules.length}</strong></p>
                     </div>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-secondary/10 border border-secondary/20 text-secondary uppercase tracking-wider">
-                      Phase 2 In-Progress
-                    </span>
                   </div>
-
-                  <div className="pt-4 border-t border-border-main">
-                    <button
-                      onClick={() => handlePromoteToPhase3(student.profile.id)}
-                      className="w-full py-2.5 rounded-xl bg-accent text-white font-bold text-xs hover:brightness-110 transition-all shadow-sm"
-                    >
-                      Promote to Phase 3
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handlePromoteToPhase3(s.profile.id)}
+                    className="btn w-full bg-accent text-text-inverse hover:brightness-110 py-2.5 rounded-xl text-xs font-black shadow-sm transition-all"
+                  >
+                    Promote to Phase 3 Field Practicals
+                  </button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="p-12 text-center text-xs text-text-muted bg-bg-card border border-border-main rounded-2xl">
-              <GraduationCap className="w-8 h-8 text-text-muted/50 mx-auto mb-2" />
-              <p>No students are currently active in Phase 2.</p>
-            </div>
+            <p className="text-xs text-text-muted italic py-6 text-center border-t border-border-main/40">
+              No students are currently awaiting promotion from Phase 2.
+            </p>
           )}
         </div>
       )}

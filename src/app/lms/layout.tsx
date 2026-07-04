@@ -17,7 +17,10 @@ import {
   Menu,
   X,
   Megaphone,
-  Globe
+  Globe,
+  BookOpen,
+  Calendar,
+  Award
 } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import Logo from "@/components/Logo";
@@ -103,7 +106,10 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
       { name: "Attendance Records", href: "/lms/instructor/attendance", icon: <FileCheck2 className="w-4.5 h-4.5" /> },
     ],
     student: [
-      { name: "Student Dashboard", href: "/lms/student/dashboard", icon: <ListTodo className="w-4.5 h-4.5" /> },
+      { name: "Overview Hub", href: "/lms/student/dashboard", icon: <ListTodo className="w-4.5 h-4.5" /> },
+      { name: "Curriculum Path", href: "/lms/student/curriculum", icon: <BookOpen className="w-4.5 h-4.5" /> },
+      { name: "Meetings & Live", href: "/lms/student/meetings", icon: <Calendar className="w-4.5 h-4.5" /> },
+      { name: "Grades & Feedback", href: "/lms/student/grades", icon: <Award className="w-4.5 h-4.5" /> },
       { name: "My Credentials", href: "/lms/student/credentials", icon: <GraduationCap className="w-4.5 h-4.5" /> },
     ],
   }[role];
