@@ -169,9 +169,9 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
                   <span className="font-bold text-primary">{progress}%</span>
                 </div>
                 <div className="w-full bg-border-main h-1.5 rounded-full overflow-hidden">
+                  <style>{`.lms-progress-bar { width: ${progress}%; }`}</style>
                   <div
-                    className="bg-primary h-full rounded-full transition-all duration-500 shadow-[0_0_8px_var(--primary)]"
-                    style={{ width: `${progress}%` }}
+                    className="bg-primary h-full rounded-full transition-all duration-500 shadow-[0_0_8px_var(--primary)] lms-progress-bar"
                   />
                 </div>
                 <div className="flex justify-between items-center text-[10px] text-text-muted">

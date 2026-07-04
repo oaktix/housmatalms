@@ -22,6 +22,16 @@ import { phase1Curriculum, Lesson } from "@/lib/curriculum";
 export default function StudentDashboard() {
   const { currentUser } = useAuth();
   
+  const delays = [
+    "[animation-delay:0ms]",
+    "[animation-delay:60ms]",
+    "[animation-delay:120ms]",
+    "[animation-delay:180ms]",
+    "[animation-delay:240ms]",
+    "[animation-delay:300ms]",
+    "[animation-delay:360ms]"
+  ];
+  
   // States
   const [cohort, setCohort] = useState<Cohort | null>(null);
   const [progress, setProgress] = useState<StudentProgress | null>(null);
@@ -187,6 +197,12 @@ export default function StudentDashboard() {
   const submitAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submittingAssignment || !activeAssessment?.assignment || !currentUser || !assignmentFile) return;
+
+    // Validate file type is PDF.
+    if (!assignmentFile.name.toLowerCase().endsWith(".pdf")) {
+      setSubmissionError("Only PDF files are allowed for assignment submission.");
+      return;
+    }
 
     // Validate file size against the configured upload limit.
     const MAX_FILE_SIZE_MB = 20;
@@ -355,7 +371,7 @@ export default function StudentDashboard() {
 
       {/* Phase 1 View */}
       {activeTab === "phase1" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           <div className="flex justify-between items-center">
             <h2 className="text-lg font-heading font-extrabold text-text-main">Foundation Curriculum</h2>
             <span className="text-xs font-bold px-3 py-1 rounded-full bg-bg-main border border-border-main text-text-muted">
@@ -368,7 +384,10 @@ export default function StudentDashboard() {
               const isUnlocked = index === 0 || progress.completed_modules.includes(phase1Curriculum[index - 1].id);
               
               return (
-                <div key={mod.id} className={`premium-card rounded-2xl border p-6 space-y-4 transition-all relative overflow-hidden ${isCompleted ? 'bg-primary-glow/5 border-primary/30' : isUnlocked ? 'bg-bg-card border-border-main' : 'bg-bg-main border-border-main/50 opacity-70'}`}>
+                <div 
+                  key={mod.id} 
+                  className={`premium-card rounded-2xl border p-6 space-y-4 transition-all relative overflow-hidden animate-slide-up opacity-0 [animation-fill-mode:forwards] ${delays[index] || ""} ${isCompleted ? 'bg-primary-glow/5 border-primary/30' : isUnlocked ? 'bg-bg-card border-border-main' : 'bg-bg-main border-border-main/50 opacity-70'}`}
+                >
                   {!isUnlocked && (
                     <div className="absolute inset-0 bg-bg-main/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center">
                       <div className="bg-bg-card p-3 rounded-full border border-border-main shadow-lg mb-2">
@@ -514,7 +533,7 @@ export default function StudentDashboard() {
 
       {/* Phase 2 View */}
       {activeTab === "phase2" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           {progress.current_phase < 2 ? (
             <div className="premium-card rounded-2xl bg-bg-card border-border-main p-12 text-center space-y-4 flex flex-col items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-bg-main border border-border-main flex items-center justify-center">
@@ -721,7 +740,7 @@ export default function StudentDashboard() {
 
       {/* Phase 3 View */}
       {activeTab === "phase3" && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in">
           {progress.current_phase < 3 ? (
             <div className="premium-card rounded-2xl bg-bg-card border-border-main p-12 text-center space-y-4 flex flex-col items-center justify-center">
               <div className="w-16 h-16 rounded-full bg-bg-main border border-border-main flex items-center justify-center">
@@ -1053,13 +1072,13 @@ export default function StudentDashboard() {
                   </div>
                   <form onSubmit={submitAssignment} className="space-y-4 pt-4 border-t border-border-main">
                     <div>
-                      <label className="text-xs font-bold block mb-2 text-text-main">Upload Presentation/Slides (PDF, PPT, PPTX)</label>
+                      <label className="text-xs font-bold block mb-2 text-text-main">Upload Presentation/Slides (PDF Only)</label>
                       <div className="relative group">
                         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         <div className="relative flex flex-col items-center justify-center w-full p-8 rounded-2xl border-2 border-dashed border-primary/30 bg-bg-main/50 hover:bg-bg-main hover:border-primary/50 transition-all duration-300">
                           <input 
                             type="file" 
-                            accept=".pdf,.ppt,.pptx"
+                            accept=".pdf"
                             required 
                             title="Upload presentation or slides"
                             placeholder="Upload presentation or slides"
@@ -1073,7 +1092,7 @@ export default function StudentDashboard() {
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                               </div>
                               <p className="text-sm font-bold text-primary">Click to browse or drag and drop</p>
-                              <p className="text-xs text-text-muted">PDF, PPT, or PPTX up to 20MB</p>
+                              <p className="text-xs text-text-muted">PDF up to 20MB</p>
                             </div>
                           ) : (
                             <div className="text-center space-y-2 pointer-events-none">

@@ -9,6 +9,13 @@ import Logo from "@/components/Logo";
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const delays = [
+    "[animation-delay:0ms]",
+    "[animation-delay:80ms]",
+    "[animation-delay:160ms]",
+    "[animation-delay:240ms]"
+  ];
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!containerRef.current) return;
     const cards = containerRef.current.getElementsByClassName("premium-card");
@@ -69,33 +76,37 @@ export default function Home() {
 
   return (
     <PublicLayout>
-      <div ref={containerRef} onMouseMove={handleMouseMove}>
+      <div ref={containerRef} onMouseMove={handleMouseMove} className="relative overflow-hidden">
+        {/* Ambient Moving Background Lights across the whole landing page */}
+        <div className="absolute top-[5%] left-[10%] w-[30vw] h-[30vw] rounded-full bg-primary/5 blur-[120px] animate-pulse-slow pointer-events-none" />
+        <div className="absolute top-[25%] right-[10%] w-[35vw] h-[35vw] rounded-full bg-secondary/5 blur-[150px] animate-pulse-slow pointer-events-none [animation-delay:3s]" />
+        <div className="absolute bottom-[20%] left-[5%] w-[40vw] h-[40vw] rounded-full bg-primary/5 blur-[160px] animate-pulse-slow pointer-events-none [animation-delay:6s]" />
+
         {/* 1. Hero Section */}
-        <section className="relative overflow-hidden pt-24 pb-28 md:pt-36 md:pb-40 border-b border-border-main">
-          {/* Ambient Lighting Gradients */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(2,184,117,0.08),transparent_50%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(79,70,229,0.05),transparent_40%)]" />
-          {/* Subtle Grid Pattern Overlay */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,0,0,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+        <section className="relative overflow-hidden pt-28 pb-32 md:pt-40 md:pb-44 border-b border-border-main bg-bg-main/30 backdrop-blur-[2px]">
+          {/* High-quality Animated Grid Overlay */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(2,184,117,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(2,184,117,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.05)_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] animate-grid-move pointer-events-none" />
+          
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg-main/50 to-bg-main pointer-events-none" />
 
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
               {/* Left Hero Details */}
               <div className="lg:col-span-7 space-y-8 text-left">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-glow border border-primary/20 text-primary text-[0.675rem] font-bold uppercase tracking-wider animate-fade-in">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary-glow border border-primary/25 text-primary text-[0.675rem] font-black uppercase tracking-wider animate-fade-in shadow-[0_0_15px_rgba(2,184,117,0.1)]">
                   <Award className="w-3.5 h-3.5" />
                   Housmata Verified Operator Program
                 </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-6.5xl font-heading font-extrabold tracking-tight leading-[1.08] text-text-main animate-fade-in text-wrap-balance">
-                  We train <span className="text-primary font-black relative inline-block">independent system-backed<span className="absolute left-0 bottom-1 h-2.5 w-full bg-primary-glow -z-10" /></span> estate managers
+                <h1 className="text-4xl sm:text-5xl lg:text-6.5xl font-heading font-extrabold tracking-tight leading-[1.05] text-text-main animate-slide-up text-wrap-balance">
+                  We train <span className="text-primary font-black relative inline-block">independent system-backed<span className="absolute left-0 bottom-1 h-3 w-full bg-primary-glow/70 -z-10 rounded-full" /></span> estate managers
                 </h1>
-                <p className="text-text-muted text-base sm:text-lg max-w-xl animate-fade-in leading-relaxed">
+                <p className="text-text-muted text-base sm:text-lg max-w-xl animate-slide-up leading-relaxed [animation-delay:150ms] opacity-0 [animation-fill-mode:forwards]">
                   This is not a generic real estate theory course. It is an operational training system designed to produce competent digital estate professionals who run structured workflows.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 pt-2 animate-fade-in">
+                <div className="flex flex-col sm:flex-row gap-4 pt-2 animate-slide-up [animation-delay:300ms] opacity-0 [animation-fill-mode:forwards]">
                   <Link
                     href="/apply"
-                    className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-glow transition-all"
+                    className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-glow hover:shadow-[0_0_25px_rgba(2,184,117,0.3)] transition-all"
                   >
                     Apply to Academy
                     <ArrowRight className="w-4 h-4" />
@@ -108,11 +119,11 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-
+ 
               {/* Right Hero Badge Graphic - Asymmetric Stagger */}
-              <div className="lg:col-span-5 flex justify-center lg:justify-end w-full relative">
-                <div className="absolute -inset-4 bg-gradient-to-tr from-primary/10 to-secondary/10 rounded-[3rem] blur-2xl opacity-60" />
-                <div className="relative w-full max-w-[340px] aspect-square rounded-[2rem] premium-card glass p-8 flex flex-col justify-between items-center text-center border-border-main animate-fade-in z-10">
+              <div className="lg:col-span-5 flex justify-center lg:justify-end w-full relative animate-float">
+                <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-secondary/20 rounded-[3rem] blur-2xl opacity-60 animate-pulse-slow" />
+                <div className="relative w-full max-w-[340px] aspect-square rounded-[2rem] premium-card glass p-8 flex flex-col justify-between items-center text-center border-border-main z-10 shadow-[0_30px_70px_rgba(0,0,0,0.15)] hover:border-primary/40">
                   <div className="absolute -top-4 -right-4 px-4 py-2 rounded-xl bg-amber-500 text-white font-extrabold text-[0.675rem] tracking-wider uppercase rotate-6 shadow-md border border-amber-400">
                     Bootcamp Open
                   </div>
@@ -127,7 +138,7 @@ export default function Home() {
                       Official credential issuer for digital estate operators inside the Housmata Property Management network.
                     </p>
                   </div>
-
+ 
                   <div className="w-full bg-primary-glow border border-primary/20 rounded-xl py-3 px-4 flex justify-between items-center text-xs font-semibold text-primary">
                     <span>Standard duration:</span>
                     <span>8-12 Weeks</span>
@@ -212,7 +223,7 @@ export default function Home() {
               {benefits.map((b, i) => (
                 <div 
                   key={i} 
-                  className="premium-card rounded-2xl p-7 bg-bg-card border-border-main flex flex-col gap-5 group transition-all"
+                  className={`premium-card rounded-2xl p-7 bg-bg-card border-border-main flex flex-col gap-5 group transition-all animate-slide-up opacity-0 [animation-fill-mode:forwards] ${delays[i] || ""}`}
                 >
                   <div className="w-12 h-12 rounded-xl bg-primary-glow flex items-center justify-center transition-all group-hover:scale-110">
                     {b.icon}
@@ -243,8 +254,11 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {levels.map((lvl) => (
-                <div key={lvl.num} className="premium-card rounded-2xl p-7 bg-bg-main border-border-main relative flex flex-col gap-5">
+              {levels.map((lvl, idx) => (
+                <div 
+                  key={lvl.num} 
+                  className={`premium-card rounded-2xl p-7 bg-bg-main border-border-main relative flex flex-col gap-5 animate-slide-up opacity-0 [animation-fill-mode:forwards] ${delays[idx] || ""}`}
+                >
                   <div className="absolute top-4 right-4 font-heading font-black text-5xl text-primary/5 select-none">
                     0{lvl.num}
                   </div>
