@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   BookOpen,
@@ -60,6 +60,23 @@ export default function StudentDashboard() {
   const [surveyError, setSurveyError] = useState<string | null>(null);
   const [currentPreSurveyStep, setCurrentPreSurveyStep] = useState(0);
   const [currentPostSurveyStep, setCurrentPostSurveyStep] = useState(0);
+
+  const preSurveyBarRef = useRef<HTMLDivElement>(null);
+  const postSurveyBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (preSurveyBarRef.current) {
+      const pct = Math.round((currentPreSurveyStep / 11) * 100);
+      preSurveyBarRef.current.style.width = `${pct}%`;
+    }
+  }, [currentPreSurveyStep]);
+
+  useEffect(() => {
+    if (postSurveyBarRef.current) {
+      const pct = Math.round((currentPostSurveyStep / 11) * 100);
+      postSurveyBarRef.current.style.width = `${pct}%`;
+    }
+  }, [currentPostSurveyStep]);
 
   const loadStudentData = useCallback(() => {
     if (!currentUser) return;
@@ -356,8 +373,8 @@ export default function StudentDashboard() {
                 </div>
                 <div className="h-2 w-full bg-bg-main rounded-full overflow-hidden border border-border-main/50">
                   <div 
+                    ref={preSurveyBarRef}
                     className="h-full bg-primary transition-all duration-500 shadow-[0_0_8px_var(--primary)]"
-                    style={{ width: `${percentComplete}%` }}
                   />
                 </div>
               </div>
@@ -512,8 +529,8 @@ export default function StudentDashboard() {
                 </div>
                 <div className="h-2 w-full bg-bg-main rounded-full overflow-hidden border border-border-main/50">
                   <div 
+                    ref={postSurveyBarRef}
                     className="h-full bg-secondary transition-all duration-500 shadow-[0_0_8px_var(--secondary)]"
-                    style={{ width: `${percentComplete}%` }}
                   />
                 </div>
               </div>

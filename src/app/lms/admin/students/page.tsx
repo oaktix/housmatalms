@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, ChevronRight, GraduationCap, Activity, Calendar, Mail } from "lucide-react";
+import { ShieldCheck, GraduationCap, Activity, Calendar, Mail, X } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Profile, GraduateStatus, Cohort, Certificate } from "@/lib/mockData";
@@ -82,113 +82,130 @@ export default function AdminStudents() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Student List (5 cols) */}
-        <div className="lg:col-span-5 space-y-3">
-          <h3 className="text-xs font-extrabold text-text-muted uppercase tracking-wider pl-2">
-            Student & Graduate Directory ({students.length})
-          </h3>
+      {/* Directory Grid */}
+      <div className="space-y-3 max-w-6xl mx-auto">
+        <h3 className="text-xs font-extrabold text-text-muted uppercase tracking-wider pl-2">
+          Student & Graduate Directory ({students.length})
+        </h3>
 
-          {students.length > 0 ? (
-            <div className="space-y-2">
-              {students.map((student) => (
-                <button
-                  key={student.id}
-                  onClick={() => {
-                    setSelectedStudent(student);
-                    setStatus(student.grad?.deployment_status || "Active");
-                    setNotes(student.grad?.placement_notes || "");
-                    const prog = db.getProgress(student.id);
-                    setMeetingUrl(prog.phase2_meeting_url || "");
-                    setSuccessMsg("");
-                    setRightTab("progress");
-                  }}
-                  className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
-                    selectedStudent?.id === student.id
-                      ? "bg-primary-glow border-primary text-text-main"
-                      : "bg-bg-card border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover"
-                  }`}
-                >
-                  <div className="space-y-1 pr-4 min-w-0 flex-grow">
-                    <h4 className="font-bold text-text-main text-xs truncate">{student.full_name}</h4>
-                    <p className="text-[10px] text-text-muted">
-                      Cohort: <strong>{student.cohort?.name || "No Cohort"}</strong>
-                    </p>
-                    <div className="flex gap-2 items-center pt-1 text-[9px]">
-                      <span className="font-semibold text-primary">
-                        Certs: {student.certs.length}
-                      </span>
-                      <span>•</span>
-                      <span className="font-semibold text-secondary">
-                        Status: {student.grad?.deployment_status || "Available"}
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-text-muted flex-shrink-0" />
-                </button>
-              ))}
+        {students.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {students.map((student) => (
+              <button
+                key={student.id}
+                onClick={() => {
+                  setSelectedStudent(student);
+                  setStatus(student.grad?.deployment_status || "Active");
+                  setNotes(student.grad?.placement_notes || "");
+                  const prog = db.getProgress(student.id);
+                  setMeetingUrl(prog.phase2_meeting_url || "");
+                  setSuccessMsg("");
+                  setRightTab("progress");
+                }}
+                className="p-5 rounded-2xl border text-left flex flex-col justify-between transition-all bg-bg-card border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover hover:scale-[1.02] active:scale-[0.98] shadow-sm space-y-4"
+              >
+                <div className="space-y-1 pr-4 min-w-0 w-full">
+                  <h4 className="font-bold text-text-main text-sm truncate">{student.full_name}</h4>
+                  <p className="text-[11px] text-text-muted">
+                    Cohort: <strong className="text-text-main">{student.cohort?.name || "No Cohort Assigned"}</strong>
+                  </p>
+                  <p className="text-[10px] text-text-muted truncate">{student.email}</p>
+                </div>
+                
+                <div className="flex gap-2 items-center justify-between w-full pt-2 border-t border-border-main/50 text-[10px]">
+                  <span className="font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">
+                    Certs: {student.certs.length}
+                  </span>
+                  <span className={`font-bold px-2 py-0.5 rounded border uppercase ${
+                    student.grad?.deployment_status === "Assigned"
+                      ? "bg-primary/10 border-primary/20 text-primary"
+                      : student.grad?.deployment_status === "Available"
+                      ? "bg-secondary-glow border-secondary/20 text-secondary"
+                      : "bg-warning/10 border-warning/20 text-warning"
+                  }`}>
+                    {student.grad?.deployment_status || "Available"}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-text-muted italic py-6 text-center">No students registered in the system.</p>
+        )}
+      </div>
+
+      {/* Modal Overlay for Student Details */}
+      {selectedStudent && (
+        <div 
+          className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedStudent(null)}
+        >
+          <div 
+            className="premium-card rounded-2xl bg-bg-card border border-border-main max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl animate-scale-in relative max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedStudent(null)}
+              className="p-1.5 text-text-muted hover:text-text-main absolute right-4 top-4 rounded-lg hover:bg-bg-main transition-colors"
+              title="Close panel"
+              aria-label="Close panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="border-b border-border-main pb-4">
+              <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
+                Status Tracking Profile
+              </span>
+              <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
+                {selectedStudent.full_name}
+              </h3>
+              <p className="text-[10px] text-text-muted mt-1">
+                Email: {selectedStudent.email} • Assigned Cohort: {selectedStudent.cohort?.name || "None"}
+              </p>
             </div>
-          ) : (
-            <p className="text-xs text-text-muted italic py-6 text-center">No students registered in the system.</p>
-          )}
-        </div>
 
-        {/* Right Column: Student Details (7 cols) */}
-        <div className="lg:col-span-7">
-          {selectedStudent ? (
-            <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-6 shadow-md animate-fade-in">
-              <div className="border-b border-border-main pb-4">
-                <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
-                  Status Tracking Profile
-                </span>
-                <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
-                  {selectedStudent.full_name}
-                </h3>
-                <p className="text-[10px] text-text-muted mt-1">
-                  Email: {selectedStudent.email} • Assigned Cohort: {selectedStudent.cohort?.name || "None"}
-                </p>
-              </div>
+            {/* Tab Selector */}
+            <div className="flex gap-2 border-b border-border-main pb-3">
+              <button
+                type="button"
+                onClick={() => setRightTab("progress")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  rightTab === "progress"
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                }`}
+              >
+                <Activity className="w-3.5 h-3.5" />
+                Academic Progress
+              </button>
+              <button
+                type="button"
+                onClick={() => setRightTab("phase2class")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  rightTab === "phase2class"
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                }`}
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                Phase 2 Class
+              </button>
+              <button
+                type="button"
+                onClick={() => setRightTab("deployment")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  rightTab === "deployment"
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                Deployment Status
+              </button>
+            </div>
 
-              {/* Tab Selector */}
-              <div className="flex gap-2 border-b border-border-main pb-3">
-                <button
-                  type="button"
-                  onClick={() => setRightTab("progress")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    rightTab === "progress"
-                      ? "bg-primary text-white shadow-sm"
-                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
-                  }`}
-                >
-                  <Activity className="w-3.5 h-3.5" />
-                  Academic Progress
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRightTab("phase2class")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    rightTab === "phase2class"
-                      ? "bg-primary text-white shadow-sm"
-                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
-                  }`}
-                >
-                  <Calendar className="w-3.5 h-3.5" />
-                  Phase 2 Class
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRightTab("deployment")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                    rightTab === "deployment"
-                      ? "bg-primary text-white shadow-sm"
-                      : "bg-bg-main border border-border-main text-text-muted hover:text-text-main"
-                  }`}
-                >
-                  <GraduationCap className="w-3.5 h-3.5" />
-                  Deployment Status
-                </button>
-              </div>
-
+            <div className="space-y-4">
               {rightTab === "progress" ? (
                 <StudentProgressSection studentId={selectedStudent.id} />
               ) : rightTab === "phase2class" ? (
@@ -269,13 +286,13 @@ export default function AdminStudents() {
                                   placeholder="https://meet.google.com/xxx-xxxx-xxx"
                                   value={meetingUrl}
                                   onChange={(e) => setMeetingUrl(e.target.value)}
-                                  className="w-full text-xs"
+                                  className="w-full text-xs bg-bg-main border border-border-main rounded-xl px-3 py-2 text-text-main focus:outline-none focus:border-primary"
                                 />
                               </div>
 
                               <button
                                 type="submit"
-                                className="btn bg-primary text-white hover:brightness-110 px-4 py-2 rounded-lg font-bold text-xs"
+                                className="btn bg-primary text-white hover:brightness-110 px-4 py-2 rounded-lg font-bold text-xs transition-all"
                               >
                                 Send Meeting Link
                               </button>
@@ -343,6 +360,7 @@ export default function AdminStudents() {
                         id="status"
                         value={status}
                         onChange={(e) => setStatus(e.target.value as GraduateStatus["deployment_status"])}
+                        className="w-full bg-bg-main border border-border-main rounded-xl px-3 py-2 text-xs text-text-main focus:outline-none focus:border-primary"
                       >
                         <option value="Active">Active (In training)</option>
                         <option value="Available">Available (Certified & seeking deployment)</option>
@@ -363,25 +381,22 @@ export default function AdminStudents() {
                       rows={4}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
+                      className="w-full bg-bg-main border border-border-main rounded-xl px-3 py-2 text-xs text-text-main focus:outline-none focus:border-primary"
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="btn bg-primary text-text-inverse hover:brightness-110 w-full py-3 rounded-xl font-bold text-xs"
+                    className="btn bg-primary text-white hover:brightness-110 w-full py-3 rounded-xl font-bold text-xs transition-all"
                   >
                     Save Status Update
                   </button>
                 </form>
               )}
             </div>
-          ) : (
-            <div className="p-12 text-center text-xs text-text-muted bg-bg-card border border-border-main rounded-2xl italic">
-              Select a student from the left directory to track and update their deployment status.
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

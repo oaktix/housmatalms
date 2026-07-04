@@ -1,11 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { BookOpen, CheckCircle2, Award, Clock, HelpCircle } from "lucide-react";
 import { db } from "@/lib/db";
 import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
-
-// Removed static PROGRESS_WIDTHS mapping in favor of dynamic style calculation
 
 interface StudentProgressSectionProps {
   studentId: string;
@@ -17,6 +15,14 @@ export default function StudentProgressSection({ studentId }: StudentProgressSec
   const completedCount = progress.completed_modules.length;
   const totalModulesCount = activeCurriculum.length;
   const readLessons = progress.read_lessons || [];
+
+  const progressBarRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (progressBarRef.current) {
+      progressBarRef.current.style.width = `${(completedCount / totalModulesCount) * 100}%`;
+    }
+  }, [completedCount, totalModulesCount]);
 
   return (
     <div className="space-y-6">
@@ -72,8 +78,8 @@ export default function StudentProgressSection({ studentId }: StudentProgressSec
         </div>
         <div className="w-full bg-bg-main h-2.5 rounded-full overflow-hidden border border-border-main">
           <div
+            ref={progressBarRef}
             className="bg-primary h-full transition-all duration-500 rounded-full"
-            style={{ width: `${(completedCount / totalModulesCount) * 100}%` }}
           />
         </div>
       </div>
