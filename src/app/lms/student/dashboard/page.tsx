@@ -126,7 +126,7 @@ export default function StudentDashboard() {
     return db.subscribe(loadStudentData);
   }, [loadStudentData]);
 
-  // Mark Lesson Read
+  // Mark Lesson Read & Auto-advance
   const handleMarkLessonRead = () => {
     if (!selectedLesson || !progress || !currentUser) return;
     const lessonId = `${selectedLesson.moduleId}-lesson-${selectedLesson.lessonIndex}`;
@@ -141,7 +141,22 @@ export default function StudentDashboard() {
       db.checkAndPromoteModule(currentUser.id, selectedLesson.moduleId);
       setProgress(db.getProgress(currentUser.id));
     }
-    setSelectedLesson(null);
+
+    // Find the current module to check for the next lesson
+    const currentModule = phase1Curriculum.find(m => m.id === selectedLesson.moduleId);
+    const nextLessonIndex = selectedLesson.lessonIndex + 1;
+
+    if (currentModule && nextLessonIndex < currentModule.lessons.length) {
+      // Auto-advance to the next lesson in this module
+      setSelectedLesson({
+        lesson: currentModule.lessons[nextLessonIndex],
+        moduleId: selectedLesson.moduleId,
+        lessonIndex: nextLessonIndex
+      });
+    } else {
+      // Last lesson in the module — close so the assessment button is visible
+      setSelectedLesson(null);
+    }
   };
   
   // Select Phase 2 Virtual Class
@@ -267,6 +282,26 @@ export default function StudentDashboard() {
         setAssessmentStatus(prev => prev ? { ...prev, submittedAssignment: true, isGraded: false } : null);
         loadStudentData();
         confetti({ particleCount: 200, spread: 90, origin: { y: 0.5 } });
+
+        // Auto-close modal and advance to the next module/lesson after a brief delay
+        const currentModuleId = activeAssessment.moduleId;
+        setTimeout(() => {
+          setActiveAssessment(null);
+          setAssessmentStatus(null);
+          setQuizResult(null);
+
+          // Find the next module in the curriculum
+          const currentModuleIndex = phase1Curriculum.findIndex(m => m.id === currentModuleId);
+          const nextModule = phase1Curriculum[currentModuleIndex + 1];
+          if (nextModule) {
+            // Expand the next module in the timeline
+            setExpandedModuleId(nextModule.id);
+            // Open the first lesson of the next module
+            if (nextModule.lessons.length > 0) {
+              setSelectedLesson({ lesson: nextModule.lessons[0], moduleId: nextModule.id, lessonIndex: 0 });
+            }
+          }
+        }, 1800);
       } catch (err) {
         setSubmittingAssignment(false);
         const message = err instanceof Error ? err.message : "Submission failed. Please try again.";
