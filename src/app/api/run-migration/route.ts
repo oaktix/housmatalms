@@ -31,8 +31,9 @@ export async function GET(request: Request) {
     const res = await client.query(sql);
     await client.end();
     return NextResponse.json({ success: true, message: "Migration executed successfully!", details: res });
-  } catch (err: any) {
-    try { await client.end(); } catch (e) {}
-    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    try { await client.end(); } catch (_e) {}
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ success: false, error: errorMessage }, { status: 500 });
   }
 }
