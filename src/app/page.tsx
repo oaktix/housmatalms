@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Shield, Landmark, Users, BarChart3, Sparkles, Check, Home as HomeIcon, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, Landmark, Sparkles, Check, Home as HomeIcon, TrendingUp } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 
 export default function Home() {
@@ -95,29 +95,31 @@ export default function Home() {
           <style>{`
             @keyframes float-slow {
               0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-15px) rotate(5deg); }
+              50% { transform: translateY(-30px) rotate(8deg); }
             }
             @keyframes float-mid {
               0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-25px) rotate(-10deg); }
+              50% { transform: translateY(-40px) rotate(-12deg); }
             }
-            .animate-float-1 { animation: float-slow 8s ease-in-out infinite; }
-            .animate-float-2 { animation: float-mid 11s ease-in-out infinite; }
-            .animate-float-3 { animation: float-slow 14s ease-in-out infinite; }
-            .animate-float-4 { animation: float-mid 9s ease-in-out infinite; }
+            .animate-float-1 { animation: float-slow 7s ease-in-out infinite; }
+            .animate-float-2 { animation: float-mid 9s ease-in-out infinite; }
+            .animate-float-3 { animation: float-slow 12s ease-in-out infinite; }
+            .animate-float-4 { animation: float-mid 8s ease-in-out infinite; }
           `}</style>
           
-          {/* House Vector - Top Left */}
-          <svg className="absolute top-[12%] left-[8%] w-16 h-16 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-1 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          
-          {/* Key Vector - Mid Right */}
-          <svg className="absolute top-[28%] right-[10%] w-14 h-14 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-2 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3M15.5 7.5L14 9"/></svg>
-          
-          {/* Lock Vector - Bottom Left */}
-          <svg className="absolute bottom-[35%] left-[6%] w-12 h-12 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-3 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          
-          {/* Map Coordinates Vector - Bottom Right */}
-          <svg className="absolute bottom-[48%] right-[8%] w-16 h-16 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-4 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+          {/* Section 1 Hero Prominent Floating SVGs */}
+          <svg className="absolute top-[10%] left-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-1 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <svg className="absolute top-[22%] right-[8%] w-20 h-20 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-2 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3M15.5 7.5L14 9"/></svg>
+          <svg className="absolute bottom-[35%] left-[5%] w-18 h-18 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg className="absolute bottom-[46%] right-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+
+          {/* Section 2 Tracks Prominent Floating SVGs */}
+          <svg className="absolute top-[52%] left-[8%] w-22 h-22 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-2 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+          <svg className="absolute top-[68%] right-[10%] w-20 h-20 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-1 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+
+          {/* Section 3 Path Prominent Floating SVGs */}
+          <svg className="absolute bottom-[18%] left-[7%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+          <svg className="absolute bottom-[5%] right-[9%] w-22 h-22 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </div>
 
         {/* 1. Hero Section */}
