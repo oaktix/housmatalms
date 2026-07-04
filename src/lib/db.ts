@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import * as seeds from "./mockData";
-import { phase1Curriculum } from "./curriculum";
+import { phase1Curriculum, hcpaCurriculum } from "./curriculum";
+import { generatedQuizzesHCPA, generatedQuizQuestionsHCPA } from "./generatedQuizzesHCPA";
 
 export interface SurveyResponse {
   id: string;
@@ -517,6 +518,7 @@ class LocalStorageDB {
             email: email,
             role: "student",
             created_at: new Date().toISOString(),
+            course_id: list[idx].course_id || "real-estate-os",
           };
           this.createProfile(studentProfile);
         }
@@ -819,7 +821,7 @@ class LocalStorageDB {
 
   // --- Quizzes & Attempts ---
   getQuizzes(moduleId?: string): seeds.Quiz[] {
-    const list = seeds.seedQuizzes;
+    const list = [...seeds.seedQuizzes, ...generatedQuizzesHCPA];
     if (moduleId) {
       const dbModuleId = normalizeToDbModuleId(moduleId);
       return list.filter((q) => q.module_id === dbModuleId);
@@ -832,7 +834,8 @@ class LocalStorageDB {
   }
 
   getQuizQuestions(quizId: string): seeds.QuizQuestion[] {
-    return seeds.seedQuizQuestions.filter((q) => q.quiz_id === quizId);
+    const list = [...seeds.seedQuizQuestions, ...generatedQuizQuestionsHCPA];
+    return list.filter((q) => q.quiz_id === quizId);
   }
 
   getQuizAttempts(userId?: string): seeds.QuizAttempt[] {
@@ -905,9 +908,11 @@ class LocalStorageDB {
     const uiModuleId = normalizeToUiModuleId(moduleId) || "";
 
     const progress = this.getProgress(userId);
+    const courseId = progress.course_id || "real-estate-os";
 
     // Verify all lessons in the curriculum for this module are read
-    const curriculumModule = phase1Curriculum.find(m => m.id === uiModuleId);
+    const curriculum = courseId === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
+    const curriculumModule = curriculum.find(m => m.id === uiModuleId);
     let allLessonsRead = true;
     if (curriculumModule) {
       allLessonsRead = curriculumModule.lessons.every((_, idx) => 
@@ -1174,9 +1179,21 @@ class LocalStorageDB {
   getProgress(userId: string): seeds.StudentProgress {
     const list = this.get<seeds.StudentProgress>("lms_progress", []);
     const existing = list.find((p) => p.user_id === userId);
-    if (existing) return existing;
+    
+    // Resolve course_id from profile if possible
+    const profile = this.getProfile(userId);
+    const resolvedCourseId = profile?.course_id || "real-estate-os";
+
+    if (existing) {
+      if (!existing.course_id) {
+        existing.course_id = resolvedCourseId;
+      }
+      return existing;
+    }
+
     return {
       user_id: userId,
+      course_id: resolvedCourseId,
       current_phase: 1,
       completed_modules: [],
       read_lessons: [],
@@ -1190,6 +1207,13 @@ class LocalStorageDB {
   updateProgress(progress: seeds.StudentProgress): seeds.StudentProgress {
     const list = this.get<seeds.StudentProgress>("lms_progress", []);
     const idx = list.findIndex((p) => p.user_id === progress.user_id);
+    
+    // Default course_id if not present
+    if (!progress.course_id) {
+      const profile = this.getProfile(progress.user_id);
+      progress.course_id = profile?.course_id || "real-estate-os";
+    }
+
     if (idx !== -1) {
       list[idx] = progress;
     } else {
@@ -1199,7 +1223,10 @@ class LocalStorageDB {
     this.saveToSupabase("student_progress", progress);
     
     // Check auto-promotion from phase 1 to 2
-    if (progress.current_phase === 1 && progress.completed_modules.length >= 9) {
+    // HCPA has 16 modules (hcpa-m0 to hcpa-m15), HCEM has 9 modules (p1-m1 to p1-m9)
+    const requiredModulesCount = progress.course_id === "property-advisor-hcpa" ? 16 : 9;
+    
+    if (progress.current_phase === 1 && progress.completed_modules.length >= requiredModulesCount) {
       const updated = {
         ...progress,
         current_phase: 2 as const,

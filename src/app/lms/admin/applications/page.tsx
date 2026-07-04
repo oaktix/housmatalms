@@ -130,6 +130,13 @@ export default function AdminApplications() {
                     <div className="space-y-1 pr-4 min-w-0 flex-grow">
                       <h4 className="font-bold text-text-main text-xs truncate">{a.applicant_name}</h4>
                       <p className="text-[10px] text-text-muted">State: {a.state} • Exp: {a.experience_level || "Beginner"}</p>
+                      <span className={`inline-block text-[9px] font-extrabold px-1.5 py-0.5 rounded-full border uppercase ${
+                        a.course_id === "property-advisor-hcpa"
+                          ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                          : "bg-primary-glow border-primary/20 text-primary"
+                      }`}>
+                        {a.course_id === "property-advisor-hcpa" ? "HCPA" : "HCEM"}
+                      </span>
                     </div>
                     <ChevronRight className="w-4 h-4 text-text-muted flex-shrink-0" />
                   </button>
@@ -187,9 +194,18 @@ export default function AdminApplications() {
           {selectedApp ? (
             <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-6 shadow-md animate-fade-in">
               <div className="border-b border-border-main pb-4">
-                <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
-                  Admission Review
-                </span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
+                    Admission Review
+                  </span>
+                  <span className={`inline-block text-[9px] font-extrabold px-2 py-0.5 rounded-full border uppercase ${
+                    selectedApp.course_id === "property-advisor-hcpa"
+                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                      : "bg-primary-glow border-primary/20 text-primary"
+                  }`}>
+                    {selectedApp.course_id === "property-advisor-hcpa" ? "Housmata Certified Property Advisor (HCPA)" : "Housmata Certified Estate Manager (HCEM)"}
+                  </span>
+                </div>
                 <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
                   {selectedApp.applicant_name}
                 </h3>

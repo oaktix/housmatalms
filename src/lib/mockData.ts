@@ -8,10 +8,12 @@ export interface Profile {
   role: "student" | "instructor" | "admin";
   avatar_url?: string;
   created_at: string;
+  course_id?: "real-estate-os" | "property-advisor-hcpa";
 }
 
 export interface StudentProgress {
   user_id: string;
+  course_id?: "real-estate-os" | "property-advisor-hcpa";
   current_phase: 1 | 2 | 3 | 4; // 4 = certified
   completed_modules: string[];
   read_lessons?: string[]; // tracks specific lesson IDs read: e.g., "module-1-lesson-0"
@@ -42,6 +44,7 @@ export interface Application {
   status: "pending" | "approved" | "rejected";
   reviewed_at?: string;
   created_at: string;
+  course_id?: "real-estate-os" | "property-advisor-hcpa";
 }
 
 export interface Cohort {
@@ -228,11 +231,21 @@ export const seedInstructors: Instructor[] = [
   },
 ];
 
-export const seedCourse: Course = {
-  id: "a0b2d6a5-7a91-4e9b-86d1-cfb42e7b7f11",
-  title: "Housmata Verified Estate Manager Certification Program",
-  description: "Full Academic & Operational Curriculum Framework designed to produce competent estate operators.",
-};
+export const seedCourses: Course[] = [
+  {
+    id: "real-estate-os",
+    title: "Housmata Certified Estate Manager",
+    description: "Full Academic & Operational Curriculum Framework designed to produce competent estate managers specializing in rent collection and landlord-tenant operations.",
+  },
+  {
+    id: "property-advisor-hcpa",
+    title: "Housmata Certified Property Advisor",
+    description: "Comprehensive professional certification designed to produce competent, ethical, and technology-enabled Property Advisors specializing in investment, verification, and sales advisory.",
+  }
+];
+
+export const seedCourse = seedCourses[0];
+export const seedCourse2 = seedCourses[1];
 
 // 9 Modules of Phase 1
 export const seedModules: Module[] = [
@@ -366,6 +379,24 @@ export const seedModules: Module[] = [
     objective: "Operate the full digital property management workflow end-to-end under simulated pressure.",
     phase: 2,
   },
+  
+  // HCPA Modules
+  { id: "hcpa-m0", course_id: "property-advisor-hcpa", title: "Orientation: Welcome to Housmata Academy", module_number: 0, objective: "Mindset of a trusted advisor, Housmata mission, and career paths.", phase: 1 },
+  { id: "hcpa-m1", course_id: "property-advisor-hcpa", title: "The Nigerian Real Estate Industry", module_number: 1, objective: "Understanding the industry history, residential/commercial and wealth creation.", phase: 1 },
+  { id: "hcpa-m2", course_id: "property-advisor-hcpa", title: "Professional Ethics & Building Trust", module_number: 2, objective: "Transparency, conflicts of interest, and the Housmata Code of Ethics.", phase: 1 },
+  { id: "hcpa-m3", course_id: "property-advisor-hcpa", title: "Understanding Land Banking", module_number: 3, objective: "Land banking mechanics, growth corridors, and risk analysis.", phase: 1 },
+  { id: "hcpa-m4", course_id: "property-advisor-hcpa", title: "Understanding Property Documents", module_number: 4, objective: "Titles, Deeds, Certificates of Occupancy, and search reports.", phase: 1 },
+  { id: "hcpa-m5", course_id: "property-advisor-hcpa", title: "Property Verification", module_number: 5, objective: "Executing ownership, title, GPS coordinate, and developer checks.", phase: 1 },
+  { id: "hcpa-m6", course_id: "property-advisor-hcpa", title: "Property Brokerage & Sales", module_number: 6, objective: "Buyer/seller representation, client prospecting, and negotiation closing.", phase: 1 },
+  { id: "hcpa-m7", course_id: "property-advisor-hcpa", title: "Digital Marketing for Property Professionals", module_number: 7, objective: "Premium visual media, social channels, and lead generation funnels.", phase: 1 },
+  { id: "hcpa-m8", course_id: "property-advisor-hcpa", title: "The Housmata Technology Platform", module_number: 8, objective: "Masters list uploads, coordinates checks, and lead CRM dashboards.", phase: 1 },
+  { id: "hcpa-m9", course_id: "property-advisor-hcpa", title: "Understanding Property Finance", module_number: 9, objective: "Cash, installments, developer financing, and cooperative finance.", phase: 1 },
+  { id: "hcpa-m10", course_id: "property-advisor-hcpa", title: "Mortgage Readiness", module_number: 10, objective: "Client mortgage readiness check and referral pipeline to partners.", phase: 1 },
+  { id: "hcpa-m11", course_id: "property-advisor-hcpa", title: "Site Inspection Excellence", module_number: 11, objective: "Inspection preparation, tour presentation, and on-site objection handling.", phase: 1 },
+  { id: "hcpa-m12", course_id: "property-advisor-hcpa", title: "Negotiation & Closing", module_number: 12, objective: "Negotiating counter-offers, payment plans, and handover checklists.", phase: 1 },
+  { id: "hcpa-m13", course_id: "property-advisor-hcpa", title: "Building Your Personal Brand", module_number: 13, objective: "LinkedIn, WhatsApp, regional speaking, and personal brand authority.", phase: 1 },
+  { id: "hcpa-m14", course_id: "property-advisor-hcpa", title: "Running Your Property Business", module_number: 14, objective: "Inflow pipeline, tax structures, CRMs, KPIs, and team building.", phase: 1 },
+  { id: "hcpa-m15", course_id: "property-advisor-hcpa", title: "Becoming a Housmata Certified Property Advisor", module_number: 15, objective: "Panel review, ethics exam, Capstone project portfolio, and deployment.", phase: 1 }
 ];
 
 export const seedLessons: Lesson[] = [
@@ -717,6 +748,24 @@ export const seedAssignments: Assignment[] = [
     description: "Perform KYC checks and compute behavioral risk scores for two student profiles: one showing low-risk credentials and another highlighting high-risk factors (e.g. undocumented references, inconsistent income). Provide onboarding recommendations for both.",
     points_possible: 100,
   },
+
+  // HCPA Assignments
+  { id: "assign-hcpa-m0", module_id: "module-hcpa-0", title: "Personal Commitment Statement", description: "Write a one-page commitment statement titled 'The Property Advisor I Aspire to Become' detailing why you enrolled and how you will uphold trust.", points_possible: 100 },
+  { id: "assign-hcpa-m1", module_id: "module-hcpa-1", title: "Growth Corridor Research", description: "Research three fast-growing locations in your state and explain why they are attractive for property investment.", points_possible: 100 },
+  { id: "assign-hcpa-m2", module_id: "module-hcpa-2", title: "Ethics Sign-off & Case Analysis", description: "Analyze a case where a buyer lost money due to an unethical broker, identify the warning signs, and sign the Housmata Professional Code.", points_possible: 100 },
+  { id: "assign-hcpa-m3", module_id: "module-hcpa-3", title: "Land Banking Sourcing", description: "Identify one future land banking location in your region, analyze its growth drivers, and outline its potential risks.", points_possible: 100 },
+  { id: "assign-hcpa-m4", module_id: "module-hcpa-4", title: "Document Inspection Review", description: "Inspect three sample property documents (Survey Plan, C of O, and Deed of Assignment) and point out key elements like coordinates, signatures, and stamps.", points_possible: 100 },
+  { id: "assign-hcpa-m5", module_id: "module-hcpa-5", title: "Verification Checklist Execution", description: "Complete a full Housmata Property Verification Checklist for a mock property based on coordinates, developer records, and site photos.", points_possible: 100 },
+  { id: "assign-hcpa-m6", module_id: "module-hcpa-6", title: "Sales Presentation Simulation", description: "Draft a sales pitch for a target property using the Housmata process, addressing client objections regarding price and location.", points_possible: 100 },
+  { id: "assign-hcpa-m7", module_id: "module-hcpa-7", title: "Listing Campaign Design", description: "Design a comprehensive digital campaign plan for a property listing, including copywriting, walkthrough scripts, and ad targeting.", points_possible: 100 },
+  { id: "assign-hcpa-m8", module_id: "module-hcpa-8", title: "Demo Platform Listing Upload", description: "Log in to the Housmata simulator, upload a verified property listing with documents, coordinates, and images, and log a mock enquiry.", points_possible: 100 },
+  { id: "assign-hcpa-m9", module_id: "module-hcpa-9", title: "Payment Plan Comparison", description: "Compare cash, installment, and developer financing options for a 20 Million Naira property and write a recommendations report.", points_possible: 100 },
+  { id: "assign-hcpa-m10", module_id: "module-hcpa-10", title: "Mortgage Readiness Assessment", description: "Complete a mortgage readiness assessment file for a mock client earning a set salary, showing equity availability and debt-to-income calculations.", points_possible: 100 },
+  { id: "assign-hcpa-m11", module_id: "module-hcpa-11", title: "Mock Inspection Recording", description: "Prepare an inspection script for a client tour, outlining your storytelling flow and how you would address a major objection on site.", points_possible: 100 },
+  { id: "assign-hcpa-m12", module_id: "module-hcpa-12", title: "Closing File Compilation", description: "Compile a transaction file including offer letters, reservation documents, payment plans, and handover schedules for approval.", points_possible: 100 },
+  { id: "assign-hcpa-m13", module_id: "module-hcpa-13", title: "Personal Brand Strategy", description: "Write a positioning statement and draft a month of educational social media post titles demonstrating property advisory expertise.", points_possible: 100 },
+  { id: "assign-hcpa-m14", module_id: "module-hcpa-14", title: "Business Budget & KPI Setup", description: "Set up a basic operational budget, define quarterly sales KPIs, and outline your CRM record-keeping workflow.", points_possible: 100 },
+  { id: "assign-hcpa-m15", module_id: "module-hcpa-15", title: "Final Review Verification Portfolio", description: "Submit your comprehensive Capstone checklist and double-check your overall compliance before the final certification panel review.", points_possible: 100 }
 ];
 
 export const seedCohorts: Cohort[] = [

@@ -17,7 +17,7 @@ import confetti from "canvas-confetti";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Cohort, StudentProgress, Meeting, Quiz, QuizQuestion, Assignment, Announcement } from "@/lib/mockData";
-import { phase1Curriculum, Lesson } from "@/lib/curriculum";
+import { phase1Curriculum, hcpaCurriculum, Lesson } from "@/lib/curriculum";
 
 const SURVEY_QUESTIONS = [
   { id: 1, text: "Agent vs. Manager Roles: Distinguishing the transaction-focused role of an Agent/Broker from the asset-custodian role of a professional Estate Manager." },
@@ -30,6 +30,19 @@ const SURVEY_QUESTIONS = [
   { id: 8, text: "Utility & Generator Operations: Coordinating diesel generators, boreholes, and water treatment systems for Nigerian properties." },
   { id: 9, text: "Real Estate Financials: Calculating rental yields, managing maintenance reserves, and auditing landlord ledgers." },
   { id: 10, text: "Eviction & Contract Dispute Mediation: Systematically navigating tenancy laws and resolving tenant payment defaults through legal channels." }
+];
+
+const HCPA_SURVEY_QUESTIONS = [
+  { id: 1, text: "Land Titles and Documentation: Differentiating Survey Plans, C of Os, Deeds of Assignment, Excisions, and Gazettes." },
+  { id: 2, text: "GPS Coordinate Charting: Plotting land coordinates to identify committed forest reserves or agricultural zones." },
+  { id: 3, text: "Lands Registry Searches: Conducting official title verification searches to discover liens, mortgages, or ownership disputes." },
+  { id: 4, text: "Land Banking & Growth Corridors: Sourcing undeveloped lands in infrastructure corridors for long-term appreciation." },
+  { id: 5, text: "Property Finance & Installments: Designing structured milestone payment plans and calculating interest rate markups." },
+  { id: 6, text: "Mortgage Readiness: Evaluating salary pay slips, tax filings, and debt-to-income ratios for bank financing approvals." },
+  { id: 7, text: "Developer Vetting & Due Diligence: Researching developer track records, litigation history, and allocation timelines." },
+  { id: 8, text: "Physical Site Inspections: Organizing and conducting structured property tours with active neighborhood storytelling." },
+  { id: 9, text: "Deal Negotiation & Closing File: Structuring offer letters, reservation forms, and snag lists for property handovers." },
+  { id: 10, text: "Digital Lead Funnels & CRM: Building social media listing campaigns and managing client databases systematically." }
 ];
 
 export default function StudentDashboard() {
@@ -87,16 +100,17 @@ export default function StudentDashboard() {
   const loadStudentData = useCallback(() => {
     if (!currentUser) return;
     const studentId = currentUser.id;
+    const studentProgress = db.getProgress(studentId);
+    const activeCurriculum = studentProgress.course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
 
     // Proactively heal/promote modules where progress criteria are fully met
-    phase1Curriculum.forEach((mod) => {
+    activeCurriculum.forEach((mod) => {
       db.checkAndPromoteModule(studentId, mod.id);
     });
 
     const studentCohort = db.getStudentCohort(studentId);
     setCohort(studentCohort || null);
 
-    const studentProgress = db.getProgress(studentId);
     setProgress(studentProgress);
 
     if (studentCohort) {
@@ -110,7 +124,7 @@ export default function StudentDashboard() {
     if (!hasPre) {
       setShowPreSurvey(true);
     } else {
-      const finishedAllModules = phase1Curriculum.every(mod => studentProgress?.completed_modules?.includes(mod.id));
+      const finishedAllModules = activeCurriculum.every(mod => studentProgress?.completed_modules?.includes(mod.id));
       if (finishedAllModules) {
         const hasPost = db.getSurveyResponse(studentId, "post");
         if (!hasPost) {
@@ -143,7 +157,8 @@ export default function StudentDashboard() {
     }
 
     // Find the current module to check for the next lesson
-    const currentModule = phase1Curriculum.find(m => m.id === selectedLesson.moduleId);
+    const activeCurriculum = progress.course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
+    const currentModule = activeCurriculum.find(m => m.id === selectedLesson.moduleId);
     const nextLessonIndex = selectedLesson.lessonIndex + 1;
 
     if (currentModule && nextLessonIndex < currentModule.lessons.length) {
@@ -291,8 +306,9 @@ export default function StudentDashboard() {
           setQuizResult(null);
 
           // Find the next module in the curriculum
-          const currentModuleIndex = phase1Curriculum.findIndex(m => m.id === currentModuleId);
-          const nextModule = phase1Curriculum[currentModuleIndex + 1];
+          const activeCurriculum = db.getProgress(currentUser!.id).course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
+          const currentModuleIndex = activeCurriculum.findIndex(m => m.id === currentModuleId);
+          const nextModule = activeCurriculum[currentModuleIndex + 1];
           if (nextModule) {
             // Expand the next module in the timeline
             setExpandedModuleId(nextModule.id);
@@ -449,7 +465,7 @@ export default function StudentDashboard() {
               name: "Foundation Operator",
               requirement: "Phase 1 - Curriculums",
               desc: "Master the real estate ethics & professional ecosystems.",
-              isCompleted: progress.current_phase > 1 || progress.completed_modules.length === phase1Curriculum.length,
+              isCompleted: progress.current_phase > 1 || progress.completed_modules.length === (progress.course_id === "property-advisor-hcpa" ? hcpaCurriculum.length : phase1Curriculum.length),
               isActive: progress.current_phase === 1
             },
             {
@@ -563,12 +579,19 @@ export default function StudentDashboard() {
       {/* Phase 1 View */}
       {activeTab === "phase1" && (
         <div className="space-y-8 animate-fade-in">
-          <div className="flex justify-between items-center">
-            <h2 className="text-lg font-heading font-extrabold text-text-main">Foundation Curriculum</h2>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-bg-main border border-border-main text-text-muted">
-              {progress.completed_modules.length} / {phase1Curriculum.length} Modules Completed
-            </span>
-          </div>
+          {/* Course-aware header */}
+          {(() => {
+            const activeCurriculum = progress.course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
+            const courseTitle = progress.course_id === "property-advisor-hcpa" ? "HCPA Self-Paced Modules" : "Foundation Curriculum";
+            return (
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-heading font-extrabold text-text-main">{courseTitle}</h2>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-bg-main border border-border-main text-text-muted">
+                  {progress.completed_modules.length} / {activeCurriculum.length} Modules Completed
+                </span>
+              </div>
+            );
+          })()}
 
           {/* Vertical Timeline Curriculum Layout */}
           <div className="relative border-l border-border-main/60 ml-4 sm:ml-8 pl-8 sm:pl-12 space-y-8 py-4">
@@ -583,9 +606,11 @@ export default function StudentDashboard() {
               className="absolute left-[-1.5px] top-0 bg-gradient-to-b from-primary via-primary-light to-secondary transition-all duration-1000 shadow-[0_0_8px_var(--primary)] timeline-progress-track-fill"
             />
 
-            {phase1Curriculum.map((mod, index) => {
+            {(() => {
+              const activeCurriculum = progress.course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
+              return activeCurriculum.map((mod, index) => {
               const isCompleted = progress.completed_modules.includes(mod.id);
-              const isUnlocked = index === 0 || progress.completed_modules.includes(phase1Curriculum[index - 1].id);
+              const isUnlocked = index === 0 || progress.completed_modules.includes(activeCurriculum[index - 1].id);
               const isExpanded = expandedModuleId === mod.id;
 
               return (
@@ -764,7 +789,8 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               );
-            })}
+              })
+              })()}
           </div>
         </div>
       )}
@@ -779,7 +805,7 @@ export default function StudentDashboard() {
               </div>
               <h2 className="text-xl font-heading font-extrabold text-text-main">Phase 2 is Locked</h2>
               <p className="text-sm text-text-muted max-w-md">
-                You must complete all {phase1Curriculum.length} modules in Phase 1 to unlock the Phase 2 Digital Systems Bootcamp.
+                You must complete all {progress.course_id === "property-advisor-hcpa" ? hcpaCurriculum.length : phase1Curriculum.length} self-paced modules to unlock Phase 2: Live Bootcamp Sessions.
               </p>
             </div>
           ) : (
@@ -1392,7 +1418,7 @@ export default function StudentDashboard() {
                 Outcome Harvesting Survey
               </span>
               <h2 className="text-xl sm:text-2xl font-heading font-black text-text-main">
-                Real Estate Knowledge Pre-Survey
+                {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Pre-Survey" : "Real Estate Knowledge Pre-Survey"}
               </h2>
               <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
                 Before taking this course, what is your knowledge level on the following topics? Your answers are evaluated for outcome harvesting to track educational impact.
@@ -1400,7 +1426,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="space-y-6 pt-4 border-t border-border-main/50">
-              {SURVEY_QUESTIONS.map((q) => (
+              {(progress?.course_id === "property-advisor-hcpa" ? HCPA_SURVEY_QUESTIONS : SURVEY_QUESTIONS).map((q) => (
                 <div key={q.id} className="space-y-3">
                   <p className="text-xs sm:text-sm font-extrabold text-text-main leading-snug">
                     {q.id}. {q.text}
@@ -1459,7 +1485,7 @@ export default function StudentDashboard() {
                 Final Evaluation
               </span>
               <h2 className="text-xl sm:text-2xl font-heading font-black text-text-main">
-                Real Estate Knowledge Post-Survey
+                {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Post-Survey" : "Real Estate Knowledge Post-Survey"}
               </h2>
               <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
                 Congratulations on completing all modules! After completing this course, what is your knowledge level on the following topics?
@@ -1467,7 +1493,7 @@ export default function StudentDashboard() {
             </div>
 
             <div className="space-y-6 pt-4 border-t border-border-main/50">
-              {SURVEY_QUESTIONS.map((q) => (
+              {(progress?.course_id === "property-advisor-hcpa" ? HCPA_SURVEY_QUESTIONS : SURVEY_QUESTIONS).map((q) => (
                 <div key={q.id} className="space-y-3">
                   <p className="text-xs sm:text-sm font-extrabold text-text-main leading-snug">
                     {q.id}. {q.text}

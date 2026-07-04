@@ -3,20 +3,9 @@
 import React from "react";
 import { BookOpen, CheckCircle2, Award, Clock, HelpCircle } from "lucide-react";
 import { db } from "@/lib/db";
-import { phase1Curriculum } from "@/lib/curriculum";
+import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
 
-const PROGRESS_WIDTHS: Record<number, string> = {
-  0: "w-0",
-  1: "w-[11.11%]",
-  2: "w-[22.22%]",
-  3: "w-[33.33%]",
-  4: "w-[44.44%]",
-  5: "w-[55.56%]",
-  6: "w-[66.67%]",
-  7: "w-[77.78%]",
-  8: "w-[88.89%]",
-  9: "w-full",
-};
+// Removed static PROGRESS_WIDTHS mapping in favor of dynamic style calculation
 
 interface StudentProgressSectionProps {
   studentId: string;
@@ -24,7 +13,9 @@ interface StudentProgressSectionProps {
 
 export default function StudentProgressSection({ studentId }: StudentProgressSectionProps) {
   const progress = db.getProgress(studentId);
+  const activeCurriculum = progress.course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
   const completedCount = progress.completed_modules.length;
+  const totalModulesCount = activeCurriculum.length;
   const readLessons = progress.read_lessons || [];
 
   return (
@@ -76,14 +67,13 @@ export default function StudentProgressSection({ studentId }: StudentProgressSec
         <div className="flex justify-between items-center text-xs font-bold">
           <span className="text-text-muted uppercase tracking-wider">Phase 1 Modules Completed</span>
           <span className="text-primary bg-primary/10 px-2.5 py-0.5 rounded-full text-[10px] font-black">
-            {completedCount} / 9 Modules
+            {completedCount} / {totalModulesCount} Modules
           </span>
         </div>
         <div className="w-full bg-bg-main h-2.5 rounded-full overflow-hidden border border-border-main">
           <div
-            className={`bg-primary h-full transition-all duration-500 rounded-full ${
-              PROGRESS_WIDTHS[completedCount] || "w-0"
-            }`}
+            className="bg-primary h-full transition-all duration-500 rounded-full"
+            style={{ width: `${(completedCount / totalModulesCount) * 100}%` }}
           />
         </div>
       </div>
@@ -94,7 +84,7 @@ export default function StudentProgressSection({ studentId }: StudentProgressSec
           Curriculum Completion Details
         </h4>
         <div className="space-y-2.5 max-h-[350px] overflow-y-auto pr-1">
-          {phase1Curriculum.map((mod, idx) => {
+          {activeCurriculum.map((mod, idx) => {
             const isCompleted = progress.completed_modules.includes(mod.id);
             const totalLessons = mod.lessons.length;
             const readCount = mod.lessons.reduce(

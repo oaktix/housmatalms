@@ -18,7 +18,8 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
     { name: "Home", href: "/" },
     { name: "About", href: "/about" },
     { name: "Programs", href: "/programs" },
-    { name: "Curriculum", href: "/curriculum" },
+    { name: "HCEM Curriculum", href: "/curriculum" },
+    { name: "HCPA Curriculum", href: "/curriculum/hcpa" },
     { name: "Instructors", href: "/instructors" },
     { name: "Certification", href: "/certification" },
     { name: "FAQ", href: "/faq" },
@@ -169,7 +170,12 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
                 </li>
                 <li>
                   <Link href="/curriculum" className="text-text-muted hover:text-primary text-sm transition-colors">
-                    Curriculum Overview
+                    HCEM Curriculum
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/curriculum/hcpa" className="text-text-muted hover:text-primary text-sm transition-colors">
+                    HCPA Curriculum
                   </Link>
                 </li>
                 <li>

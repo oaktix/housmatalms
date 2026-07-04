@@ -461,3 +461,327 @@ export const phase1Curriculum: ModuleData[] = [
     ],
   },
 ];
+
+export const hcpaCurriculum: ModuleData[] = [
+  {
+    id: "module-hcpa-0",
+    title: "Orientation: Welcome to Housmata Academy",
+    objective: "To understand the mindset of a trusted advisor, the Housmata mission, and your professional identity.",
+    lessons: [
+      {
+        title: "The Mindset of a Trusted Property Advisor",
+        content: [
+          "WHY TRUST IS THE FOUNDATION\nPeople do not avoid buying property in Nigeria because they dislike investing; they avoid it because they fear making an expensive mistake. Frauds, dual ownerships, and undocumented transactions breed suspicion. At Housmata, trust is the primary asset. We verify before we market, educate before we recommend, and advise before we sell.",
+          "A SALESPERSON VS. A TRUSTED ADVISOR\nA salesperson focuses on closing a transaction for a quick commission. A trusted advisor focuses on understanding client goals and solving their problems. When you match the right property to the right objective, sales become the natural outcome.",
+          "YOUR NEW PROFESSIONAL IDENTITY\nAs a Housmata Property Advisor, you are a guardian of transparency and a bridge between buyers, sellers, developers, and finance partners. Always ask: 'If this were my own money, would I still buy this property?'"
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Personal Commitment Statement",
+        description: "Write a one-page commitment statement titled 'The Property Advisor I Aspire to Become' detailing why you enrolled and how you will uphold trust."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-1",
+    title: "Module 1: The Nigerian Real Estate Industry",
+    objective: "To understand property classification, wealth creation dynamics, and the role of an advisor in Nigeria.",
+    lessons: [
+      {
+        title: "Real Estate & Wealth Creation",
+        content: [
+          "WHAT IS REAL ESTATE\nReal estate includes land and everything permanently attached to it. It encompasses residential, commercial, industrial, mixed-use, and agricultural developments. It is the foundation of every community and business.",
+          "NIGERIA: A LAND OF OPPORTUNITY\nDriven by urbanisation, expanding infrastructure, and demographic growth, cities like Lagos, Ibadan, and Abuja offer high appreciation. Advisors must help clients identify appreciation corridors while avoiding structural risks."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Growth Corridor Research",
+        description: "Research three fast-growing locations in your state and explain why they are attractive for property investment."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-2",
+    title: "Module 2: Professional Ethics & Building Trust",
+    objective: "To internalise the Housmata Code of Ethics and learn how to manage conflicts of interest.",
+    lessons: [
+      {
+        title: "Housmata Code of Ethics",
+        content: [
+          "UNDERSTANDING BUYER FEARS\nBuyers fear losing capital to unregistered brokers, double allocation, or hidden encumbrances. Ethical advisors maintain radical transparency and absolute client confidentiality.",
+          "CONFLICTS OF INTEREST\nAlways disclose when you represent both the buyer and seller (dual agency) or have a personal financial interest in a transaction. Integrity builds long-term authority."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Ethics Sign-off & Case Analysis",
+        description: "Analyze a case where a buyer lost money due to an unethical broker, identify the warning signs, and sign the Housmata Professional Code."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-3",
+    title: "Module 3: Understanding Land Banking",
+    objective: "To master the mechanics of strategic land acquisition, appreciation cycles, and risk mitigation.",
+    lessons: [
+      {
+        title: "Land Appreciation & Location Sourcing",
+        content: [
+          "WHAT IS LAND BANKING\nLand banking is purchasing undeveloped land in growth corridors and holding it until development increases its market value. Growth is driven by government infrastructure (roads, airports, ports).",
+          "COMMON LAND BANKING MISTAKES\nBuying without verification, overlooking zoning laws, buying in inaccessible zones, or ignoring community encumbrances. Advisors must conduct thorough risk analysis."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Land Banking Sourcing",
+        description: "Identify one future land banking location in your region, analyze its growth drivers, and outline its potential risks."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-4",
+    title: "Module 4: Understanding Property Documents",
+    objective: "To identify and verify critical property titles including Survey Plans, C of Os, and Deeds of Assignment.",
+    lessons: [
+      {
+        title: "Property Titles and Deeds",
+        content: [
+          "ESSENTIAL PROPERTY DOCUMENTS\nOperators must understand: Survey Plans, Registered Surveys, Excisions, Gazettes, Certificates of Occupancy (C of O), Governor's Consent, Deeds of Assignment, and Allocation Letters.",
+          "SEARCH REPORTS AND TITLE FLOW\nA property is only as good as its title flow. An advisor coordinates searches at the Lands Registry to verify the authenticity of titles before any payment is made."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Document Inspection Review",
+        description: "Inspect three sample property documents (Survey Plan, C of O, and Deed of Assignment) and point out key elements like coordinates, signatures, and stamps."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-5",
+    title: "Module 5: Property Verification",
+    objective: "To execute the Housmata Verification Framework covering title, ownership, developer, and site coordinates.",
+    lessons: [
+      {
+        title: "The Housmata Verification Framework",
+        content: [
+          "THE VERIFICATION SYSTEM\nVerification covers ownership checks, title checks, developer integrity, GPS coordinate checking, site inspections, and checking for physical encumbrances or local issues.",
+          "GPS COORDINATES & LAND REGISTRY\nUsing coordinate data to confirm if a land falls inside a government committed forest reserve or agricultural zone is a critical, non-negotiable step."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Verification Checklist Execution",
+        description: "Complete a full Housmata Property Verification Checklist for a mock property based on coordinates, developer records, and site photos."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-6",
+    title: "Module 6: Property Brokerage & Sales",
+    objective: "To master client prospecting, lead qualification, and property listing presentations.",
+    lessons: [
+      {
+        title: "Real Estate Brokerage Operations",
+        content: [
+          "REPRESENTING CLIENTS\nAdvisors represent buyers, sellers, or operate as dual agents. To win exclusive listings, advisors must prove their market knowledge, pricing competency, and marketing strength.",
+          "PROSPECTING & CLOSING\nProspecting involves warming up leads, networking, cold calling, and leveraging referrals. Closing is the structured alignment of client goals to make a decision."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Sales Presentation Simulation",
+        description: "Draft a sales pitch for a target property using the Housmata process, addressing client objections regarding price and location."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-7",
+    title: "Module 7: Digital Marketing for Property Professionals",
+    objective: "To construct premium property listing campaigns using video, photography, and social channels.",
+    lessons: [
+      {
+        title: "Digital Sourcing & Lead Funnels",
+        content: [
+          "PREMIUM VISUAL MEDIA\nUse high-quality smartphone photography, walkthrough videos, drone shots, and social graphic templates to tell visual stories that attract qualified clients.",
+          "SOCIAL CHANNELS & FUNNELS\nLeverage WhatsApp, Instagram, Facebook, and LinkedIn. Create separate landing pages for buyers and developers to drive conversion."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Listing Campaign Design",
+        description: "Design a comprehensive digital campaign plan for a property listing, including copywriting, walkthrough scripts, and ad targeting."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-8",
+    title: "Module 8: The Housmata Technology Platform",
+    objective: "To manage listings, verify requests, and coordinate leads using the Housmata software platform.",
+    lessons: [
+      {
+        title: "Housmata App Ecosystem",
+        content: [
+          "DIGITAL OPERATIONS ON HOUSMATA\nLearn to upload listings, manage inquiries, dispatch inspections, track customer CRM pipelines, request verifications, and view commission status on the app.",
+          "ANALYTICS & CONVERSION TRACKING\nUse real-time data to track lead sources, response times, and conversion patterns to improve your advisory performance."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Demo Platform Listing Upload",
+        description: "Log in to the Housmata simulator, upload a verified property listing with documents, coordinates, and images, and log a mock enquiry."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-9",
+    title: "Module 9: Understanding Property Finance",
+    objective: "To distinguish cash, installment, developer financing, and cooperative finance methods.",
+    lessons: [
+      {
+        title: "Property Sourcing Payment Methods",
+        content: [
+          "FINANCING TYPES IN NIGERIA\nUnderstand cash purchases, structured installment plans, developer financing, cooperative finance structures, and bridging finance options.",
+          "INTEREST RATES & DEBT RATIOS\nCalculate the total cost of acquisition across payment plans, helping buyers choose a plan that does not over-leverage their monthly income."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Payment Plan Comparison",
+        description: "Compare cash, installment, and developer financing options for a 20 Million Naira property and write a recommendations report."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-10",
+    title: "Module 10: Mortgage Readiness",
+    objective: "To assess client eligibility and prepare documentation for mortgage partner referrals.",
+    lessons: [
+      {
+        title: "Affordability and Referrals",
+        content: [
+          "MORTGAGE READINESS PRINCIPLES\nEvaluate equity contribution, credit behavior, income verification (salary vs business owners), and required documents. The advisor prepares; the partner approves.",
+          "MORTGAGE FINANCE COLLABORATIONS\nUnderstand the referral workflow with housing finance institutions like Yalo and ULE Homes to bridge home-ownership gaps."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Mortgage Readiness Assessment",
+        description: "Complete a mortgage readiness assessment file for a mock client earning a set salary, showing equity availability and debt-to-income calculations."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-11",
+    title: "Module 11: Site Inspection Excellence",
+    objective: "To organize, present, and coordinate high-conversion physical property tours.",
+    lessons: [
+      {
+        title: "Physical Property Showings",
+        content: [
+          "INSPECTION PREPARATION & PRESENTATION\nLogistical planning, transport coordination, safety standards, and personal presentation. Use structured storytelling rather than passive walking.",
+          "HANDLING OBJECTIONS ON SITE\nAddress structural, environmental, and financial objections professionally. Set up subsequent follow-up timelines immediately."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Mock Inspection Recording",
+        description: "Prepare an inspection script for a client tour, outlining your storytelling flow and how you would address a major objection on site."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-12",
+    title: "Module 12: Negotiation & Closing",
+    objective: "To manage offers, counter-offers, payment plans, and coordinate handovers.",
+    lessons: [
+      {
+        title: "The Closing Phase",
+        content: [
+          "NEGOTIATION PRINCIPLES\nNegotiate pricing, schedules, and handovers. Draft reservation forms and transaction records clearly.",
+          "AFTER-SALES SERVICE\nCoordinate documentation delivery (Deeds, receipts) and support the client during handover to build long-term advisory relationships."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Closing File Compilation",
+        description: "Compile a transaction file including offer letters, reservation documents, payment plans, and handover schedules for approval."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-13",
+    title: "Module 13: Building Your Personal Brand",
+    objective: "To establish professional authority across LinkedIn, Facebook, and regional network events.",
+    lessons: [
+      {
+        title: "Brand Authority & Image",
+        content: [
+          "BRAND PILLARS FOR ADVISORS\nFocus on consistency, credibility, and authority. Use content marketing, professional networking, and educational seminars to get clients.",
+          "LINKEDIN & WHATSAPP STRATEGY\nUtilize educational posts on land rights, documentation, and market trends to establish yourself as a trusted local expert."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Personal Brand Strategy",
+        description: "Write a positioning statement and draft a month of educational social media post titles demonstrating property advisory expertise."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-14",
+    title: "Module 14: Running Your Property Business",
+    objective: "To manage commissions, track sales pipelines, and scale client records systematically.",
+    lessons: [
+      {
+        title: "Property Consultancy Operations",
+        content: [
+          "MANAGING BUSINESS FINANCIALS\nTrack commission pipelines, set up tax reserves, log business expenses, and use CRM tools to organize prospect databases.",
+          "SCALING YOUR TEAM\nLearn about recruitment frameworks, hiring assistants, and systemizing tasks to scale your property business."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Business Budget & KPI Setup",
+        description: "Set up a basic operational budget, define quarterly sales KPIs, and outline your CRM record-keeping workflow."
+      }
+    ]
+  },
+  {
+    id: "module-hcpa-15",
+    title: "Module 15: Becoming a Housmata Certified Property Advisor",
+    objective: "To finalize graduation criteria, pass the ethics review, and activate your profile.",
+    lessons: [
+      {
+        title: "Certification and Deployment",
+        content: [
+          "GRADUATION SPECIFICATIONS\nPass the ethics exam, complete the Capstone project, verify practical competency, and receive your certification.",
+          "ACTIVATING YOUR PROFILE\nLaunch your public profile on the Housmata app, unlock live lead assignments, and set up your partner commission structures."
+        ]
+      }
+    ],
+    assignments: [
+      {
+        title: "Final Review Verification Portfolio",
+        description: "Submit your comprehensive Capstone checklist and double-check your overall compliance before the final certification panel review."
+      }
+    ]
+  }
+];

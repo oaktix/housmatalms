@@ -15,6 +15,7 @@ export default function Apply() {
     state: "",
     experience: "Beginner",
     motivation: "",
+    courseId: "real-estate-os",
   });
 
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -54,6 +55,7 @@ export default function Apply() {
         state: formData.state,
         experience_level: formData.experience,
         motivation: formData.motivation,
+        course_id: formData.courseId as "real-estate-os" | "property-advisor-hcpa",
       });
 
       // Log email confirmation simulation
@@ -162,6 +164,22 @@ export default function Apply() {
                     required
                   />
                 </div>
+              </div>
+
+              {/* Track Selection */}
+              <div className="form-group">
+                <label htmlFor="courseId" className="text-xs font-extrabold text-text-muted mb-1 block">
+                  Select Target Certification Track *
+                </label>
+                <select
+                  id="courseId"
+                  name="courseId"
+                  value={formData.courseId}
+                  onChange={handleChange}
+                >
+                  <option value="real-estate-os">Housmata Certified Estate Manager (HCEM)</option>
+                  <option value="property-advisor-hcpa">Housmata Certified Property Advisor (HCPA)</option>
+                </select>
               </div>
 
               {/* Cohort Selector & Experience */}
