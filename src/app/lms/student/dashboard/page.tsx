@@ -126,12 +126,17 @@ export default function StudentDashboard() {
     if (!hasPre) {
       setShowPreSurvey(true);
     } else {
+      setShowPreSurvey(false);
       const finishedAllModules = activeCurriculum.every(mod => studentProgress?.completed_modules?.includes(mod.id));
       if (finishedAllModules) {
         const hasPost = db.getSurveyResponse(studentId, "post");
         if (!hasPost) {
           setShowPostSurvey(true);
+        } else {
+          setShowPostSurvey(false);
         }
+      } else {
+        setShowPostSurvey(false);
       }
     }
   }, [currentUser]);

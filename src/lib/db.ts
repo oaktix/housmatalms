@@ -885,10 +885,11 @@ class LocalStorageDB {
 
   async createSurveyResponse(userId: string, type: "pre" | "post", answers: Record<string, number>): Promise<SurveyResponse> {
     const list = this.getSurveyResponses();
+    const existing = list.find((r) => r.user_id === userId && r.type === type);
     const filtered = list.filter((r) => !(r.user_id === userId && r.type === type));
 
     const newResponse: SurveyResponse = {
-      id: generateUUID(),
+      id: existing ? existing.id : generateUUID(),
       user_id: userId,
       type: type,
       answers: answers,
@@ -897,7 +898,9 @@ class LocalStorageDB {
 
     filtered.push(newResponse);
     this.set("lms_survey_responses", filtered);
-    await this.saveToSupabase("survey_responses", newResponse, true);
+    
+    // Use upsert (isInsert = false) to prevent unique constraint violation on (user_id, type)
+    await this.saveToSupabase("survey_responses", newResponse, false);
 
     return newResponse;
   }
