@@ -90,6 +90,36 @@ export default function Home() {
         <div className="absolute top-[30%] right-[5%] w-[40vw] h-[40vw] rounded-full bg-secondary/8 blur-[160px] animate-pulse-slow pointer-events-none [animation-delay:3s]" />
         <div className="absolute bottom-[25%] left-[5%] w-[45vw] h-[45vw] rounded-full bg-primary/8 blur-[180px] animate-pulse-slow pointer-events-none [animation-delay:6s]" />
 
+        {/* Floating Real Estate Vector Animations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 select-none">
+          <style>{`
+            @keyframes float-slow {
+              0%, 100% { transform: translateY(0px) rotate(0deg); }
+              50% { transform: translateY(-15px) rotate(5deg); }
+            }
+            @keyframes float-mid {
+              0%, 100% { transform: translateY(0px) rotate(0deg); }
+              50% { transform: translateY(-25px) rotate(-10deg); }
+            }
+            .animate-float-1 { animation: float-slow 8s ease-in-out infinite; }
+            .animate-float-2 { animation: float-mid 11s ease-in-out infinite; }
+            .animate-float-3 { animation: float-slow 14s ease-in-out infinite; }
+            .animate-float-4 { animation: float-mid 9s ease-in-out infinite; }
+          `}</style>
+          
+          {/* House Vector - Top Left */}
+          <svg className="absolute top-[12%] left-[8%] w-16 h-16 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-1 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          
+          {/* Key Vector - Mid Right */}
+          <svg className="absolute top-[28%] right-[10%] w-14 h-14 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-2 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3M15.5 7.5L14 9"/></svg>
+          
+          {/* Lock Vector - Bottom Left */}
+          <svg className="absolute bottom-[35%] left-[6%] w-12 h-12 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-3 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          
+          {/* Map Coordinates Vector - Bottom Right */}
+          <svg className="absolute bottom-[48%] right-[8%] w-16 h-16 text-black/[0.06] dark:text-white/[0.04] stroke-current stroke-[1.5] animate-float-4 transition-colors hover:text-primary/20" viewBox="0 0 24 24" fill="none"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        </div>
+
         {/* 1. Hero Section */}
         <section className="relative overflow-hidden pt-32 pb-36 md:pt-44 md:pb-48 border-b border-border-main scroll-section transition-all duration-1000">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(2,184,117,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(2,184,117,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.05)_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] animate-grid-move pointer-events-none" />
