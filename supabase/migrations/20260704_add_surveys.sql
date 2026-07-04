@@ -14,15 +14,17 @@ CREATE TABLE IF NOT EXISTS public.survey_responses (
 -- Enable RLS
 ALTER TABLE public.survey_responses ENABLE ROW LEVEL SECURITY;
 
--- Policies
+-- Policies (permissive — app uses anon key without Supabase Auth sessions)
 DROP POLICY IF EXISTS "Students can insert their own survey responses" ON public.survey_responses;
-CREATE POLICY "Students can insert their own survey responses" ON public.survey_responses
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS "Anyone can insert survey responses" ON public.survey_responses;
+CREATE POLICY "Anyone can insert survey responses" ON public.survey_responses
+    FOR INSERT WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Students can view their own survey responses" ON public.survey_responses;
-CREATE POLICY "Students can view their own survey responses" ON public.survey_responses
-    FOR SELECT USING (auth.uid() = user_id or public.is_admin(auth.uid()));
+DROP POLICY IF EXISTS "Anyone can view survey responses" ON public.survey_responses;
+CREATE POLICY "Anyone can view survey responses" ON public.survey_responses
+    FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Admins can view all survey responses" ON public.survey_responses;
-CREATE POLICY "Admins can view all survey responses" ON public.survey_responses
+CREATE POLICY "Admins can manage all survey responses" ON public.survey_responses
     FOR ALL USING (public.is_admin(auth.uid()));
