@@ -12,6 +12,11 @@ export function useAuth() {
     if (typeof window === "undefined") return;
 
     const checkAuth = () => {
+      if (db.isSyncing()) {
+        setLoading(true);
+        return;
+      }
+
       const savedUserId = localStorage.getItem("lms_current_user_id");
       if (savedUserId) {
         const profile = db.getProfile(savedUserId);
@@ -39,7 +44,7 @@ export function useAuth() {
     // Safety timeout to ensure loading screen closes even on slow network
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1500);
+    }, 3000);
 
     return () => {
       unsubscribe();
