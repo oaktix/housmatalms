@@ -106,6 +106,8 @@ export default function ProgressTrackerPortal() {
             <select
               value={selectedCohortId}
               onChange={(e) => setSelectedCohortId(e.target.value)}
+              title="Select Cohort Filter"
+              aria-label="Select Cohort Filter"
               className="text-xs py-1.5 px-3 rounded-xl border border-border-main bg-bg-main"
             >
               <option value="all">All Cohorts</option>
@@ -120,6 +122,8 @@ export default function ProgressTrackerPortal() {
             <select
               value={selectedPhase}
               onChange={(e) => setSelectedPhase(e.target.value)}
+              title="Select Phase Filter"
+              aria-label="Select Phase Filter"
               className="text-xs py-1.5 px-3 rounded-xl border border-border-main bg-bg-main"
             >
               <option value="all">All Phases</option>

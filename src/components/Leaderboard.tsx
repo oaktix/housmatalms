@@ -107,6 +107,8 @@ export default function Leaderboard() {
           <select
             value={selectedCohortId}
             onChange={(e) => setSelectedCohortId(e.target.value)}
+            title="Select Cohort Filter"
+            aria-label="Select Cohort Filter"
             className="w-full md:w-56 text-xs bg-bg-main border border-border-main rounded-xl px-3 py-2 text-text-main focus:outline-none focus:border-primary"
           >
             <option value="all">All Cohorts</option>
