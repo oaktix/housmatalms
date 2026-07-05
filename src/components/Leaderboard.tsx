@@ -160,10 +160,26 @@ export default function Leaderboard() {
                         {rank > 3 && <span className="text-text-muted">#{rank}</span>}
                       </td>
                       <td className="py-4 px-6 font-bold text-text-main">
-                        <div>
-                          <p className="font-heading font-black text-sm">{entry.profile.full_name}</p>
-                          <p className="text-[10px] text-text-muted font-normal">{entry.profile.email}</p>
-                        </div>
+                        {(() => {
+                          const getBadge = (count: number) => {
+                            if (count >= 10) return { name: "Ecosystem Expert 👑", style: "bg-green-950/20 border-green-500/30 text-green-400" };
+                            if (count >= 8) return { name: "Specialist ⚡", style: "bg-accent-glow border-accent/20 text-accent" };
+                            if (count >= 4) return { name: "Apprentice ⚙️", style: "bg-secondary-glow border-secondary/20 text-secondary" };
+                            return { name: "Novice 🌱", style: "bg-bg-main border-border-main text-text-muted" };
+                          };
+                          const badge = getBadge(entry.completedModulesCount);
+                          return (
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-heading font-black text-sm">{entry.profile.full_name}</p>
+                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase ${badge.style}`}>
+                                  {badge.name}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-text-muted font-normal">{entry.profile.email}</p>
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="py-4 px-6 text-text-muted">
                         {entry.cohort?.name || "No Cohort Assigned"}

@@ -99,6 +99,21 @@ export default function StudentDashboard() {
       setShowPreSurvey(false);
       const finishedAllModules = activeCurriculum.every(mod => studentProgress?.completed_modules?.includes(mod.id));
       if (finishedAllModules) {
+        // Nudge check for unscheduled stream
+        if (!studentProgress.selected_class) {
+          const emailSentFlag = typeof window !== "undefined" && localStorage.getItem(`nudge_email_sent_${studentId}`);
+          if (emailSentFlag !== "true") {
+            db.logEmail(
+              currentUser.email,
+              "Urgent Action: Select Live Class Stream to Proceed",
+              `Hello ${currentUser.full_name},\n\nYou have successfully completed all curriculum modules! However, you have not selected a live class stream slot yet.\n\nPlease log in to your dashboard and navigate to "Meetings & Live" to choose one of the available Tuesday slot options so that we can verify your progress and promote you to Phase 3 Field Practicals.\n\nBest regards,\nHousmata Academy Team`
+            );
+            if (typeof window !== "undefined") {
+              localStorage.setItem(`nudge_email_sent_${studentId}`, "true");
+            }
+          }
+        }
+
         const localPostFlag = typeof window !== "undefined" && localStorage.getItem(`survey_completed_post_${studentId}`);
         const hasPost = localPostFlag === "true" || !!db.getSurveyResponse(studentId, "post");
         if (!hasPost) {
@@ -170,7 +185,7 @@ export default function StudentDashboard() {
               Assigned Course: <span className="font-bold text-text-main">{courseTitle}</span>
             </p>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <div className="text-xs">
               <span className="text-text-muted block">Cohort</span>
               <span className="font-bold text-text-main block mt-0.5">{cohort ? cohort.name : "Unassigned"}</span>
@@ -179,8 +194,46 @@ export default function StudentDashboard() {
               <span className="text-text-muted block">Current Phase</span>
               <span className="font-bold text-primary block mt-0.5">Phase {progress.current_phase}</span>
             </div>
+            <div className="text-xs">
+              <span className="text-text-muted block">Milestone Badge</span>
+              {(() => {
+                const getBadge = (count: number) => {
+                  if (count >= 10) return { name: "Ecosystem Expert 👑", style: "bg-green-950/20 border-green-500/30 text-green-400" };
+                  if (count >= 8) return { name: "Specialist ⚡", style: "bg-accent-glow border-accent/20 text-accent" };
+                  if (count >= 4) return { name: "Apprentice ⚙️", style: "bg-secondary-glow border-secondary/20 text-secondary" };
+                  return { name: "Novice 🌱", style: "bg-bg-main border-border-main text-text-muted" };
+                };
+                const badge = getBadge(progress.completed_modules.length);
+                return (
+                  <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold border uppercase ${badge.style}`}>
+                    {badge.name}
+                  </span>
+                );
+              })()}
+            </div>
           </div>
         </div>
+
+        {/* Nudge Warning Banner */}
+        {progress.completed_modules.length === activeCurriculum.length && !progress.selected_class && (
+          <div className="p-5 border border-accent/25 bg-accent-glow/10 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-pulse">
+            <div className="space-y-1">
+              <h4 className="text-xs font-black text-text-main flex items-center gap-1.5">
+                <Calendar className="w-4 h-4 text-accent" />
+                Next Milestone Action Required
+              </h4>
+              <p className="text-[10px] text-text-muted leading-relaxed">
+                You have successfully completed all Phase 1 Modules! Please select one of the 4 Tuesday live class slots to unlock your Phase 3 Field Practicals.
+              </p>
+            </div>
+            <Link
+              href="/lms/student/meetings"
+              className="btn bg-accent text-text-inverse hover:brightness-110 px-4 py-2 rounded-xl text-[10px] font-extrabold shadow-sm whitespace-nowrap"
+            >
+              Select Tuesday Slot
+            </Link>
+          </div>
+        )}
 
         {/* Directory Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

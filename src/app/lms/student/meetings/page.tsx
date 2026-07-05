@@ -94,41 +94,77 @@ export default function StudentMeetings() {
                 </div>
               ) : !progress.selected_class ? (
                 <div className="space-y-4">
-                  <div className="grid grid-cols-1 gap-3">
-                    {[
-                      "Bootcamp Stream - Tuesday July 7th, 2026 (4PM)",
-                      "Bootcamp Stream - Tuesday July 14th, 2026 (4PM)",
-                      "Bootcamp Stream - Tuesday July 21st, 2026 (4PM)",
-                      "Bootcamp Stream - Tuesday July 28th, 2026 (4PM)"
-                    ].map((slot) => (
-                      <label
-                        key={slot}
-                        className={`p-4 rounded-xl border flex items-start gap-3 cursor-pointer hover:bg-bg-main/55 transition-all ${
-                          tempSelectedClass === slot
-                            ? "border-secondary bg-secondary/5 text-text-main"
-                            : "border-border-main bg-bg-main/30 text-text-muted"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="class-slot"
-                          className="mt-1"
-                          checked={tempSelectedClass === slot}
-                          onChange={() => setTempSelectedClass(slot)}
-                        />
-                        <span className="text-xs font-bold text-text-main">{slot}</span>
-                      </label>
-                    ))}
+                  <div className="p-4 bg-bg-main/30 border border-border-main rounded-2xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black text-text-main">July 2026</span>
+                      <span className="text-[10px] text-text-muted">Select an active Tuesday slot</span>
+                    </div>
+
+                    {/* Calendar grid */}
+                    <div className="grid grid-cols-7 gap-2 text-center text-[10px] font-bold">
+                      {/* Week Headers */}
+                      {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map(d => (
+                        <div key={d} className="text-text-muted py-1">{d}</div>
+                      ))}
+
+                      {/* Empty cells before July 1st (starts on Wednesday, so 3 empty cells) */}
+                      {Array(3).fill(null).map((_, i) => (
+                        <div key={`empty-${i}`} className="py-2.5 opacity-0" />
+                      ))}
+
+                      {/* Day cells for July 2026 */}
+                      {Array.from({ length: 31 }, (_, i) => {
+                        const day = i + 1;
+                        const isTuesday = [7, 14, 21, 28].map(d => d).includes(day);
+                        const slotString = isTuesday 
+                          ? `Bootcamp Stream - Tuesday July ${day}th, 2026 (4PM)`
+                          : null;
+                        const isSelected = slotString === tempSelectedClass;
+
+                        return (
+                          <div
+                            key={day}
+                            onClick={() => {
+                              if (slotString) {
+                                setTempSelectedClass(slotString);
+                              }
+                            }}
+                            className={`py-2 rounded-xl border transition-all text-xs font-black ${
+                              isTuesday
+                                ? isSelected
+                                  ? "border-secondary bg-secondary/15 text-secondary shadow-md cursor-pointer scale-105"
+                                  : "border-secondary/40 bg-secondary-glow/5 text-text-main cursor-pointer hover:border-secondary hover:bg-secondary/10"
+                                : "border-transparent text-text-muted/20 pointer-events-none"
+                            }`}
+                          >
+                            <span>{day}</span>
+                            {isTuesday && (
+                              <span className="block text-[6px] text-secondary font-extrabold uppercase mt-0.5 tracking-tighter">
+                                {isSelected ? "Selected" : "4PM"}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
+
+                  {tempSelectedClass && (
+                    <div className="p-3.5 bg-secondary-glow/10 border border-secondary/15 rounded-2xl text-xs space-y-1.5 animate-fade-in">
+                      <span className="text-[9px] font-bold text-secondary uppercase block">Selected Slot details</span>
+                      <p className="font-extrabold text-text-main">{tempSelectedClass}</p>
+                      <p className="text-[10px] text-text-muted">Requires 1.5 hours live attendance. Session zoom link will unlock 10 mins prior to the start time.</p>
+                    </div>
+                  )}
 
                   <div className="flex justify-end">
                     <button
                       type="button"
                       disabled={!tempSelectedClass}
                       onClick={() => handleSelectClass(tempSelectedClass)}
-                      className="btn bg-secondary text-white hover:brightness-110 px-6 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                      className="btn bg-secondary text-white hover:brightness-110 px-6 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-md cursor-pointer"
                     >
-                      Confirm Enrollment
+                      Confirm Booking Enrollment
                     </button>
                   </div>
                 </div>

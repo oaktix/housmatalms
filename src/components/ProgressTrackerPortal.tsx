@@ -169,7 +169,23 @@ export default function ProgressTrackerPortal() {
                             <GraduationCap className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <span className="font-bold text-text-main truncate block">{student.full_name}</span>
+                            {(() => {
+                              const getBadge = (count: number) => {
+                                if (count >= 10) return { name: "Ecosystem Expert 👑", style: "bg-green-950/20 border-green-500/30 text-green-400" };
+                                if (count >= 8) return { name: "Specialist ⚡", style: "bg-accent-glow border-accent/20 text-accent" };
+                                if (count >= 4) return { name: "Apprentice ⚙️", style: "bg-secondary-glow border-secondary/20 text-secondary" };
+                                return { name: "Novice 🌱", style: "bg-bg-main border-border-main text-text-muted" };
+                              };
+                              const badge = getBadge(progress.completed_modules.length);
+                              return (
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-text-main truncate block">{student.full_name}</span>
+                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase ${badge.style}`}>
+                                    {badge.name}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                             <span className="text-[10px] text-text-muted truncate block">{student.email}</span>
                           </div>
                         </div>

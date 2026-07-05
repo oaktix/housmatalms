@@ -183,6 +183,36 @@ export default function Verify() {
                   </div>
                 </div>
 
+                <style>{`
+                  @media print {
+                    header, footer, nav, button, form, .print\\:hidden {
+                      display: none !important;
+                    }
+                    body {
+                      background: white !important;
+                      color: black !important;
+                    }
+                    .premium-card {
+                      border: 2px solid #26c496 !important;
+                      box-shadow: none !important;
+                      background: white !important;
+                      margin: 40px auto !important;
+                      padding: 24px !important;
+                      max-width: 500px !important;
+                    }
+                  }
+                `}</style>
+
+                <div className="pt-2 flex justify-center print:hidden">
+                  <button
+                    onClick={() => window.print()}
+                    className="btn bg-primary text-text-inverse hover:brightness-110 px-4 py-2 rounded-xl text-[10px] font-extrabold shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Print Verified Certificate
+                  </button>
+                </div>
+
                 <div className="h-px bg-border-main w-full" />
 
                 <div className="text-[9px] text-text-muted font-mono break-all text-center">
