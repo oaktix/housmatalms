@@ -28,7 +28,6 @@ export default function AdminApplications() {
 
   useEffect(() => {
     loadApplications();
-    db.sync();
     return db.subscribe(loadApplications);
   }, [currentUser, loadApplications]);
 
