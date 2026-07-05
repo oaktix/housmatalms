@@ -28,8 +28,7 @@ export default function AdminUsersCrud() {
   const [activeTab, setActiveTab] = useState<"all" | "admin" | "instructor" | "student">("all");
 
   // Form Panel States
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [panelMode, setPanelMode] = useState<"create" | "edit">("create");
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "view" | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Form Inputs
@@ -109,14 +108,12 @@ Housmata Academy Admissions & Operations Team`;
   // Open Create Panel
   const handleOpenCreate = () => {
     resetForm();
-    setPanelMode("create");
-    setIsPanelOpen(true);
+    setModalMode("create");
   };
 
-  // Open Edit Panel
-  const handleOpenEdit = (user: Profile) => {
+  // Open View Panel
+  const handleOpenView = (user: Profile) => {
     resetForm();
-    setPanelMode("edit");
     setSelectedUserId(user.id);
     setFullName(user.full_name);
     setEmail(user.email);
@@ -136,8 +133,32 @@ Housmata Academy Admissions & Operations Team`;
         setPhilosophy(instData.philosophy || "");
       }
     }
+    setModalMode("view");
+  };
 
-    setIsPanelOpen(true);
+  // Open Edit Panel
+  const handleOpenEdit = (user: Profile) => {
+    resetForm();
+    setSelectedUserId(user.id);
+    setFullName(user.full_name);
+    setEmail(user.email);
+    setRole(user.role);
+
+    if (user.role === "student") {
+      const currentCohort = db.getStudentCohort(user.id);
+      if (currentCohort) {
+        setCohortId(currentCohort.id);
+      }
+    } else if (user.role === "instructor") {
+      const instData = db.getInstructorByProfile(user.id);
+      if (instData) {
+        setBio(instData.bio || "");
+        setQualifications(instData.qualifications?.join(", ") || "");
+        setAwards(instData.awards?.join(", ") || "");
+        setPhilosophy(instData.philosophy || "");
+      }
+    }
+    setModalMode("edit");
   };
 
   // Submit Handler
@@ -158,12 +179,12 @@ Housmata Academy Admissions & Operations Team`;
 
     // Email uniqueness check (ignore if editing same user)
     const existing = db.getProfileByEmail(email);
-    if (existing && (panelMode === "create" || existing.id !== selectedUserId)) {
+    if (existing && (modalMode === "create" || existing.id !== selectedUserId)) {
       setMessage({ text: `An account with email ${email} already exists.`, type: "error" });
       return;
     }
 
-    if (panelMode === "create") {
+    if (modalMode === "create") {
       const newUserId = db.generateUUID();
       
       const newProfile: Profile = {
@@ -254,7 +275,7 @@ Housmata Academy Admissions & Operations Team`;
 
     loadData();
     setTimeout(() => {
-      setIsPanelOpen(false);
+      setModalMode(null);
       setMessage(null);
     }, 1200);
   };
@@ -373,8 +394,8 @@ Housmata Academy Admissions & Operations Team`;
 
       {/* Main Grid View */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* User List Panel (left 8 cols or full width if drawer closed) */}
-        <div className={`${isPanelOpen ? "lg:col-span-7" : "lg:col-span-12"} space-y-4`}>
+        {/* User List Panel (Full Width) */}
+        <div className="lg:col-span-12 space-y-4">
           <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 space-y-4">
             {/* Search & Tabs control */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border-main pb-4">
@@ -433,17 +454,21 @@ Housmata Academy Admissions & Operations Team`;
                 <table className="table-grid text-xs">
                   <thead>
                     <tr>
-                      <th className="w-[40%]">User Profile</th>
+                      <th className="w-[45%]">User Profile</th>
                       <th className="w-[20%]">System Role</th>
                       <th className="w-[20%]">Cohort/Mapping</th>
-                      <th className="w-[20%] text-right">Operations</th>
+                      <th className="w-[15%] text-right font-black uppercase text-[10px] text-primary">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.map((user) => {
                       const userCohort = user.role === "student" ? db.getStudentCohort(user.id) : undefined;
                       return (
-                        <tr key={user.id} className="hover:bg-bg-card-hover transition-colors">
+                        <tr 
+                          key={user.id} 
+                          onClick={() => handleOpenView(user)}
+                          className="hover:bg-bg-card-hover transition-colors cursor-pointer"
+                        >
                           <td>
                             <div className="flex items-center gap-2.5">
                               <div className={`p-2 rounded-xl text-xs flex-shrink-0 ${
@@ -478,39 +503,9 @@ Housmata Academy Admissions & Operations Team`;
                             </span>
                           </td>
                           <td className="text-right">
-                            {confirmDeleteId === user.id ? (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleDelete(user.id)}
-                                  className="text-[10px] px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors active:scale-95"
-                                >
-                                  Yes
-                                </button>
-                                <button
-                                  onClick={() => setConfirmDeleteId(null)}
-                                  className="text-[10px] px-2 py-1 bg-bg-main border border-border-main text-text-main font-bold rounded-lg hover:bg-bg-card-hover transition-colors"
-                                >
-                                  No
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-end gap-2.5">
-                                <button
-                                  onClick={() => handleOpenEdit(user)}
-                                  className="p-1.5 text-text-muted hover:text-primary hover:bg-primary-glow rounded-lg transition-colors"
-                                  title="Edit account credentials"
-                                >
-                                  <Edit3 className="w-3.5 h-3.5" />
-                                </button>
-                                <button
-                                  onClick={() => setConfirmDeleteId(user.id)}
-                                  className="p-1.5 text-text-muted hover:text-red-400 hover:bg-red-950/20 rounded-lg transition-colors"
-                                  title="Delete user account"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            )}
+                            <span className="text-[10px] font-bold text-primary hover:underline">
+                              Manage
+                            </span>
                           </td>
                         </tr>
                       );
@@ -523,182 +518,309 @@ Housmata Academy Admissions & Operations Team`;
             )}
           </div>
         </div>
-
-        {/* Sidebar Creation Form Panel (right 5 cols, slide-in animation) */}
-        {isPanelOpen && (
-          <div className="lg:col-span-5 animate-slide-in">
-            <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-5 shadow-lg relative">
-              <button
-                onClick={() => setIsPanelOpen(false)}
-                className="p-1 text-text-muted hover:text-text-main absolute right-4 top-4 rounded-lg hover:bg-bg-main transition-colors"
-                title="Close panel"
-                aria-label="Close panel"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="border-b border-border-main pb-3">
-                <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
-                  Credential Panel
-                </span>
-                <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
-                  {panelMode === "create" ? "Create New User" : "Edit User Account"}
-                </h3>
-              </div>
-
-              {/* Form Input fields */}
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="form-group">
-                  <label htmlFor="fullName" className="text-[10px] font-bold text-text-muted block mb-1">
-                    Full Account Name
-                  </label>
-                  <input
-                    type="text"
-                    id="fullName"
-                    placeholder="e.g. Adebayo Adesina"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="email" className="text-[10px] font-bold text-text-muted block mb-1">
-                    System Login Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    placeholder="e.g. adebayo@housmata.test"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="role" className="text-[10px] font-bold text-text-muted block mb-1">
-                    Select Account Role
-                  </label>
-                  <select
-                    id="role"
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as "admin" | "instructor" | "student")}
-                  >
-                    <option value="student">🎓 Trainee / Student</option>
-                    <option value="instructor">👨‍🏫 Instructor</option>
-                    <option value="admin">🛡️ System Administrator</option>
-                  </select>
-                </div>
-
-                {/* Trainee Cohort allocation dropdown (student specific) */}
-                {role === "student" && (
-                  <div className="form-group bg-accent-glow/30 border border-accent/10 p-3 rounded-xl space-y-3 animate-fade-in">
-                    <span className="text-[9px] font-extrabold uppercase text-accent flex items-center gap-1">
-                      <GraduationCap className="w-3.5 h-3.5" />
-                      Cohort Enrollment Mapping
-                    </span>
-                    <div>
-                      <label htmlFor="cohortId" className="text-[10px] font-bold text-text-muted block mb-1">
-                        Select Cohort Session
-                      </label>
-                      <select
-                        id="cohortId"
-                        value={cohortId}
-                        onChange={(e) => setCohortId(e.target.value)}
-                      >
-                        {cohorts.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name} ({c.active ? "Active" : "Archived"})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    {panelMode === "create" && (
-                      <p className="text-[9px] text-accent font-semibold leading-relaxed flex gap-1 items-start bg-bg-card p-2 rounded-lg">
-                        <Mail className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                        Creating this student triggers a welcome/congratulations email to their inbox.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Biography & Skills text areas (instructor specific) */}
-                {role === "instructor" && (
-                  <div className="bg-secondary-glow/20 border border-secondary/10 p-3 rounded-xl space-y-3 animate-fade-in">
-                    <span className="text-[9px] font-extrabold uppercase text-secondary flex items-center gap-1">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      Instructor Profile Credentials
-                    </span>
-                    
-                    <div className="form-group">
-                      <label htmlFor="bio" className="text-[10px] font-bold text-text-muted block mb-1">
-                        Instructor biography
-                      </label>
-                      <textarea
-                        id="bio"
-                        placeholder="e.g. Over 10 years of property management and legal counseling..."
-                        rows={2}
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        className="text-[11px] p-2 bg-bg-main border border-border-main rounded-lg w-full text-text-main placeholder-text-muted focus:border-secondary/50 focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="qualifications" className="text-[10px] font-bold text-text-muted block mb-1">
-                        Qualifications (comma separated)
-                      </label>
-                      <input
-                        type="text"
-                        id="qualifications"
-                        placeholder="e.g. LL.B, MBA Real Estate, ANIVS"
-                        value={qualifications}
-                        onChange={(e) => setQualifications(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="awards" className="text-[10px] font-bold text-text-muted block mb-1">
-                        Awards & Recognition (comma separated)
-                      </label>
-                      <input
-                        type="text"
-                        id="awards"
-                        placeholder="e.g. Property Manager of the Year 2024"
-                        value={awards}
-                        onChange={(e) => setAwards(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="philosophy" className="text-[10px] font-bold text-text-muted block mb-1">
-                        Teaching Philosophy
-                      </label>
-                      <textarea
-                        id="philosophy"
-                        placeholder="e.g. Empowering practitioners via real-world simulations..."
-                        rows={2}
-                        value={philosophy}
-                        onChange={(e) => setPhilosophy(e.target.value)}
-                        className="text-[11px] p-2 bg-bg-main border border-border-main rounded-lg w-full text-text-main placeholder-text-muted focus:border-secondary/50 focus:outline-none"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Buttons */}
-                <button
-                  type="submit"
-                  className="btn bg-primary text-text-inverse hover:brightness-110 w-full py-2.5 rounded-xl font-bold text-xs shadow-sm mt-2 transition-transform active:scale-95"
-                >
-                  {panelMode === "create" ? "Save New Account" : "Apply Modifications"}
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Centered Modal Overlay for User details & Actions */}
+      {modalMode && (
+        <div 
+          className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            setModalMode(null);
+            setConfirmDeleteId(null);
+          }}
+        >
+          <div 
+            className="premium-card rounded-2xl bg-bg-card border border-border-main max-w-xl w-full p-6 sm:p-8 space-y-5 shadow-2xl animate-scale-in relative max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => {
+                setModalMode(null);
+                setConfirmDeleteId(null);
+              }}
+              className="p-1.5 text-text-muted hover:text-text-main absolute right-4 top-4 rounded-lg hover:bg-bg-main transition-colors cursor-pointer"
+              title="Close panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            {modalMode === "view" ? (
+              /* View Details Panel */
+              <div className="space-y-5">
+                <div className="border-b border-border-main pb-4 flex items-center gap-3">
+                  <div className={`p-3.5 rounded-2xl text-xs flex-shrink-0 ${
+                    role === "admin" ? "bg-primary-glow text-primary"
+                    : role === "instructor" ? "bg-secondary-glow text-secondary"
+                    : "bg-accent-glow text-accent"
+                  }`}>
+                    {role === "admin" ? <ShieldCheck className="w-5.5 h-5.5" />
+                     : role === "instructor" ? <BookOpen className="w-5.5 h-5.5" />
+                     : <GraduationCap className="w-5.5 h-5.5" />}
+                  </div>
+                  <div>
+                    <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main">
+                      {fullName}
+                    </h3>
+                    <p className="text-xs text-text-muted mt-0.5">{email}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4 text-xs">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-bg-main/30 border border-border-main p-3.5 rounded-xl space-y-0.5">
+                      <span className="text-[9px] text-text-muted font-bold block uppercase tracking-wider">System Role</span>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase border ${
+                        role === "admin" ? "bg-primary-glow border-primary/20 text-primary"
+                        : role === "instructor" ? "bg-secondary-glow border-secondary/20 text-secondary"
+                        : "bg-accent-glow border-accent/20 text-accent"
+                      }`}>
+                        {role}
+                      </span>
+                    </div>
+
+                    <div className="bg-bg-main/30 border border-border-main p-3.5 rounded-xl space-y-0.5">
+                      <span className="text-[9px] text-text-muted font-bold block uppercase tracking-wider">Access privileges</span>
+                      <span className="font-bold text-text-main block">
+                        {role === "admin" ? "Admissions & Portal Master"
+                         : role === "instructor" ? "Academic Assessor"
+                         : "Curriculum Learner"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {role === "student" && (
+                    <div className="bg-accent-glow/10 border border-accent/15 p-4 rounded-xl space-y-1 animate-fade-in">
+                      <span className="text-[9px] font-bold text-accent uppercase block tracking-widest">Cohort mapping</span>
+                      <span className="font-black text-xs text-text-main">
+                        {(() => {
+                          const userCohort = db.getStudentCohort(selectedUserId || "");
+                          return userCohort ? `${userCohort.name} (${userCohort.active ? "Active" : "Archived"})` : "No cohort assigned yet";
+                        })()}
+                      </span>
+                    </div>
+                  )}
+
+                  {role === "instructor" && (
+                    <div className="bg-secondary-glow/10 border border-secondary/15 p-4 rounded-xl space-y-3.5 animate-fade-in">
+                      <span className="text-[9px] font-bold text-secondary uppercase block tracking-widest">Instructor Credentials</span>
+                      <div className="space-y-2 leading-relaxed">
+                        <p><strong>Biography:</strong> <span className="text-text-muted">{bio || "No biography written."}</span></p>
+                        <p><strong>Qualifications:</strong> <span className="text-text-muted">{qualifications || "No qualifications loaded."}</span></p>
+                        <p><strong>Awards:</strong> <span className="text-text-muted">{awards || "No awards registered."}</span></p>
+                        <p><strong>Teaching Philosophy:</strong> <span className="text-text-muted">{philosophy || "No philosophy entered."}</span></p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Operations Desk inside Modal */}
+                <div className="border-t border-border-main/50 pt-4 space-y-3">
+                  {confirmDeleteId === selectedUserId ? (
+                    <div className="bg-red-950/15 border border-red-500/20 p-4 rounded-xl space-y-3 text-center">
+                      <p className="text-[11px] font-bold text-red-400">Are you sure you want to permanently delete this user account?</p>
+                      <div className="flex gap-2 justify-center">
+                        <button
+                          onClick={() => selectedUserId && handleDelete(selectedUserId)}
+                          className="text-[10px] font-black px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors cursor-pointer"
+                        >
+                          Yes, Delete Account
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          className="text-[10px] font-black px-4 py-2 bg-bg-main border border-border-main text-text-main rounded-lg hover:bg-bg-card-hover transition-colors cursor-pointer"
+                        >
+                          No, Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => {
+                          if (selectedUserId) {
+                            const u = db.getProfile(selectedUserId);
+                            if (u) handleOpenEdit(u);
+                          }
+                        }}
+                        className="btn bg-primary text-text-inverse hover:brightness-110 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        Edit Account Details
+                      </button>
+
+                      <button
+                        onClick={() => selectedUserId && setConfirmDeleteId(selectedUserId)}
+                        className="btn bg-red-950/10 border border-red-500/20 text-red-400 hover:bg-red-950/20 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete User
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Create / Edit Form Panel */
+              <div className="space-y-4">
+                <div className="border-b border-border-main pb-3">
+                  <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
+                    Credential Form Desk
+                  </span>
+                  <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
+                    {modalMode === "create" ? "Create New User" : "Edit User Account"}
+                  </h3>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="form-group">
+                    <label htmlFor="fullName" className="text-[10px] font-bold text-text-muted block mb-1">
+                      Full Account Name
+                    </label>
+                    <input
+                      type="text"
+                      id="fullName"
+                      placeholder="e.g. Adebayo Adesina"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="email" className="text-[10px] font-bold text-text-muted block mb-1">
+                      System Login Email
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      placeholder="e.g. adebayo@housmata.test"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="role" className="text-[10px] font-bold text-text-muted block mb-1">
+                      Select Account Role
+                    </label>
+                    <select
+                      id="role"
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as "admin" | "instructor" | "student")}
+                    >
+                      <option value="student">🎓 Trainee / Student</option>
+                      <option value="instructor">👨‍🏫 Instructor</option>
+                      <option value="admin">🛡️ System Administrator</option>
+                    </select>
+                  </div>
+
+                  {role === "student" && (
+                    <div className="form-group bg-accent-glow/30 border border-accent/15 p-3.5 rounded-xl space-y-3.5 animate-fade-in">
+                      <span className="text-[9px] font-extrabold uppercase text-accent flex items-center gap-1">
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        Cohort Enrollment Mapping
+                      </span>
+                      <div>
+                        <label htmlFor="cohortId" className="text-[10px] font-bold text-text-muted block mb-1">
+                          Select Cohort Session
+                        </label>
+                        <select
+                          id="cohortId"
+                          value={cohortId}
+                          onChange={(e) => setCohortId(e.target.value)}
+                        >
+                          {cohorts.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name} ({c.active ? "Active" : "Archived"})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {modalMode === "create" && (
+                        <p className="text-[9px] text-accent font-semibold leading-relaxed flex gap-1 items-start bg-bg-card p-2 rounded-lg">
+                          <Mail className="w-3 h-3 flex-shrink-0 mt-0.5" />
+                          Creating this student triggers a welcome/congratulations email to their inbox.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {role === "instructor" && (
+                    <div className="bg-secondary-glow/20 border border-secondary/15 p-3.5 rounded-xl space-y-3 animate-fade-in">
+                      <span className="text-[9px] font-extrabold uppercase text-secondary flex items-center gap-1">
+                        <BookOpen className="w-3.5 h-3.5" />
+                        Instructor Profile Credentials
+                      </span>
+                      
+                      <div className="form-group">
+                        <label htmlFor="bio" className="text-[10px] font-bold text-text-muted block mb-1">
+                          Instructor biography
+                        </label>
+                        <textarea
+                          id="bio"
+                          placeholder="e.g. Over 10 years of property management and legal counseling..."
+                          rows={2}
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          className="text-[11px] p-2 bg-bg-main border border-border-main rounded-lg w-full text-text-main placeholder-text-muted focus:border-secondary/50 focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor="qualifications" className="text-[10px] font-bold text-text-muted block mb-1">
+                          Qualifications (comma separated)
+                        </label>
+                        <input
+                          type="text"
+                          id="qualifications"
+                          placeholder="e.g. LL.B, MBA Real Estate, ANIVS"
+                          value={qualifications}
+                          onChange={(e) => setQualifications(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor="awards" className="text-[10px] font-bold text-text-muted block mb-1">
+                          Awards & Recognition (comma separated)
+                        </label>
+                        <input
+                          type="text"
+                          id="awards"
+                          placeholder="e.g. Property Manager of the Year 2024"
+                          value={awards}
+                          onChange={(e) => setAwards(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor="philosophy" className="text-[10px] font-bold text-text-muted block mb-1">
+                          Teaching Philosophy
+                        </label>
+                        <textarea
+                          id="philosophy"
+                          placeholder="e.g. Empowering practitioners via real-world simulations..."
+                          rows={2}
+                          value={philosophy}
+                          onChange={(e) => setPhilosophy(e.target.value)}
+                          className="text-[11px] p-2 bg-bg-main border border-border-main rounded-lg w-full text-text-main placeholder-text-muted focus:border-secondary/50 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    className="btn bg-primary text-text-inverse hover:brightness-110 w-full py-2.5 rounded-xl font-bold text-xs shadow-sm mt-2 transition-transform active:scale-95 cursor-pointer"
+                  >
+                    {modalMode === "create" ? "Save New Account" : "Apply Modifications"}
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

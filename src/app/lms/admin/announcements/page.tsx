@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Megaphone, Send, Users, User, Layers, Search, Mail, ShieldCheck } from "lucide-react";
+import { Megaphone, Send, Users, User, Layers, Search, Mail, ShieldCheck, X } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Cohort, Profile, Announcement } from "@/lib/mockData";
@@ -23,6 +23,7 @@ export default function AdminAnnouncements() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [selectedAnn, setSelectedAnn] = useState<Announcement | null>(null);
 
   const loadData = useCallback(() => {
     // Fetch cohorts
@@ -382,29 +383,39 @@ export default function AdminAnnouncements() {
                 {announcements
                   .slice()
                   .reverse()
-                  .map((ann) => (
-                    <div
-                      key={ann.id}
-                      className="p-4 rounded-xl border border-border-main bg-bg-main/30 space-y-2.5 transition-all hover:border-primary/20"
-                    >
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="space-y-0.5">
-                          <h4 className="font-extrabold text-xs text-text-main leading-snug">
-                            {ann.title}
-                          </h4>
-                          <span className="inline-block text-[9px] font-bold text-primary bg-primary-glow border border-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            {getCohortName(ann.cohort_id)}
+                  .map((ann) => {
+                    const isLong = ann.content.length > 150;
+                    const snippet = isLong ? ann.content.substring(0, 150) + "..." : ann.content;
+                    return (
+                      <div
+                        key={ann.id}
+                        onClick={() => setSelectedAnn(ann)}
+                        className="p-4 rounded-xl border border-border-main bg-bg-main/30 space-y-2.5 transition-all hover:border-primary/40 cursor-pointer hover:bg-bg-main/50"
+                      >
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="space-y-0.5">
+                            <h4 className="font-extrabold text-xs text-text-main leading-snug">
+                              {ann.title}
+                            </h4>
+                            <span className="inline-block text-[9px] font-bold text-primary bg-primary-glow border border-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              {getCohortName(ann.cohort_id)}
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-text-muted whitespace-nowrap bg-bg-card border border-border-main px-2 py-1 rounded-md">
+                            {new Date(ann.created_at).toLocaleString()}
                           </span>
                         </div>
-                        <span className="text-[9px] text-text-muted whitespace-nowrap bg-bg-card border border-border-main px-2 py-1 rounded-md">
-                          {new Date(ann.created_at).toLocaleString()}
-                        </span>
+                        <p className="text-[11px] text-text-muted leading-relaxed whitespace-pre-wrap">
+                          {snippet}
+                        </p>
+                        {isLong && (
+                          <span className="text-[10px] text-primary font-bold hover:underline">
+                            Read Full Announcement
+                          </span>
+                        )}
                       </div>
-                      <p className="text-[11px] text-text-muted leading-relaxed whitespace-pre-wrap">
-                        {ann.content}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             ) : (
               <div className="text-center py-12 text-text-muted text-xs">
@@ -414,6 +425,43 @@ export default function AdminAnnouncements() {
           </div>
         </div>
       </div>
+
+      {/* Modal Overlay for Announcement Details */}
+      {selectedAnn && (
+        <div 
+          className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedAnn(null)}
+        >
+          <div 
+            className="premium-card rounded-2xl bg-bg-card border border-border-main max-w-xl w-full p-6 sm:p-8 space-y-4 shadow-2xl animate-scale-in relative max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedAnn(null)}
+              className="p-1.5 text-text-muted hover:text-text-main absolute right-4 top-4 rounded-lg hover:bg-bg-main transition-colors cursor-pointer"
+              title="Close panel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="border-b border-border-main pb-4">
+              <span className="text-[9px] font-extrabold uppercase text-primary tracking-widest block">
+                {getCohortName(selectedAnn.cohort_id)}
+              </span>
+              <h3 className="font-heading font-extrabold text-sm sm:text-base text-text-main mt-0.5">
+                {selectedAnn.title}
+              </h3>
+              <p className="text-[9px] text-text-muted mt-1">
+                Published: {new Date(selectedAnn.created_at).toLocaleString()}
+              </p>
+            </div>
+
+            <div className="text-xs text-text-muted leading-relaxed whitespace-pre-wrap bg-bg-main/30 border border-border-main p-4 rounded-xl font-sans">
+              {selectedAnn.content}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
