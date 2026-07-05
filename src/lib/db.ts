@@ -70,6 +70,15 @@ class LocalStorageDB {
     if (isSupabaseConfigured && supabase) {
       this.isSupabase = true;
       this.syncFromSupabase();
+
+      // Subscribe to Supabase Realtime changes across all public tables
+      supabase
+        .channel("db-changes")
+        .on("postgres_changes", { event: "*", schema: "public" }, (payload) => {
+          console.log("Realtime database update detected:", payload.table);
+          this.syncFromSupabase();
+        })
+        .subscribe();
     }
   }
 
