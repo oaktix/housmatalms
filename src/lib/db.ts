@@ -1300,7 +1300,41 @@ class LocalStorageDB {
     };
     return this.updateProgress(updated);
   }
+
+  deleteSurveyResponsesForEmail(email: string): void {
+    const student = this.getProfileByEmail(email);
+    if (!student) return;
+    const userId = student.id;
+
+    // Local Storage cleanup
+    const responses = this.getSurveyResponses();
+    const filtered = responses.filter(r => r.user_id !== userId);
+    this.set("lms_survey_responses", filtered);
+
+    // Remove local flags from localStorage
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(`survey_completed_pre_${userId}`);
+      localStorage.removeItem(`survey_completed_post_${userId}`);
+      localStorage.removeItem(`survey_completed_pre_${email}`);
+      localStorage.removeItem(`survey_completed_post_${email}`);
+    }
+
+    // Supabase deletion
+    if (supabase) {
+      supabase
+        .from("survey_responses")
+        .delete()
+        .eq("user_id", userId)
+        .then(({ error }) => {
+          if (error) console.error("Failed to delete survey responses from Supabase:", error);
+          else console.log(`Successfully deleted survey responses for ${email} from Supabase.`);
+        });
+    }
+  }
 }
 
 export const db = new LocalStorageDB();
+// Reset survey responses for gahdejtheprince@gmail.com
+db.deleteSurveyResponsesForEmail("gahdejtheprince@gmail.com");
+
 export type { LocalStorageDB };
