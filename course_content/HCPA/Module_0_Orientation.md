@@ -133,36 +133,3 @@ Your reflection should answer:
 5. What impact do you hope to have on your clients and your community?
 
 *Note: This statement will become part of your professional portfolio and serve as a reminder of the standards you committed to when you began your journey as a Housmata Certified Property Advisor.*
-
-### Quiz: Orientation & Mindset
-1. **What is the primary reason many Nigerians avoid buying property?**
-   a) They dislike investing.
-   b) Lack of available properties.
-   c) Fear of making an expensive mistake and being defrauded.
-   d) Property is not a good asset.
-
-2. **Which of the following is NOT one of the 10 Housmata Principles?**
-   a) People Before Property
-   b) Commission Before Advice
-   c) Truth Builds Trust
-   d) Verify Before You Market
-
-3. **According to the Housmata philosophy, a salesperson focuses on closing transactions, while a trusted advisor focuses on:**
-   a) Maximizing profit margins.
-   b) Selling the most expensive property.
-   c) Solving problems.
-   d) Increasing social media followers.
-
-4. **What is the first step in the Housmata Certification Ladder?**
-   a) Housmata Partner Agency
-   b) Verified Independent Property Consultant
-   c) Certified Estate Manager
-   d) Housmata Property Agent
-
-5. **When a client is ready to buy, what should a Housmata Advisor do before recommending a property?**
-   a) Recommend the property with the highest commission.
-   b) Understand the client's goals and verify the property.
-   c) Pressure the client to pay immediately.
-   d) Wait for the client to find a property on their own.
-
-*Answers: 1 (c), 2 (b), 3 (c), 4 (d), 5 (b)*

@@ -1,7 +1,6 @@
 import { Quiz, QuizQuestion } from "./mockData";
 
 export const generatedQuizzesHCPA: Quiz[] = [
-  { id: "quiz-hcpa-m0", module_id: "hcpa-m0", title: "Orientation Assessment", passing_score: 75 },
   { id: "quiz-hcpa-m1", module_id: "hcpa-m1", title: "Module 1 Assessment", passing_score: 75 },
   { id: "quiz-hcpa-m2", module_id: "hcpa-m2", title: "Module 2 Assessment", passing_score: 75 },
   { id: "quiz-hcpa-m3", module_id: "hcpa-m3", title: "Module 3 Assessment", passing_score: 75 },
@@ -20,88 +19,6 @@ export const generatedQuizzesHCPA: Quiz[] = [
 ];
 
 export const generatedQuizQuestionsHCPA: QuizQuestion[] = [
-  // ==================== ORIENTATION (MODULE 0) ====================
-  {
-    id: "q-hcpa-m0-1",
-    quiz_id: "quiz-hcpa-m0",
-    question: "What is the primary asset that distinguishes a Housmata Certified Property Advisor?",
-    options: ["Aggressive sales closure speed", "Trust and verification protocols", "Having the lowest prices", "Knowing local developers personally"],
-    correct_option_index: 1,
-    explanation: "Trust is the primary asset in the Housmata ecosystem. Advisors verify before they market, and educate before they recommend."
-  },
-  {
-    id: "q-hcpa-m0-2",
-    quiz_id: "quiz-hcpa-m0",
-    question: "What is the main focus of a trusted advisor compared to a traditional salesperson?",
-    options: ["Earning commission on day one", "Solving client problems and matching the right properties", "Advertising as many properties as possible", "Relying on verbal agreements"],
-    correct_option_index: 1,
-    explanation: "A trusted advisor focuses on solving problems and matching the right property to the client's objective."
-  },
-  {
-    id: "q-hcpa-m0-3",
-    quiz_id: "quiz-hcpa-m0",
-    question: "According to the orientation, what question should an advisor ask before recommending a property?",
-    options: ["How much commission will I make?", "If this were my own money, would I still buy it?", "Is this the biggest building in the area?", "Can I close this deal in 24 hours?"],
-    correct_option_index: 1,
-    explanation: "Asking yourself if you would buy the property with your own money anchors your fiduciary duty of honesty to the client."
-  },
-  {
-    id: "q-hcpa-m0-4",
-    quiz_id: "quiz-hcpa-m0",
-    question: "What is the primary cause of investor hesitation in the Nigerian property market?",
-    options: ["A general dislike of owning physical land", "Fear of fraud, double allocations, and unverified titles", "Low historical returns on land investment", "High cost of transport for site tours"],
-    correct_option_index: 1,
-    explanation: "Buyers avoid property because they fear making an expensive mistake due to lack of verification."
-  },
-  {
-    id: "q-hcpa-m0-5",
-    quiz_id: "quiz-hcpa-m0",
-    question: "What does the Housmata model recommend before marketing a property?",
-    options: ["Gathering a deposit immediately", "Thoroughly verifying document titles and coordinates", "Creating a high-budget social media video", "Finding a buyer first"],
-    correct_option_index: 1,
-    explanation: "The core rule is: verify before you market, educate before you recommend, and advise before you sell."
-  },
-  {
-    id: "q-hcpa-m0-6",
-    quiz_id: "quiz-hcpa-m0",
-    question: "Which of these best defines the professional identity of a Housmata Advisor?",
-    options: ["A transactional broker searching for commissions", "A guardian of transparency and bridge between buyers and developers", "A private land surveyor", "A freelance mortgage broker"],
-    correct_option_index: 1,
-    explanation: "You represent a professional who coordinates searches, coordinates title flows, and ensures transparency."
-  },
-  {
-    id: "q-hcpa-m0-7",
-    quiz_id: "quiz-hcpa-m0",
-    question: "Why does the orientation emphasize 'educating' before 'recommending'?",
-    options: ["To delay the sale as long as possible", "To ensure the client understands the risks and rules of their investment", "To show off academic qualifications", "To charge a tutoring fee"],
-    correct_option_index: 1,
-    explanation: "Educating the client builds authority and ensures they make decisions based on clear information, not hype."
-  },
-  {
-    id: "q-hcpa-m0-8",
-    quiz_id: "quiz-hcpa-m0",
-    question: "How does the Housmata orientation define double allocation?",
-    options: ["Allocating double commissions to an advisor", "Allocating the same physical plot of land to two different buyers", "Building two houses on one plot", "Approving two mortgage applications at once"],
-    correct_option_index: 1,
-    explanation: "Double allocation is a fraudulent practice where developers or sellers sell the same plot to multiple buyers."
-  },
-  {
-    id: "q-hcpa-m0-9",
-    quiz_id: "quiz-hcpa-m0",
-    question: "What is the outcome when an advisor successfully matches the right property to the right objective?",
-    options: ["The client cancels the deal", "Sales become the natural, friction-free outcome", "Double taxation is triggered", "The advisor must refund the agency fee"],
-    correct_option_index: 1,
-    explanation: "When client alignment is handled honestly, high-trust sales follow naturally without aggressive pressure."
-  },
-  {
-    id: "q-hcpa-m0-10",
-    quiz_id: "quiz-hcpa-m0",
-    question: "The orientation states that trust is the primary asset. Why is this critical in Nigeria?",
-    options: ["Because land registry offices are fully automated and transparent", "Because informal, unverified brokerage has eroded client confidence", "Because there is no demand for real estate in urban areas", "Because developers always offer money-back guarantees"],
-    correct_option_index: 1,
-    explanation: "Unverified operations have made clients suspicious; proving you verify titles overcomes this barrier."
-  },
-
   // ==================== MODULE 1 ====================
   {
     id: "q-hcpa-m1-1",

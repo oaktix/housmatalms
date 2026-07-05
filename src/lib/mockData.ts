@@ -749,8 +749,7 @@ export const seedAssignments: Assignment[] = [
     points_possible: 100,
   },
 
-  // HCPA Assignments
-  { id: "assign-hcpa-m0", module_id: "module-hcpa-0", title: "Personal Commitment Statement", description: "Write a one-page commitment statement titled 'The Property Advisor I Aspire to Become' detailing why you enrolled and how you will uphold trust.", points_possible: 100 },
+  // HCPA Assignments (Modules 2-16: module-hcpa-1 through module-hcpa-15)
   { id: "assign-hcpa-m1", module_id: "module-hcpa-1", title: "Growth Corridor Research", description: "Research three fast-growing locations in your state and explain why they are attractive for property investment.", points_possible: 100 },
   { id: "assign-hcpa-m2", module_id: "module-hcpa-2", title: "Ethics Sign-off & Case Analysis", description: "Analyze a case where a buyer lost money due to an unethical broker, identify the warning signs, and sign the Housmata Professional Code.", points_possible: 100 },
   { id: "assign-hcpa-m3", module_id: "module-hcpa-3", title: "Land Banking Sourcing", description: "Identify one future land banking location in your region, analyze its growth drivers, and outline its potential risks.", points_possible: 100 },
