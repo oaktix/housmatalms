@@ -31,18 +31,30 @@ const isBrowser = typeof window !== "undefined";
 // Normalization Helpers to bridge UI (module-X) and DB (p1-mX) module IDs
 function normalizeToDbModuleId(moduleId?: string): string | undefined {
   if (!moduleId) return undefined;
-  const match = moduleId.match(/^module-(\d+)$/);
-  if (match) {
-    return `p1-m${match[1]}`;
+  // UI: "module-hcpa-1" → DB: "hcpa-m1"
+  const hcpaMatch = moduleId.match(/^module-hcpa-(\d+)$/);
+  if (hcpaMatch) {
+    return `hcpa-m${hcpaMatch[1]}`;
+  }
+  // UI: "module-1" → DB: "p1-m1"
+  const p1Match = moduleId.match(/^module-(\d+)$/);
+  if (p1Match) {
+    return `p1-m${p1Match[1]}`;
   }
   return moduleId;
 }
 
 function normalizeToUiModuleId(moduleId?: string): string | undefined {
   if (!moduleId) return undefined;
-  const match = moduleId.match(/^p1-m(\d+)$/);
-  if (match) {
-    return `module-${match[1]}`;
+  // DB: "hcpa-m1" → UI: "module-hcpa-1"
+  const hcpaMatch = moduleId.match(/^hcpa-m(\d+)$/);
+  if (hcpaMatch) {
+    return `module-hcpa-${hcpaMatch[1]}`;
+  }
+  // DB: "p1-m1" → UI: "module-1"
+  const p1Match = moduleId.match(/^p1-m(\d+)$/);
+  if (p1Match) {
+    return `module-${p1Match[1]}`;
   }
   return moduleId;
 }
