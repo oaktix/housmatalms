@@ -68,6 +68,7 @@ class LocalStorageDB {
   // Guards against overlapping / storm-triggered syncs
   private isSyncing = false;
   private realtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
+  public hasSynced = false;
 
   constructor() {
     if (isSupabaseConfigured && supabase) {
@@ -203,6 +204,7 @@ class LocalStorageDB {
           console.warn("[Storage Event Exception] Caught dispatch error:", err);
         }
       }
+      this.hasSynced = true;
       this.notify();
     } catch (e) {
       console.error("Failed to sync from Supabase:", e);

@@ -28,11 +28,8 @@ export function useAuth() {
           }
           setLoading(false);
         } else {
-          // Profile not found in cache yet — could mean sync is still in
-          // progress. Only clear the session if profiles have fully loaded
-          // AND we still can't find this user.
-          const allProfiles = db.getProfiles();
-          if (allProfiles.length > 0) {
+          // Only clear if the database has successfully synchronized from Supabase
+          if (db.hasSynced) {
             lastSetUserId = null;
             localStorage.removeItem("lms_current_user_id");
             setCurrentUser(null);
@@ -56,7 +53,7 @@ export function useAuth() {
       const savedUserId = localStorage.getItem("lms_current_user_id");
       // Only force-disable loading if there is no session to verify,
       // or if the profiles are loaded and we can do a proper check.
-      if (!savedUserId || db.getProfiles().length > 0) {
+      if (!savedUserId || db.hasSynced) {
         setLoading(false);
       }
     }, 8000);
