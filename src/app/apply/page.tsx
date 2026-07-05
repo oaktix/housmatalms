@@ -37,7 +37,7 @@ export default function Apply() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -58,7 +58,7 @@ export default function Apply() {
 
     try {
       // Save application
-      db.createApplication({
+      await db.createApplication({
         applicant_name: formData.name,
         email: formData.email,
         phone: formData.phone,
@@ -67,6 +67,7 @@ export default function Apply() {
         motivation: formData.motivation,
         course_id: formData.courseId as "real-estate-os" | "property-advisor-hcpa",
       });
+
 
       // Log email confirmation simulation
       db.logEmail(

@@ -47,7 +47,7 @@ function LoginContent() {
     }
   }, [token, login, router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -66,6 +66,10 @@ function LoginContent() {
       setLoading(false);
       return;
     }
+
+    // Force a Supabase sync so newly-approved student profiles are available
+    // before we attempt the lookup — prevents "account not found" on first login.
+    await db.sync();
 
     const res = login(email);
     setLoading(false);

@@ -499,8 +499,15 @@ class LocalStorageDB {
     return this.get<seeds.Application>("lms_applications", []);
   }
 
-  createApplication(app: Omit<seeds.Application, "id" | "status" | "created_at">): seeds.Application {
-    const list = this.getApplications();
+  async createApplication(app: Omit<seeds.Application, "id" | "status" | "created_at">): Promise<seeds.Application> {
+    // If an existing application row for this email exists in Supabase, delete it first
+    // to avoid the UNIQUE constraint on the email column blocking re-applications.
+    if (supabase) {
+      await supabase.from("applications").delete().eq("email", app.email);
+    }
+
+    // Remove any old local entry for same email
+    const list = this.getApplications().filter((a) => a.email.toLowerCase() !== app.email.toLowerCase());
     const newApp: seeds.Application = {
       ...app,
       id: generateUUID(),
@@ -509,7 +516,8 @@ class LocalStorageDB {
     };
     list.push(newApp);
     this.set("lms_applications", list);
-    this.saveToSupabase("applications", newApp, true);
+    // Use upsert (not insert) so re-submissions never fail on the unique email constraint
+    await this.saveToSupabase("applications", newApp, false);
     return newApp;
   }
 
