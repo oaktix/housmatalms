@@ -99,11 +99,13 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
       { name: "Admissions Review", href: "/lms/admin/applications", icon: <ClipboardList className="w-4.5 h-4.5" /> },
       { name: "Cohort Manager", href: "/lms/admin/cohorts", icon: <Users className="w-4.5 h-4.5" /> },
       { name: "Graduate Deployments", href: "/lms/admin/students", icon: <ShieldCheck className="w-4.5 h-4.5" /> },
+      { name: "Promoted Leaderboard", href: "/lms/admin/leaderboard", icon: <Award className="w-4.5 h-4.5" /> },
     ],
     instructor: [
       { name: "Instructor Hub", href: "/lms/instructor/dashboard", icon: <Layers className="w-4.5 h-4.5" /> },
       { name: "Grading Queue", href: "/lms/instructor/grading", icon: <ClipboardList className="w-4.5 h-4.5" /> },
       { name: "Attendance Records", href: "/lms/instructor/attendance", icon: <FileCheck2 className="w-4.5 h-4.5" /> },
+      { name: "Promoted Leaderboard", href: "/lms/instructor/leaderboard", icon: <Award className="w-4.5 h-4.5" /> },
     ],
     student: [
       { name: "Overview Hub", href: "/lms/student/dashboard", icon: <ListTodo className="w-4.5 h-4.5" /> },

@@ -15,6 +15,9 @@
   --color-primary: var(--primary);
   --color-primary-glow: var(--primary-glow);
   --color-secondary: var(--secondary);
+  --color-secondary-glow: var(--secondary-glow);
+  --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
   
   --color-text-main: var(--text-main);
   --color-text-muted: var(--text-muted);
@@ -73,6 +76,9 @@
   --primary: #02b875;
   --primary-glow: rgba(2, 184, 117, 0.12);
   --secondary: #4f46e5;
+  --secondary-glow: rgba(79, 70, 229, 0.1);
+  --accent: #d97706;
+  --accent-glow: rgba(217, 119, 6, 0.1);
   
   --text-main: #18191f;
   --text-muted: #5e6475;
@@ -98,6 +104,9 @@
     --primary: #02b875;
     --primary-glow: rgba(2, 184, 117, 0.2);
     --secondary: #6366f1;
+    --secondary-glow: rgba(99, 102, 241, 0.15);
+    --accent: #f59e0b;
+    --accent-glow: rgba(245, 158, 11, 0.2);
     
     --text-main: #f3f4f6;
     --text-muted: #8e95a5;
