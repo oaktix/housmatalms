@@ -16,10 +16,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const [courseTitle, setCourseTitle] = useState("");
 
   useEffect(() => {
-    if (!currentUser) {
-      router.push("/lms");
-      return;
-    }
+    if (!currentUser) return;
     const progress = db.getProgress(currentUser.id);
     if (progress) {
       setCourseTitle(
@@ -28,9 +25,18 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           : "Certified Estate Manager (HCEM)"
       );
     }
-  }, [currentUser, router]);
+  }, [currentUser]);
 
-  if (!currentUser) return null;
+  if (!currentUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-bg-main text-text-muted text-xs">
+        <div className="text-center space-y-4">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="font-heading font-medium tracking-tight">Verifying Student Portal...</p>
+        </div>
+      </div>
+    );
+  }
 
   const navLinks = [
     { name: "Overview Hub", href: "/lms/student/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
