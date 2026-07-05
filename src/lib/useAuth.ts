@@ -9,18 +9,42 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window === "undefined") return;
+
+    const checkAuth = () => {
       const savedUserId = localStorage.getItem("lms_current_user_id");
       if (savedUserId) {
         const profile = db.getProfile(savedUserId);
         if (profile) {
           setCurrentUser(profile);
+          setLoading(false);
         } else {
-          localStorage.removeItem("lms_current_user_id");
+          // Only clear if the database has finished syncing (i.e. has profiles)
+          const allProfiles = db.getProfiles();
+          if (allProfiles.length > 0) {
+            localStorage.removeItem("lms_current_user_id");
+            setLoading(false);
+          }
         }
+      } else {
+        setLoading(false);
       }
+    };
+
+    checkAuth();
+    
+    // Subscribe to database updates (like Supabase sync completing)
+    const unsubscribe = db.subscribe(checkAuth);
+
+    // Safety timeout to ensure loading screen closes even on slow network
+    const timer = setTimeout(() => {
       setLoading(false);
-    }
+    }, 1500);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   const login = (email: string): { success: boolean; error?: string } => {
