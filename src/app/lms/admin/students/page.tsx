@@ -299,6 +299,46 @@ export default function AdminStudents() {
                         </div>
                       );
                     }
+                    if (prog.current_phase === 3) {
+                      return (
+                        <div className="p-4 border border-error/20 bg-error/5 rounded-2xl space-y-3 animate-fade-in">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="text-xs font-black text-text-main flex items-center gap-1.5">
+                                <X className="w-4 h-4 text-error" />
+                                Reverse Promotion Desk (Admin)
+                              </h4>
+                              <p className="text-[10px] text-text-muted mt-1">
+                                This student is currently promoted to Phase 3. You can reverse this promotion to place them back into Phase 2.
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm("Are you sure you want to reverse this student's promotion back to Phase 2?")) {
+                                db.reversePromotion(selectedStudent.id);
+                                loadStudents();
+                                const allStds = db.getProfiles().filter(p => p.role === "student");
+                                const matched = allStds.find(s => s.id === selectedStudent.id);
+                                if (matched) {
+                                  const cohort = db.getStudentCohort(matched.id);
+                                  const grad = db.getGraduateStatus(matched.id) || {
+                                    deployment_status: "Available" as const,
+                                    placement_notes: "Awaiting cohort final capstone.",
+                                  };
+                                  const certs = db.getCertificates(matched.id);
+                                  setSelectedStudent({ ...matched, cohort, grad, certs });
+                                }
+                              }
+                            }}
+                            className="btn w-full bg-error text-white hover:brightness-110 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            Reverse Promotion to Phase 2
+                          </button>
+                        </div>
+                      );
+                    }
                     return null;
                   })()}
                   <StudentProgressSection studentId={selectedStudent.id} />

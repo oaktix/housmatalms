@@ -25,6 +25,7 @@ export default function InstructorGrading() {
   // Data States
   const [submissions, setSubmissions] = useState<SubmissionWithDetails[]>([]);
   const [phase2Students, setPhase2Students] = useState<StudentWithProgress[]>([]);
+  const [phase3Students, setPhase3Students] = useState<StudentWithProgress[]>([]);
   const [selectedSub, setSelectedSub] = useState<SubmissionWithDetails | null>(null);
 
   // UI States
@@ -69,6 +70,14 @@ export default function InstructorGrading() {
     })).filter(s => s.progress.current_phase === 2 && s.progress.phase2_status === "in-progress");
     
     setPhase2Students(phase2);
+
+    // 3. Fetch Phase 3 Students
+    const phase3 = allStudents.map(student => ({
+      profile: student,
+      progress: db.getProgress(student.id)
+    })).filter(s => s.progress.current_phase === 3 && s.progress.phase2_status === "passed");
+
+    setPhase3Students(phase3);
   }, []);
 
   useEffect(() => {
@@ -167,6 +176,15 @@ export default function InstructorGrading() {
       colors: ['#26c496', '#2b6cb0']
     });
     loadData();
+  };
+
+  const handleReversePromotion = (studentId: string) => {
+    if (confirm("Are you sure you want to reverse this student's promotion back to Phase 2?")) {
+      db.reversePromotion(studentId);
+      setSuccessMsg("Student promotion reversed successfully!");
+      loadData();
+      setTimeout(() => setSuccessMsg(""), 3000);
+    }
   };
 
   const pendingSubs = submissions.filter((s) => s.status === "pending");
@@ -420,7 +438,7 @@ export default function InstructorGrading() {
                   </div>
                   <button
                     onClick={() => handlePromoteToPhase3(s.profile.id)}
-                    className="btn w-full bg-accent text-text-inverse hover:brightness-110 py-2.5 rounded-xl text-xs font-black shadow-sm transition-all"
+                    className="btn w-full bg-accent text-text-inverse hover:brightness-110 py-2.5 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer"
                   >
                     Promote to Phase 3 Field Practicals
                   </button>
@@ -432,6 +450,49 @@ export default function InstructorGrading() {
               No students are currently awaiting promotion from Phase 2.
             </p>
           )}
+
+          {/* Reverse Promotions Desk */}
+          <div className="border-t border-border-main/50 pt-6 mt-6 space-y-4">
+            <div>
+              <h3 className="font-heading font-black text-sm text-text-main flex items-center gap-2">
+                <GraduationCap className="w-4.5 h-4.5 text-error" />
+                Active Phase 3 Students (Promotion Reversal Desk)
+              </h3>
+              <p className="text-[11px] text-text-muted mt-0.5">
+                View students currently promoted to Phase 3 Field Practicals and reverse their promotion if needed.
+              </p>
+            </div>
+
+            {phase3Students.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {phase3Students.map((s) => (
+                  <div
+                    key={s.profile.id}
+                    className="p-5 rounded-2xl border border-border-main bg-bg-main/30 flex flex-col justify-between space-y-4 hover:border-error/45 transition-all duration-300"
+                  >
+                    <div className="space-y-1">
+                      <h4 className="font-bold text-xs text-text-main">{s.profile.full_name}</h4>
+                      <p className="text-[10px] text-text-muted">{s.profile.email}</p>
+                      <div className="pt-2 text-[10px] text-text-muted space-y-1">
+                        <p>Selected Slot: <strong className="text-text-main">{s.progress.selected_class || "Not Enrolled"}</strong></p>
+                        <p>Completed Modules: <strong className="text-text-main">{s.progress.completed_modules.length}</strong></p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleReversePromotion(s.profile.id)}
+                      className="btn w-full bg-error text-white hover:brightness-110 py-2.5 rounded-xl text-xs font-black shadow-sm transition-all cursor-pointer"
+                    >
+                      Reverse Promotion to Phase 2
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-text-muted italic py-4 text-center border border-dashed border-border-main rounded-xl">
+                No promoted Phase 3 students are registered.
+              </p>
+            )}
+          </div>
         </div>
       )}
     </div>

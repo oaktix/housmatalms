@@ -453,7 +453,12 @@ export default function StudentCurriculum() {
                   <div className="space-y-4">
                     <h3 className="text-xs font-extrabold text-text-main uppercase tracking-wider">Select Class Stream</h3>
                     <div className="space-y-3">
-                      {["Bootcamp Class Stream A (Tuesdays 4PM)", "Bootcamp Class Stream B (Saturdays 10AM)"].map((cls) => (
+                      {[
+                        "Bootcamp Stream - Tuesday July 7th, 2026 (4PM)",
+                        "Bootcamp Stream - Tuesday July 14th, 2026 (4PM)",
+                        "Bootcamp Stream - Tuesday July 21st, 2026 (4PM)",
+                        "Bootcamp Stream - Tuesday July 28th, 2026 (4PM)"
+                      ].map((cls) => (
                         <button
                           key={cls}
                           onClick={() => handleSelectClass(cls)}

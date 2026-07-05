@@ -96,8 +96,10 @@ export default function StudentMeetings() {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-3">
                     {[
-                      "Bootcamp Class Stream A (Tuesdays 4PM)",
-                      "Bootcamp Class Stream B (Saturdays 10AM)",
+                      "Bootcamp Stream - Tuesday July 7th, 2026 (4PM)",
+                      "Bootcamp Stream - Tuesday July 14th, 2026 (4PM)",
+                      "Bootcamp Stream - Tuesday July 21st, 2026 (4PM)",
+                      "Bootcamp Stream - Tuesday July 28th, 2026 (4PM)"
                     ].map((slot) => (
                       <label
                         key={slot}

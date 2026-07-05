@@ -1290,6 +1290,16 @@ class LocalStorageDB {
     };
     return this.updateProgress(updated);
   }
+
+  reversePromotion(userId: string): seeds.StudentProgress {
+    const progress = this.getProgress(userId);
+    const updated = {
+      ...progress,
+      current_phase: 2 as const,
+      phase2_status: "in-progress" as const,
+    };
+    return this.updateProgress(updated);
+  }
 }
 
 export const db = new LocalStorageDB();
