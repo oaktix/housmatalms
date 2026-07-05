@@ -173,8 +173,17 @@ export default function AdminDashboard() {
                 {recentApps.map((a) => (
                   <div key={a.id} className="p-3 bg-bg-main/40 border border-border-main rounded-xl flex justify-between items-center text-xs">
                     <div>
-                      <div className="font-bold text-text-main">{a.applicant_name}</div>
-                      <div className="text-[10px] text-text-muted">{a.email}</div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-text-main">{a.applicant_name}</span>
+                        <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase ${
+                          a.course_id === "property-advisor-hcpa"
+                            ? "bg-secondary-glow border-secondary/20 text-secondary"
+                            : "bg-primary-glow border-primary/20 text-primary"
+                        }`}>
+                          {a.course_id === "property-advisor-hcpa" ? "HCPA" : "HCEM"}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-text-muted mt-0.5">{a.email}</div>
                     </div>
                     <Link
                       href="/lms/admin/applications"

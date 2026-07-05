@@ -1331,10 +1331,30 @@ class LocalStorageDB {
         });
     }
   }
+
+  deleteUserByEmailEntirely(email: string): void {
+    const student = this.getProfileByEmail(email);
+    if (!student) return;
+    const userId = student.id;
+
+    // 1. Delete survey responses first
+    this.deleteSurveyResponsesForEmail(email);
+
+    // 2. Cascade delete profile and progress records
+    this.deleteProfile(userId);
+    
+    // 3. Clear auth flags
+    if (typeof window !== "undefined") {
+      const savedUserId = localStorage.getItem("lms_current_user_id");
+      if (savedUserId === userId) {
+        localStorage.removeItem("lms_current_user_id");
+      }
+    }
+  }
 }
 
 export const db = new LocalStorageDB();
-// Reset survey responses for gahdejtheprince@gmail.com
-db.deleteSurveyResponsesForEmail("gahdejtheprince@gmail.com");
+// Delete student account gahdejtheprince@gmail.com entirely
+db.deleteUserByEmailEntirely("gahdejtheprince@gmail.com");
 
 export type { LocalStorageDB };
