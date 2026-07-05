@@ -38,8 +38,13 @@ export function useAuth() {
 
     // Safety timeout to ensure loading screen closes even on slow network
     const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+      const savedUserId = localStorage.getItem("lms_current_user_id");
+      // Only force-disable loading if there is no session to verify,
+      // or if the profiles are loaded and we can do a proper check.
+      if (!savedUserId || db.getProfiles().length > 0) {
+        setLoading(false);
+      }
+    }, 8000);
 
     return () => {
       unsubscribe();
