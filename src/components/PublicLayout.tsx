@@ -245,22 +245,22 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
           {/* Detailed Silhouette Skyline of Lagos, Abuja, and Ibadan */}
           <div className="w-full h-16 relative overflow-hidden opacity-[0.08] dark:opacity-[0.05] text-text-main transition-opacity pointer-events-none select-none my-4">
-            <svg className="w-full h-full" viewBox="0 0 1200 100" preserveAspectRatio="none" fill="currentColor">
+            <svg className="w-full h-full" viewBox="0 0 1200 100" preserveAspectRatio="none" fill="none" stroke="currentColor" strokeWidth="1.5">
               {/* Ibadan: Bower's Tower (Left) */}
               <rect x="50" y="30" width="16" height="70" rx="2" />
               <rect x="42" y="20" width="32" height="10" rx="1" />
               <rect x="54" y="5" width="8" height="15" rx="1" />
-              <line x1="58" y1="5" x2="58" y2="0" stroke="currentColor" strokeWidth="2" />
+              <line x1="58" y1="5" x2="58" y2="0" strokeWidth="2" />
               {/* Ibadan: Cocoa House (High Rise) */}
               <rect x="120" y="10" width="40" height="90" rx="1" />
-              <rect x="125" y="15" width="30" height="80" fill="none" stroke="currentColor" strokeWidth="1" />
-              <line x1="120" y1="25" x2="160" y2="25" stroke="currentColor" />
-              <line x1="120" y1="45" x2="160" y2="45" stroke="currentColor" />
-              <line x1="120" y1="65" x2="160" y2="65" stroke="currentColor" />
+              <rect x="125" y="15" width="30" height="80" strokeWidth="1" />
+              <line x1="120" y1="25" x2="160" y2="25" />
+              <line x1="120" y1="45" x2="160" y2="45" />
+              <line x1="120" y1="65" x2="160" y2="65" />
               
               {/* Abuja: Zuma Rock Profile (Center-Left) */}
-              <path d="M 280 100 Q 320 25 380 28 Q 440 30 480 100 Z" />
-              <path d="M 330 100 Q 350 50 370 100 Z" opacity="0.3" />
+              <path d="M 280 100 Q 320 25 380 28 Q 440 30 480 100" />
+              <path d="M 330 100 Q 350 50 370 100" opacity="0.3" />
 
               {/* Abuja: National Mosque Domes & Minarets (Center-Right) */}
               <rect x="620" y="15" width="6" height="85" />
@@ -271,12 +271,12 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
               <circle cx="670" cy="50" r="8" />
 
               {/* Lagos: Lekki-Ikoyi Link Bridge (Right) */}
-              <path d="M 850 100 L 910 20 L 970 100 Z" fill="none" stroke="currentColor" strokeWidth="4" />
-              <line x1="910" y1="20" x2="910" y2="100" stroke="currentColor" strokeWidth="6" />
-              <line x1="870" y1="100" x2="910" y2="45" stroke="currentColor" strokeWidth="1.5" />
-              <line x1="890" y1="100" x2="910" y2="65" stroke="currentColor" strokeWidth="1.5" />
-              <line x1="950" y1="100" x2="910" y2="45" stroke="currentColor" strokeWidth="1.5" />
-              <line x1="930" y1="100" x2="910" y2="65" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M 850 100 L 910 20 L 970 100 Z" strokeWidth="3" />
+              <line x1="910" y1="20" x2="910" y2="100" strokeWidth="4" />
+              <line x1="870" y1="100" x2="910" y2="45" strokeWidth="1" />
+              <line x1="890" y1="100" x2="910" y2="65" strokeWidth="1" />
+              <line x1="950" y1="100" x2="910" y2="45" strokeWidth="1" />
+              <line x1="930" y1="100" x2="910" y2="65" strokeWidth="1" />
               {/* Lagos: Civic Center/Standard Highrises (Far Right) */}
               <rect x="1040" y="25" width="35" height="75" rx="2" />
               <path d="M 1040 25 L 1075 40 L 1075 100 L 1040 100 Z" opacity="0.4" />
