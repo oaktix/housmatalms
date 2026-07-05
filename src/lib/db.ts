@@ -65,18 +65,26 @@ class LocalStorageDB {
   private listeners = new Set<() => void>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private memoryCache: Record<string, any> = {};
+  // Guards against overlapping / storm-triggered syncs
+  private isSyncing = false;
+  private realtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     if (isSupabaseConfigured && supabase) {
       this.isSupabase = true;
       this.syncFromSupabase();
 
-      // Subscribe to Supabase Realtime changes across all public tables
+      // Subscribe to Supabase Realtime changes.
+      // Use a 5-second debounce so that a burst of DB writes (e.g. during
+      // student approval) does not fan out into dozens of concurrent syncs.
       supabase
         .channel("db-changes")
         .on("postgres_changes", { event: "*", schema: "public" }, (payload) => {
-          console.log("Realtime database update detected:", payload.table);
-          this.syncFromSupabase();
+          console.log("Realtime change detected on:", payload.table, "— scheduling sync.");
+          if (this.realtimeSyncTimer) clearTimeout(this.realtimeSyncTimer);
+          this.realtimeSyncTimer = setTimeout(() => {
+            this.syncFromSupabase();
+          }, 5000);
         })
         .subscribe();
     }
@@ -111,6 +119,12 @@ class LocalStorageDB {
 
   private async syncFromSupabase() {
     if (!supabase) return;
+    // In-flight guard: skip if a sync is already running to prevent storms
+    if (this.isSyncing) {
+      console.log("Sync already in progress — skipping duplicate trigger.");
+      return;
+    }
+    this.isSyncing = true;
     try {
       console.log("Synchronizing data from Supabase...");
       
@@ -119,7 +133,9 @@ class LocalStorageDB {
       if (pErr) throw pErr;
       this.set("lms_profiles", profiles || []);
 
-      // 2. Fetch other tables in parallel
+      // 2. Fetch other tables in parallel.
+      // Tables that don't yet exist in Supabase (e.g. survey_responses) will
+      // log a warning and be skipped; they never block the rest of the sync.
       const tables = [
         { name: "instructors", key: "lms_instructors" },
         { name: "applications", key: "lms_applications" },
@@ -142,15 +158,14 @@ class LocalStorageDB {
           try {
             const { data, error } = await supabase!.from(t.name).select("*");
             if (error) {
-              console.error(`Error syncing table ${t.name} from Supabase:`, error);
+              // Log but never throw — a missing/broken table must not abort
+              // the whole sync or leave isSyncing=true indefinitely.
+              console.warn(`[Sync] Skipping table '${t.name}' (Supabase error: ${error.message || JSON.stringify(error)})`);
               return;
             }
             if (data) {
               if (t.name === "submissions") {
                 // Deduplicate: keep only the most recent submission per (assignment_id, user_id).
-                // Supabase may accumulate duplicate rows when resubmissions occur because
-                // the student DELETE RLS policy may not be present. We resolve that here
-                // so the client always works with a clean, deduplicated set.
                 const deduped = Object.values(
                   (data as seeds.Submission[]).reduce<Record<string, seeds.Submission>>((acc, sub) => {
                     const key = `${sub.assignment_id}__${sub.user_id}`;
@@ -167,14 +182,14 @@ class LocalStorageDB {
               }
             }
           } catch (tblErr) {
-            console.error(`Exception while syncing table ${t.name}:`, tblErr);
+            console.warn(`[Sync] Exception on table '${t.name}':`, tblErr);
           }
         })
       );
 
       console.log("Supabase synchronization successfully completed.");
 
-      // Trigger UI updates safely
+      // Trigger UI updates safely (only on success)
       if (isBrowser) {
         try {
           window.dispatchEvent(
@@ -191,6 +206,9 @@ class LocalStorageDB {
       this.notify();
     } catch (e) {
       console.error("Failed to sync from Supabase:", e);
+    } finally {
+      // Always release the guard so future syncs can run
+      this.isSyncing = false;
     }
   }
 
@@ -313,12 +331,16 @@ class LocalStorageDB {
     return this.getProfiles().find((p) => p.email.toLowerCase() === email.toLowerCase());
   }
 
-  createProfile(profile: seeds.Profile): seeds.Profile {
+  async createProfile(profile: seeds.Profile): Promise<seeds.Profile> {
     const list = this.getProfiles();
-    if (!list.some((p) => p.id === profile.id)) {
+    // Deduplicate by both id AND email to prevent duplicate profiles
+    const alreadyExists = list.some(
+      (p) => p.id === profile.id || p.email.toLowerCase() === profile.email.toLowerCase()
+    );
+    if (!alreadyExists) {
       list.push(profile);
       this.set("lms_profiles", list);
-      this.saveToSupabase("profiles", profile);
+      await this.saveToSupabase("profiles", profile);
     }
     return profile;
   }
@@ -521,14 +543,15 @@ class LocalStorageDB {
     return newApp;
   }
 
-  updateApplicationStatus(id: string, status: "approved" | "rejected", cohortId?: string): seeds.Application | undefined {
+  async updateApplicationStatus(id: string, status: "approved" | "rejected", cohortId?: string): Promise<seeds.Application | undefined> {
     const list = this.getApplications();
     const idx = list.findIndex((a) => a.id === id);
     if (idx !== -1) {
       list[idx].status = status;
       list[idx].reviewed_at = new Date().toISOString();
       this.set("lms_applications", list);
-      this.saveToSupabase("applications", list[idx]);
+      // Await so errors are surfaced rather than silently swallowed
+      await this.saveToSupabase("applications", list[idx]);
 
       if (status === "approved" && cohortId) {
         // Automatically create student profile
@@ -545,7 +568,8 @@ class LocalStorageDB {
             created_at: new Date().toISOString(),
             course_id: list[idx].course_id || "real-estate-os",
           };
-          this.createProfile(studentProfile);
+          // Await profile creation so we know it succeeds in Supabase before continuing
+          await this.createProfile(studentProfile);
         }
         
         // Enroll in cohort

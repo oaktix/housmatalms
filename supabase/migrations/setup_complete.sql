@@ -18,6 +18,7 @@ create table if not exists public.profiles (
     email text unique not null,
     role text not null default 'student' check (role in ('student', 'instructor', 'admin')),
     avatar_url text,
+    course_id text,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
