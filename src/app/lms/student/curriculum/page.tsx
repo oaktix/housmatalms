@@ -555,8 +555,59 @@ export default function StudentCurriculum() {
             </div>
 
             {/* Reading Content */}
-            <div className="flex-grow p-6 sm:p-8 overflow-y-auto space-y-6 text-sm leading-relaxed text-text-main markdown-body">
-              <p className="whitespace-pre-wrap leading-relaxed">{selectedLesson.lesson.content}</p>
+            <div className="flex-grow p-6 sm:p-8 overflow-y-auto space-y-4 text-sm leading-relaxed text-text-main markdown-body">
+              {selectedLesson.lesson.content.flatMap((block) => block.split("\n")).map((line, idx) => {
+                const trimmed = line.trim();
+                if (!trimmed) return <div key={idx} className="h-2" />;
+
+                // Horizontal Rule
+                if (/^---+$/.test(trimmed) || /^___+$/.test(trimmed)) {
+                  return <hr key={idx} className="border-border-main my-6" />;
+                }
+
+                // Headers (##, ###, #)
+                if (trimmed.startsWith("#")) {
+                  // Strip the hash marks, any markdown bold/italic stars, and Lesson prefixes
+                  let headerText = trimmed.replace(/^#+\s*/, "").replace(/\*+/g, "").replace(/\*+/g, "");
+                  headerText = headerText.replace(/^Lesson\s+\d+:\s*/i, "");
+                  
+                  return (
+                    <h4 key={idx} className="text-base sm:text-lg font-black text-text-main mt-6 mb-3 tracking-tight">
+                      {headerText}
+                    </h4>
+                  );
+                }
+
+                // Blockquotes (> )
+                if (trimmed.startsWith(">")) {
+                  const quoteText = trimmed.replace(/^>\s*/, "").replace(/\[!.*?\]/g, "").replace(/\*+/g, "").trim();
+                  if (!quoteText) return null;
+                  return (
+                    <blockquote key={idx} className="border-l-4 border-primary/50 bg-primary-glow/20 px-4 py-3 rounded-r-xl text-xs text-text-muted my-4 italic leading-relaxed">
+                      {quoteText}
+                    </blockquote>
+                  );
+                }
+
+                // Bullet Lists (- or *)
+                if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
+                  const listText = trimmed.replace(/^[-*]\s*/, "").replace(/\*+/g, "").trim();
+                  return (
+                    <ul key={idx} className="list-disc pl-5 space-y-1 my-2">
+                      <li className="text-xs sm:text-sm text-text-muted leading-relaxed">{listText}</li>
+                    </ul>
+                  );
+                }
+
+                // Standard Paragraph
+                // Clean up any remaining markdown stars in the paragraph
+                const cleanedText = trimmed.replace(/\*+/g, "");
+                return (
+                  <p key={idx} className="text-xs sm:text-sm leading-relaxed text-text-main mb-3">
+                    {cleanedText}
+                  </p>
+                );
+              })}
             </div>
 
             {/* Footer */}
