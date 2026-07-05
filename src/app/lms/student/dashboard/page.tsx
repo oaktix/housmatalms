@@ -51,7 +51,6 @@ export default function StudentDashboard() {
   const [cohort, setCohort] = useState<Cohort | null>(null);
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [initialized, setInitialized] = useState(false);
 
   // Survey States
   const [showPreSurvey, setShowPreSurvey] = useState(false);
@@ -125,7 +124,6 @@ export default function StudentDashboard() {
       } else {
         setShowPostSurvey(false);
       }
-      setInitialized(true);
     }
   }, [currentUser]);
 
@@ -168,16 +166,7 @@ export default function StudentDashboard() {
     }
   };
 
-  if (!currentUser || !progress || !initialized) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh] text-text-muted text-xs">
-        <div className="text-center space-y-3 py-12">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="font-heading font-medium tracking-tight">Initializing Student Dashboard...</p>
-        </div>
-      </div>
-    );
-  }
+  if (!currentUser || !progress) return null;
 
   const activeCurriculum = progress.course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
   const courseTitle = progress.course_id === "property-advisor-hcpa" ? "Housmata Certified Property Advisor" : "Housmata Certified Estate Manager";

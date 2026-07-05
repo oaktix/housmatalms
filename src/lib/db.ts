@@ -62,7 +62,6 @@ function generateUUID(): string {
 // LocalStorage Mock DB implementation with Supabase Synchronization
 class LocalStorageDB {
   private isSupabase = false;
-  private syncCompleted = false;
   private listeners = new Set<() => void>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private memoryCache: Record<string, any> = {};
@@ -72,10 +71,6 @@ class LocalStorageDB {
       this.isSupabase = true;
       this.syncFromSupabase();
     }
-  }
-
-  isSyncing(): boolean {
-    return this.isSupabase && !this.syncCompleted;
   }
 
   generateUUID(): string {
@@ -184,11 +179,8 @@ class LocalStorageDB {
           console.warn("[Storage Event Exception] Caught dispatch error:", err);
         }
       }
-      this.syncCompleted = true;
       this.notify();
     } catch (e) {
-      this.syncCompleted = true; // Set to true even on failure to prevent locking the app
-      this.notify();
       console.error("Failed to sync from Supabase:", e);
     }
   }
