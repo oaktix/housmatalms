@@ -1395,7 +1395,5 @@ class LocalStorageDB {
 }
 
 export const db = new LocalStorageDB();
-// Delete student account gahdejtheprince@gmail.com entirely
-db.deleteUserByEmailEntirely("gahdejtheprince@gmail.com");
 
 export type { LocalStorageDB };
