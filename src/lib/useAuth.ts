@@ -5,15 +5,17 @@ import { db } from "./db";
 import { Profile } from "./mockData";
 
 export function useAuth() {
-  const [currentUser, setCurrentUser] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<{ currentUser: Profile | null; loading: boolean }>({
+    currentUser: null,
+    loading: true
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const checkAuth = () => {
       if (db.isSyncing()) {
-        setLoading(true);
+        setState(prev => prev.loading ? prev : { ...prev, loading: true });
         return;
       }
 
@@ -21,18 +23,17 @@ export function useAuth() {
       if (savedUserId) {
         const profile = db.getProfile(savedUserId);
         if (profile) {
-          setCurrentUser(profile);
-          setLoading(false);
+          setState({ currentUser: profile, loading: false });
         } else {
           // Only clear if the database has finished syncing (i.e. has profiles)
           const allProfiles = db.getProfiles();
           if (allProfiles.length > 0) {
             localStorage.removeItem("lms_current_user_id");
-            setLoading(false);
+            setState({ currentUser: null, loading: false });
           }
         }
       } else {
-        setLoading(false);
+        setState({ currentUser: null, loading: false });
       }
     };
 
@@ -43,7 +44,7 @@ export function useAuth() {
 
     // Safety timeout to ensure loading screen closes even on slow network
     const timer = setTimeout(() => {
-      setLoading(false);
+      setState(prev => ({ ...prev, loading: false }));
     }, 3000);
 
     return () => {
@@ -61,7 +62,7 @@ export function useAuth() {
     if (typeof window !== "undefined") {
       localStorage.setItem("lms_current_user_id", profile.id);
     }
-    setCurrentUser(profile);
+    setState({ currentUser: profile, loading: false });
     return { success: true };
   };
 
@@ -69,16 +70,16 @@ export function useAuth() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("lms_current_user_id");
     }
-    setCurrentUser(null);
+    setState({ currentUser: null, loading: false });
   };
 
   return {
-    currentUser,
-    loading,
+    currentUser: state.currentUser,
+    loading: state.loading,
     login,
     logout,
-    isAdmin: currentUser?.role === "admin",
-    isInstructor: currentUser?.role === "instructor",
-    isStudent: currentUser?.role === "student",
+    isAdmin: state.currentUser?.role === "admin",
+    isInstructor: state.currentUser?.role === "instructor",
+    isStudent: state.currentUser?.role === "student",
   };
 }
