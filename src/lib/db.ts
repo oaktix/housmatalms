@@ -191,6 +191,7 @@ class LocalStorageDB {
                 );
                 this.set(t.key, deduped);
               } else {
+                // Supabase is the source of truth — overwrite local cache with remote data.
                 this.set(t.key, data);
               }
             }
@@ -1309,7 +1310,12 @@ class LocalStorageDB {
       list.push(progress);
     }
     this.set("lms_progress", list);
-    this.saveToSupabase("student_progress", progress);
+    // Strip fields that don't exist in the Supabase student_progress schema
+    // (course_id, phase2_meeting_url, phase2_attendance are local-only fields).
+    // Sending unknown columns causes the upsert to fail silently, leaving Supabase stale.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { course_id: _cid, ...progressForSupabase } = progress;
+    this.saveToSupabase("student_progress", progressForSupabase);
     
     // Check auto-promotion from phase 1 to 2
     // HCPA has 16 modules (hcpa-m0 to hcpa-m15), HCEM has 9 modules (p1-m1 to p1-m9)
@@ -1329,7 +1335,9 @@ class LocalStorageDB {
         list2.push(updated);
       }
       this.set("lms_progress", list2);
-      this.saveToSupabase("student_progress", updated);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { course_id: _cid2, ...updatedForSupabase } = updated;
+      this.saveToSupabase("student_progress", updatedForSupabase);
       return updated;
     }
     

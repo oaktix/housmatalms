@@ -382,28 +382,18 @@ export default function StudentCurriculum() {
                             const quizzes = db.getQuizzes(mod.id);
                             const assignments = db.getAssignments(mod.id);
                             const hasAssessment = quizzes.length > 0 || assignments.length > 0;
-                            const allLessonsRead = mod.lessons.every((_, idx) => progress.read_lessons?.includes(`${mod.id}-lesson-${idx}`));
                             
                             if (!isCompleted && isUnlocked) {
                               if (hasAssessment) {
-                                if (allLessonsRead) {
-                                  return (
-                                    <button
-                                      onClick={() => handleOpenAssessment(mod.id)}
-                                      className="w-full py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-black text-primary transition-all duration-300 flex items-center justify-center gap-2 group"
-                                    >
-                                      <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                                      Launch End-of-Module Assessment
-                                    </button>
-                                  );
-                                } else {
-                                  return (
-                                    <button disabled className="w-full py-2.5 rounded-xl border border-border-main bg-bg-main text-text-muted/50 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-not-allowed">
-                                      <Lock className="w-4 h-4 opacity-75" />
-                                      Read all lessons above to unlock assessment
-                                    </button>
-                                  );
-                                }
+                                return (
+                                  <button
+                                    onClick={() => handleOpenAssessment(mod.id)}
+                                    className="w-full py-3 rounded-xl bg-gradient-to-r from-primary/10 to-primary/20 hover:from-primary hover:to-primary-light hover:text-white border border-primary/30 text-xs font-black text-primary transition-all duration-300 flex items-center justify-center gap-2 group"
+                                  >
+                                    <Award className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                    Launch End-of-Module Assessment
+                                  </button>
+                                );
                               }
                             } else if (isCompleted) {
                               return (
