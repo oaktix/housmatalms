@@ -46,6 +46,12 @@ const HCPA_SURVEY_QUESTIONS = [
 
 export default function StudentDashboard() {
   const { currentUser } = useAuth();
+  // Hold latest currentUser in a ref so loadStudentData (subscribed to db)
+  // always reads the fresh value without needing a new function reference.
+  const currentUserRef = useRef(currentUser);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
   
   // States
   const [cohort, setCohort] = useState<Cohort | null>(null);
@@ -78,9 +84,12 @@ export default function StudentDashboard() {
     }
   }, [currentPostSurveyStep]);
 
+  // Stable data loader — never changes identity so db.subscribe never
+  // unsubscribes/resubscribes on every render (which was the survey flicker).
   const loadStudentData = useCallback(() => {
-    if (!currentUser) return;
-    const studentId = currentUser.id;
+    const user = currentUserRef.current;
+    if (!user) return;
+    const studentId = user.id;
     const studentProgress = db.getProgress(studentId);
     const activeCurriculum = studentProgress.course_id === "property-advisor-hcpa" ? hcpaCurriculum : phase1Curriculum;
 
@@ -104,9 +113,9 @@ export default function StudentDashboard() {
           const emailSentFlag = typeof window !== "undefined" && localStorage.getItem(`nudge_email_sent_${studentId}`);
           if (emailSentFlag !== "true") {
             db.logEmail(
-              currentUser.email,
+              user.email,
               "Urgent Action: Select Live Class Stream to Proceed",
-              `Hello ${currentUser.full_name},\n\nYou have successfully completed all curriculum modules! However, you have not selected a live class stream slot yet.\n\nPlease log in to your dashboard and navigate to "Meetings & Live" to choose one of the available Tuesday slot options so that we can verify your progress and promote you to Phase 3 Field Practicals.\n\nBest regards,\nHousmata Academy Team`
+              `Hello ${user.full_name},\n\nYou have successfully completed all curriculum modules! However, you have not selected a live class stream slot yet.\n\nPlease log in to your dashboard and navigate to "Meetings & Live" to choose one of the available Tuesday slot options so that we can verify your progress and promote you to Phase 3 Field Practicals.\n\nBest regards,\nHousmata Academy Team`
             );
             if (typeof window !== "undefined") {
               localStorage.setItem(`nudge_email_sent_${studentId}`, "true");
@@ -125,12 +134,19 @@ export default function StudentDashboard() {
         setShowPostSurvey(false);
       }
     }
-  }, [currentUser]);
+  }, []); // stable — reads currentUser via ref, never recreated
 
+  // Subscribe once on mount. loadStudentData identity never changes,
+  // so this effect never re-fires due to function reference changes.
   useEffect(() => {
     loadStudentData();
     return db.subscribe(loadStudentData);
   }, [loadStudentData]);
+
+  // Re-run data load when the logged-in user actually changes (e.g. login/logout)
+  useEffect(() => {
+    if (currentUser) loadStudentData();
+  }, [currentUser, loadStudentData]);
 
   // Survey submission helper
   const handleSurveySubmit = async (type: "pre" | "post") => {
