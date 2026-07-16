@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { TrendingUp, BarChart2, ClipboardCheck, ArrowLeft } from "lucide-react";
+import { TrendingUp, BarChart2, ClipboardCheck, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
@@ -36,6 +36,41 @@ export default function AdminSurveysPage() {
     highestPostVal: 0,
     gapReduction: 0
   });
+
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+
+  const handleAiSummary = async () => {
+    setAiSummaryLoading(true);
+    setAiSummary("");
+    try {
+      const res = await fetch("/api/ai/summarize-surveys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stats: {
+            overallPre: stats.overallPre,
+            overallPost: stats.overallPost,
+            countPre: stats.countPre,
+            countPost: stats.countPost,
+            maxGrowthTopic: stats.maxGrowthTopic,
+            maxGrowthVal: stats.maxGrowthVal,
+            highestPostTopic: stats.highestPostTopic,
+            highestPostVal: stats.highestPostVal,
+            gapReduction: stats.gapReduction,
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiSummary(data.result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI survey summary failed: ${msg}`);
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
 
   const loadSurveyData = () => {
     const allResponses = db.getSurveyResponses();
@@ -267,8 +302,26 @@ export default function AdminSurveysPage() {
               <ClipboardCheck className="w-4 h-4 text-primary" />
               Impact Interpretation
             </h4>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleAiSummary}
+                disabled={aiSummaryLoading}
+                className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+              >
+                {aiSummaryLoading ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" /> Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3" /> AI Summary
+                  </>
+                )}
+              </button>
+            </div>
             <p className="text-xs text-text-muted leading-relaxed whitespace-pre-line">
-              {getInterpretationText()}
+              {aiSummary || getInterpretationText()}
             </p>
             <div className="pt-4 border-t border-border-main/50 text-[10px] text-text-muted leading-relaxed">
               <strong>Evaluation Background:</strong> Student ratings are submitted at pre-course intake (upon registration) and post-course completion (directly before graduation certificate issue).
