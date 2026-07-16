@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Sparkles,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { db } from "@/lib/db";
@@ -53,6 +54,15 @@ export default function StudentCurriculum() {
   const [submittingAssignment, setSubmittingAssignment] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
+  // AI Assistant State (lesson summarize / ask + quiz explanation)
+  const [aiSummary, setAiSummary] = useState("");
+  const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState("");
+  const [aiAnswer, setAiAnswer] = useState("");
+  const [aiAnswerLoading, setAiAnswerLoading] = useState(false);
+  const [aiExplainLoading, setAiExplainLoading] = useState(false);
+  const [aiExplainText, setAiExplainText] = useState("");
+
   // Curriculum Display State
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>("module-1");
 
@@ -68,6 +78,79 @@ export default function StudentCurriculum() {
     db.sync();
     return db.subscribe(loadStudentData);
   }, [loadStudentData]);
+
+  const handleLessonSummarize = async () => {
+    if (!selectedLesson) return;
+    setAiSummaryLoading(true);
+    setAiSummary("");
+    try {
+      const res = await fetch("/api/ai/lesson-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: selectedLesson.lesson.content.join("\n"),
+          mode: "summarize",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiSummary(data.result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI summarize failed: ${message}`);
+    } finally {
+      setAiSummaryLoading(false);
+    }
+  };
+
+  const handleLessonAsk = async () => {
+    if (!selectedLesson || !aiQuestion.trim()) return;
+    setAiAnswerLoading(true);
+    setAiAnswer("");
+    try {
+      const res = await fetch("/api/ai/lesson-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          context: selectedLesson.lesson.content.join("\n"),
+          question: aiQuestion,
+          mode: "ask",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiAnswer(data.result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI question failed: ${message}`);
+    } finally {
+      setAiAnswerLoading(false);
+    }
+  };
+
+  const handleAiExplain = async (q: QuizQuestion) => {
+    setAiExplainLoading(true);
+    setAiExplainText("");
+    try {
+      const res = await fetch("/api/ai/explain-answer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: q.question,
+          options: q.options,
+          correctOptionIndex: q.correct_option_index,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiExplainText(data.result);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI explanation failed: ${message}`);
+    } finally {
+      setAiExplainLoading(false);
+    }
+  };
 
   if (!currentUser || !progress) return null;
 
@@ -599,6 +682,58 @@ export default function StudentCurriculum() {
               })}
             </div>
 
+            {/* AI Lesson Assistant */}
+            <div className="px-6 pb-4 space-y-3 border-t border-border-main bg-bg-main/30">
+              <div className="flex flex-wrap items-center gap-2 pt-4">
+                <button
+                  type="button"
+                  onClick={handleLessonSummarize}
+                  disabled={aiSummaryLoading}
+                  className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {aiSummaryLoading ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Summarizing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" /> Summarize Lesson
+                    </>
+                  )}
+                </button>
+                <span className="text-[10px] text-text-muted">or ask:</span>
+                <input
+                  type="text"
+                  value={aiQuestion}
+                  onChange={(e) => setAiQuestion(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleLessonAsk(); }}
+                  placeholder="e.g. What is the KYC process?"
+                  className="flex-1 min-w-[160px] px-3 py-2 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary"
+                />
+                <button
+                  type="button"
+                  onClick={handleLessonAsk}
+                  disabled={aiAnswerLoading || !aiQuestion.trim()}
+                  className="btn bg-primary text-text-inverse hover:brightness-110 px-3 py-2 rounded-xl text-[10px] font-bold transition-all disabled:opacity-50"
+                >
+                  {aiAnswerLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Ask"}
+                </button>
+              </div>
+
+              {aiSummary && (
+                <div className="p-4 rounded-xl bg-primary-glow/20 border border-primary/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
+                  <span className="font-extrabold block mb-1 text-primary">✨ Key Takeaways</span>
+                  {aiSummary}
+                </div>
+              )}
+              {aiAnswer && (
+                <div className="p-4 rounded-xl bg-bg-main border border-border-main text-xs text-text-main leading-relaxed whitespace-pre-line">
+                  <span className="font-extrabold block mb-1 text-primary">✨ Answer</span>
+                  {aiAnswer}
+                </div>
+              )}
+            </div>
+
             {/* Footer */}
             <div className="p-6 border-t border-border-main bg-bg-main/50 flex justify-between items-center gap-4">
               <button
@@ -717,6 +852,29 @@ export default function StudentCurriculum() {
                               <div className={`p-5 rounded-xl text-sm leading-relaxed border ${isCorrect ? 'bg-primary/5 border-primary/20 text-text-main' : 'bg-error/5 border-error/20 text-text-main'}`}>
                                 <span className="font-extrabold block mb-2">{isCorrect ? 'Correct!' : 'Incorrect'}</span>
                                 {q.explanation || `The correct answer is: ${q.options[q.correct_option_index]}`}
+                                {!q.explanation && (
+                                  <div className="mt-3 pt-3 border-t border-border-main/40">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAiExplain(q)}
+                                      disabled={aiExplainLoading}
+                                      className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                                    >
+                                      {aiExplainLoading ? (
+                                        <>
+                                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> Explaining...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Sparkles className="w-3.5 h-3.5" /> Explain with AI
+                                        </>
+                                      )}
+                                    </button>
+                                    {aiExplainText && (
+                                      <p className="mt-3 text-xs text-text-main leading-relaxed whitespace-pre-line">{aiExplainText}</p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}
