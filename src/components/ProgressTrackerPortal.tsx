@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, GraduationCap, X, BarChart2 } from "lucide-react";
+import { Search, GraduationCap, X, BarChart2, Sparkles, Loader2, AlertTriangle } from "lucide-react";
 import { db } from "@/lib/db";
 import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
 import { Profile, Cohort } from "@/lib/mockData";
+import { getAtRiskStudents } from "@/lib/analytics";
 import StudentProgressSection from "@/components/StudentProgressSection";
 
 export default function ProgressTrackerPortal() {
@@ -19,6 +20,20 @@ export default function ProgressTrackerPortal() {
 
   // Selected Student Drilldown
   const [selectedStudent, setSelectedStudent] = useState<Profile | null>(null);
+
+  // At-risk filter + AI briefing
+  const [atRiskOnly, setAtRiskOnly] = useState(false);
+  const [atRisk, setAtRisk] = useState<ReturnType<typeof getAtRiskStudents>>([]);
+  const [aiRiskBrief, setAiRiskBrief] = useState("");
+  const [aiRiskLoading, setAiRiskLoading] = useState(false);
+
+  const refreshAtRisk = useCallback(() => {
+    setAtRisk(getAtRiskStudents(selectedCohortId === "all" ? undefined : selectedCohortId));
+  }, [selectedCohortId]);
+
+  useEffect(() => {
+    refreshAtRisk();
+  }, [refreshAtRisk, students]);
 
   const loadData = useCallback(() => {
     setStudents(db.getProfiles().filter(p => p.role === "student"));
@@ -67,8 +82,40 @@ export default function ProgressTrackerPortal() {
 
     const matchesPhase = selectedPhase === "all" || progress.current_phase.toString() === selectedPhase;
 
-    return matchesSearch && matchesCohort && matchesPhase;
+    const matchesRisk = !atRiskOnly || atRisk.some((r) => r.id === student.id);
+
+    return matchesSearch && matchesCohort && matchesPhase && matchesRisk;
   });
+
+  const handleAiRiskBrief = async () => {
+    const scoped = atRiskOnly ? atRisk : getAtRiskStudents(selectedCohortId === "all" ? undefined : selectedCohortId);
+    if (scoped.length === 0) return;
+    setAiRiskLoading(true);
+    setAiRiskBrief("");
+    try {
+      const res = await fetch("/api/ai/at-risk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          students: scoped.map((s) => ({
+            name: s.name,
+            phase: s.phase,
+            avgGrade: s.avgGrade,
+            completedModules: s.completedModules,
+            flags: s.flags,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiRiskBrief(data.result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI risk briefing failed: ${msg}`);
+    } finally {
+      setAiRiskLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -97,6 +144,40 @@ export default function ProgressTrackerPortal() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 pr-4 py-2 w-full text-xs"
           />
+        </div>
+
+        {/* At-risk toggle + AI summary */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setAtRiskOnly((v) => !v)}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border transition-all ${
+              atRiskOnly
+                ? "bg-error/10 text-error border-error/30"
+                : "border-border-main text-text-muted hover:text-text-main"
+            }`}
+          >
+            <AlertTriangle className="w-3.5 h-3.5" />
+            At-risk {atRisk.length > 0 ? `(${atRisk.length})` : ""}
+          </button>
+          {atRisk.length > 0 && (
+            <button
+              type="button"
+              onClick={handleAiRiskBrief}
+              disabled={aiRiskLoading}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border border-primary/30 text-primary hover:bg-primary/5 transition-all disabled:opacity-50"
+            >
+              {aiRiskLoading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Summarizing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-3.5 h-3.5" /> AI Summary
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {/* Cohort & Phase Filters */}
@@ -236,6 +317,15 @@ export default function ProgressTrackerPortal() {
           <p className="text-xs text-text-muted italic py-12 text-center">No students found matching your filters.</p>
         )}
       </div>
+
+      {aiRiskBrief && (
+        <div className="premium-card rounded-2xl bg-bg-card border border-error/20 p-5 shadow-sm">
+          <div className="p-4 rounded-xl bg-error/5 border border-error/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
+            <span className="font-extrabold block mb-1 text-error">✨ AI Attention Brief</span>
+            {aiRiskBrief}
+          </div>
+        </div>
+      )}
 
       {/* Drilldown modal overlay */}
       {selectedStudent && (

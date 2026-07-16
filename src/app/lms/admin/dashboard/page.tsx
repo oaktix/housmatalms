@@ -12,11 +12,15 @@ import {
   ArrowRight,
   TrendingUp,
   Award,
-  X
+  X,
+  Sparkles,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Application, EmailLog } from "@/lib/mockData";
+import { getAtRiskStudents } from "@/lib/analytics";
 
 export default function AdminDashboard() {
   const { currentUser } = useAuth();
@@ -38,6 +42,10 @@ export default function AdminDashboard() {
     countPre: 0,
     countPost: 0
   });
+
+  const [atRisk, setAtRisk] = useState<ReturnType<typeof getAtRiskStudents>>([]);
+  const [aiRiskBrief, setAiRiskBrief] = useState("");
+  const [aiRiskLoading, setAiRiskLoading] = useState(false);
 
   const loadAdminDashboardData = () => {
     // Metrics
@@ -86,12 +94,43 @@ export default function AdminDashboard() {
       countPre: preResponses.length,
       countPost: postResponses.length
     });
+
+    setAtRisk(getAtRiskStudents());
   };
 
   useEffect(() => {
     loadAdminDashboardData();
     return db.subscribe(loadAdminDashboardData);
   }, [currentUser]);
+
+  const handleAiRiskBrief = async () => {
+    if (atRisk.length === 0) return;
+    setAiRiskLoading(true);
+    setAiRiskBrief("");
+    try {
+      const res = await fetch("/api/ai/at-risk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          students: atRisk.map((s) => ({
+            name: s.name,
+            phase: s.phase,
+            avgGrade: s.avgGrade,
+            completedModules: s.completedModules,
+            flags: s.flags,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiRiskBrief(data.result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI risk briefing failed: ${msg}`);
+    } finally {
+      setAiRiskLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -195,6 +234,73 @@ export default function AdminDashboard() {
               </div>
             ) : (
               <p className="text-xs text-text-muted italic py-4 text-center">No pending applications in queue.</p>
+            )}
+          </div>
+
+          {/* At-Risk Students card */}
+          <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4 shadow-sm">
+            <div className="flex justify-between items-center border-b border-border-main pb-3">
+              <h3 className="font-heading font-bold text-sm text-text-main flex items-center gap-2">
+                <AlertTriangle className="w-4.5 h-4.5 text-error" />
+                Students Needing Attention
+                {atRisk.length > 0 && (
+                  <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-error/10 text-error border border-error/20">
+                    {atRisk.length}
+                  </span>
+                )}
+              </h3>
+              {atRisk.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleAiRiskBrief}
+                  disabled={aiRiskLoading}
+                  className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+                >
+                  {aiRiskLoading ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" /> Summarizing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" /> AI Summary
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {atRisk.length === 0 ? (
+              <p className="text-xs text-text-muted italic py-4 text-center">No at-risk trainees detected. 🎉</p>
+            ) : (
+              <div className="space-y-3">
+                {atRisk.slice(0, 6).map((s) => (
+                  <div key={s.id} className="p-3 rounded-xl bg-bg-main border border-border-main flex justify-between items-center gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-text-main truncate">{s.name}</p>
+                      <p className="text-[10px] text-text-muted truncate">
+                        Phase {s.phase} · avg {s.avgGrade ?? "N/A"}% · {s.completedModules} modules
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1 justify-end max-w-[55%]">
+                      {s.flags.map((f) => (
+                        <span key={f} className="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-error/10 text-error border border-error/20">
+                          {f.replace("-", " ")}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {atRisk.length > 6 && (
+                  <p className="text-[10px] text-text-muted text-center">+{atRisk.length - 6} more</p>
+                )}
+              </div>
+            )}
+
+            {aiRiskBrief && (
+              <div className="p-4 rounded-xl bg-error/5 border border-error/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
+                <span className="font-extrabold block mb-1 text-error">✨ AI Attention Brief</span>
+                {aiRiskBrief}
+              </div>
             )}
           </div>
 
