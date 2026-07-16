@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@next/swc-win32-x64-msvc": "^16.2.10",
     "@supabase/supabase-js": "^2.106.2",
     "canvas-confetti": "^1.9.4",
     "cloudinary": "^2.10.0",
@@ -39,11 +38,5 @@
     "eslint-config-next": "15.5.18",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "allowScripts": {
-    "core-js@3.49.0": true,
-    "sharp@0.34.5": true,
-    "unrs-resolver@1.12.2": true,
-    "lightningcss@1.32.0": true
   }
 }
