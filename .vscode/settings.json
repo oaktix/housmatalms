@@ -1,0 +1,11 @@
+{
+  "css.lint.unknownAtRules": "ignore",
+  "sql.linter.executablePath": "",
+  "files.associations": {
+    "*.sql": "sql"
+  },
+  "[sql]": {
+    "editor.defaultFormatter": null
+  },
+  "mssql.connections": []
+}
