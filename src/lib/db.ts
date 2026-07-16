@@ -2,6 +2,11 @@ import { createClient } from "@supabase/supabase-js";
 import * as seeds from "./mockData";
 import { phase1Curriculum, hcpaCurriculum } from "./curriculum";
 import { generatedQuizzesHCPA, generatedQuizQuestionsHCPA } from "./generatedQuizzesHCPA";
+import {
+  cloudStorePutClient,
+  cloudStoreListClient,
+  collectionForTable,
+} from "./cloudStore";
 
 export interface SurveyResponse {
   id: string;
@@ -100,6 +105,70 @@ class LocalStorageDB {
           }, 5000);
         })
         .subscribe();
+    }
+
+    // Permanent Cloudinary-store fallback: pull any records that were written
+    // while Supabase was unavailable (or as the always-on backup) and merge
+    // them into the local cache so admin/instructor UIs see them. Runs
+    // opportunistically; failures are swallowed and never block startup.
+    if (isBrowser) {
+      this.hydrateFromCloudStore();
+    }
+  }
+
+  /**
+   * Merge Cloudinary-stored records into the local cache for the collections
+   * that support write fallback. Records already present locally (by id) are
+   * kept (local is authoritative for the active session); cloud-only records
+   * are appended. This makes submissions / applications / quiz attempts that
+   * landed in the cloud store visible in every existing synchronous getter.
+   */
+  private async hydrateFromCloudStore() {
+    type StoreRecord = Record<string, unknown> & { id?: string };
+    const collections: { collection: string; key: string; idField: string }[] = [
+      { collection: "submissions", key: "lms_submissions", idField: "id" },
+      { collection: "applications", key: "lms_applications", idField: "id" },
+      { collection: "quiz_attempts", key: "lms_quiz_attempts", idField: "id" },
+      { collection: "student_progress", key: "lms_progress", idField: "id" },
+      { collection: "announcements", key: "lms_announcements", idField: "id" },
+      { collection: "meetings", key: "lms_meetings", idField: "id" },
+      { collection: "attendance", key: "lms_attendance", idField: "id" },
+      { collection: "certificates", key: "lms_certificates", idField: "id" },
+      { collection: "graduate_status", key: "lms_graduate_status", idField: "id" },
+      { collection: "email_logs", key: "lms_email_logs", idField: "id" },
+      { collection: "survey_responses", key: "lms_survey_responses", idField: "id" },
+    ];
+
+    try {
+      const results = await Promise.all(
+        collections.map(async (c) => {
+          const remote = await cloudStoreListClient<StoreRecord>(c.collection);
+          return { ...c, remote };
+        })
+      );
+
+      let changed = false;
+      for (const { key, idField, remote } of results) {
+        if (!remote || remote.length === 0) continue;
+        const local: StoreRecord[] = this.get<StoreRecord>(key, []);
+        const seen = new Set(local.map((r) => r?.[idField]));
+        const merged = [...local];
+        for (const r of remote) {
+          if (r && r[idField] && !seen.has(r[idField])) {
+            merged.push(r);
+            seen.add(r[idField]);
+            changed = true;
+          }
+        }
+        if (changed) this.set<StoreRecord>(key, merged);
+      }
+
+      if (changed) {
+        this.hasSynced = true;
+        this.notify();
+      }
+    } catch (err) {
+      console.warn("[cloudStore] hydrate failed (non-fatal):", err);
     }
   }
 
@@ -290,18 +359,26 @@ class LocalStorageDB {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private async saveToSupabase(table: string, record: any, isInsert: boolean = false) {
+    // Mirror every write to the Cloudinary store as a permanent, non-throwing
+    // fallback so submissions / applications keep working even when Supabase
+    // is over quota or unreachable. The local (localStorage) write always
+    // succeeds; this must never break the caller.
+    const collection = collectionForTable(table);
+    if (collection && record && record.id) {
+      cloudStorePutClient(collection, String(record.id), record).catch(() => {});
+    }
+
     if (!this.isSupabase || !supabase) return;
     const { error } = isInsert
       ? await supabase.from(table).insert(record)
       : await supabase.from(table).upsert(record);
     if (error) {
-      console.error(`Supabase ${isInsert ? 'insert' : 'upsert'} error on '${table}':`, {
+      // Do NOT throw — let the local write stand and the Cloudinary mirror
+      // carry the data. Logging only.
+      console.warn(`Supabase ${isInsert ? 'insert' : 'upsert'} unavailable on '${table}' (kept in local + cloud store):`, {
         message: error.message,
         code: error.code,
-        hint: error.hint,
-        details: error.details,
       });
-      throw new Error(error.message);
     }
   }
 
