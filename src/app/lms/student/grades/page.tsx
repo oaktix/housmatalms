@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   Award,
   Clock,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
@@ -16,6 +18,8 @@ export default function StudentGrades() {
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
+  const [aiInsight, setAiInsight] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   const loadStudentData = useCallback(() => {
     if (!currentUser) return;
@@ -48,6 +52,45 @@ export default function StudentGrades() {
       }, 0) / gradedModules.length
     : 0;
 
+  const handleAiInsight = async () => {
+    if (!currentUser || !progress) return;
+    setAiLoading(true);
+    setAiInsight("");
+    const moduleData = activeCurriculum.map((mod) => {
+      const grades = db.getFinalModuleGrade(currentUser.id, mod.id);
+      const modSubs = submissions.filter((s) => {
+        const assignments = db.getAssignments(mod.id);
+        return assignments.length > 0 && s.assignment_id === assignments[0].id;
+      });
+      return {
+        title: mod.title,
+        quizScore: grades?.quizScore,
+        assignmentGrade: grades?.assignmentGrade,
+        finalGrade: grades?.finalGrade,
+        feedback: modSubs[0]?.feedback || undefined,
+      };
+    });
+    try {
+      const res = await fetch("/api/ai/performance-insight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          overallScore: Math.round(overallScore),
+          phase: progress.current_phase,
+          modules: moduleData,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiInsight(data.result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI insight failed: ${msg}`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <StudentLayout>
       <div className="space-y-6">
@@ -71,6 +114,37 @@ export default function StudentGrades() {
               <span className="text-lg font-black text-secondary block mt-0.5">{overallScore.toFixed(0)}%</span>
             </div>
           </div>
+        </div>
+
+        {/* AI Performance Insight */}
+        <div className="premium-card rounded-2xl bg-bg-card border-border-main p-5 sm:p-6 shadow-sm space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="font-heading font-bold text-sm text-text-main flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Performance Insight
+            </h3>
+            <button
+              type="button"
+              onClick={handleAiInsight}
+              disabled={aiLoading}
+              className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {aiLoading ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Analyzing...
+                </>
+              ) : (
+                "Get my insight"
+              )}
+            </button>
+          </div>
+          {aiInsight ? (
+            <p className="text-xs text-text-main leading-relaxed whitespace-pre-line">{aiInsight}</p>
+          ) : (
+            <p className="text-[11px] text-text-muted leading-relaxed">
+              Get a personalized, encouraging read on your scorecard — what you&apos;re doing well and where to focus next.
+            </p>
+          )}
         </div>
 
         {/* Detailed Modules Performance List */}

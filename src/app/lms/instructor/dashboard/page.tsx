@@ -42,7 +42,7 @@ export default function InstructorDashboard() {
   const [notification, setNotification] = useState("");
 
   const [aiAgendaLoading, setAiAgendaLoading] = useState(false);
-  const [annContent, setAnnContent] = useState("");
+  const [aiAnnDraft, setAiAnnDraft] = useState("");
 
   const loadInstructorData = useCallback(() => {
     if (!currentUser) return;
@@ -130,7 +130,7 @@ export default function InstructorDashboard() {
       if (!res.ok || !data.success) throw new Error(data.error || "Failed");
       const text = data.result;
       const annMatch = text.match(/Announcement:\s*([\s\S]+)/i);
-      if (annMatch) setAnnContent(annMatch[1].trim());
+      if (annMatch) setAiAnnDraft(annMatch[1].trim());
       setNotification("Agenda generated — review the announcement draft below.");
       setTimeout(() => setNotification(""), 4000);
     } catch (err) {
@@ -347,14 +347,14 @@ export default function InstructorDashboard() {
                 )}
               </button>
 
-              {annContent && (
+              {aiAnnDraft && (
                 <div className="form-group flex flex-col gap-1">
                   <label htmlFor="aiAnnContent" className="text-[10px] font-bold text-text-muted uppercase tracking-wider">AI Cohort Announcement Draft</label>
                   <textarea
                     id="aiAnnContent"
                     rows={3}
-                    value={annContent}
-                    onChange={(e) => setAnnContent(e.target.value)}
+                    value={aiAnnDraft}
+                    onChange={(e) => setAiAnnDraft(e.target.value)}
                     className="w-full px-4 py-2.5 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary transition-all resize-none"
                   />
                 </div>
