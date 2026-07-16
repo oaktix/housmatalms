@@ -12,6 +12,7 @@ import {
   ClipboardCheck,
   Sparkles,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
@@ -39,6 +40,9 @@ export default function InstructorDashboard() {
   const [meetDate, setMeetDate] = useState("");
 
   const [notification, setNotification] = useState("");
+
+  const [aiAgendaLoading, setAiAgendaLoading] = useState(false);
+  const [annContent, setAnnContent] = useState("");
 
   const loadInstructorData = useCallback(() => {
     if (!currentUser) return;
@@ -108,6 +112,33 @@ export default function InstructorDashboard() {
     loadInstructorData();
 
     setTimeout(() => setNotification(""), 3000);
+  };
+
+  const handleAiAgenda = async () => {
+    if (!meetTopic.trim()) {
+      alert("Enter a class topic first, then generate an agenda with AI.");
+      return;
+    }
+    setAiAgendaLoading(true);
+    try {
+      const res = await fetch("/api/ai/generate-agenda", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic: meetTopic, date: meetDate || undefined }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      const text = data.result;
+      const annMatch = text.match(/Announcement:\s*([\s\S]+)/i);
+      if (annMatch) setAnnContent(annMatch[1].trim());
+      setNotification("Agenda generated — review the announcement draft below.");
+      setTimeout(() => setNotification(""), 4000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI agenda failed: ${msg}`);
+    } finally {
+      setAiAgendaLoading(false);
+    }
   };
 
   if (!currentUser) return null;
@@ -298,6 +329,36 @@ export default function InstructorDashboard() {
                   className="w-full px-4 py-2.5 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary transition-all"
                 />
               </div>
+
+              <button
+                type="button"
+                onClick={handleAiAgenda}
+                disabled={aiAgendaLoading}
+                className="btn border border-primary/30 hover:bg-primary/5 text-primary px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {aiAgendaLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" /> Generate Agenda
+                  </>
+                )}
+              </button>
+
+              {annContent && (
+                <div className="form-group flex flex-col gap-1">
+                  <label htmlFor="aiAnnContent" className="text-[10px] font-bold text-text-muted uppercase tracking-wider">AI Cohort Announcement Draft</label>
+                  <textarea
+                    id="aiAnnContent"
+                    rows={3}
+                    value={annContent}
+                    onChange={(e) => setAnnContent(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary transition-all resize-none"
+                  />
+                </div>
+              )}
 
               <button
                 type="submit"
