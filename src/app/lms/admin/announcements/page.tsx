@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Megaphone, Send, Users, User, Layers, Search, Mail, ShieldCheck, X } from "lucide-react";
+import { Megaphone, Send, Users, User, Layers, Search, Mail, ShieldCheck, X, Sparkles, Loader2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Cohort, Profile, Announcement } from "@/lib/mockData";
@@ -24,6 +24,8 @@ export default function AdminAnnouncements() {
 
   const [message, setMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [selectedAnn, setSelectedAnn] = useState<Announcement | null>(null);
+  const [aiDraftLoading, setAiDraftLoading] = useState(false);
+  const [aiImproveLoading, setAiImproveLoading] = useState(false);
 
   const loadData = useCallback(() => {
     // Fetch cohorts
@@ -68,6 +70,61 @@ export default function AdminAnnouncements() {
       setSelectedUserIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
     } else {
       setSelectedUserIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
+    }
+  };
+
+  const handleAiDraft = async () => {
+    setAiDraftLoading(true);
+    try {
+      const res = await fetch("/api/ai/draft-announcement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title || undefined,
+          body: content || undefined,
+          mode: "draft",
+          audience:
+            targetType === "cohort"
+              ? cohorts.find((c) => c.id === selectedCohortId)?.name
+              : targetType === "users"
+              ? "selected trainees"
+              : "all trainees",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      const text = data.result;
+      const subjectMatch = text.match(/Subject:\s*(.+)/i);
+      if (subjectMatch) setTitle(subjectMatch[1].trim());
+      setContent(text.replace(/Subject:\s*.+\n?/i, "").trim());
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI draft failed: ${msg}`);
+    } finally {
+      setAiDraftLoading(false);
+    }
+  };
+
+  const handleAiImprove = async () => {
+    if (!content.trim()) {
+      alert("Write some announcement text first, then improve it with AI.");
+      return;
+    }
+    setAiImproveLoading(true);
+    try {
+      const res = await fetch("/api/ai/draft-announcement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body: content, mode: "improve" }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setContent(data.result.trim());
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI improve failed: ${msg}`);
+    } finally {
+      setAiImproveLoading(false);
     }
   };
 
@@ -357,6 +414,38 @@ export default function AdminAnnouncements() {
                   onChange={(e) => setContent(e.target.value)}
                   required
                 />
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleAiDraft}
+                    disabled={aiDraftLoading}
+                    className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {aiDraftLoading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Drafting...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" /> Draft with AI
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleAiImprove}
+                    disabled={aiImproveLoading}
+                    className="btn border border-border-main hover:bg-bg-card-hover text-text-muted px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {aiImproveLoading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Improving...
+                      </>
+                    ) : (
+                      "Improve writing"
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button
