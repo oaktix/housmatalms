@@ -22,9 +22,12 @@ import {
   Calendar,
   Award,
   TrendingUp,
-  BarChart2
+  BarChart2,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
+import { useTheme } from "@/components/theme/ThemeProvider";
 import Logo from "@/components/Logo";
 import { db } from "@/lib/db";
 
@@ -36,6 +39,7 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { currentUser, loading, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [progress, setProgress] = useState(0);
   const [points, setPoints] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -120,6 +124,16 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
       { name: "My Credentials", href: "/lms/student/credentials", icon: <GraduationCap className="w-4.5 h-4.5" /> },
     ],
   }[role];
+
+  // Bottom tab bar (students only, mobile < md)
+  const bottomTabs = role === "student"
+    ? [
+        { name: "Hub", href: "/lms/student/dashboard", icon: <ListTodo className="w-5 h-5" /> },
+        { name: "Learn", href: "/lms/student/curriculum", icon: <BookOpen className="w-5 h-5" /> },
+        { name: "Grades", href: "/lms/student/grades", icon: <Award className="w-5 h-5" /> },
+        { name: "Live", href: "/lms/student/meetings", icon: <Calendar className="w-5 h-5" /> },
+      ]
+    : [];
 
   const handleLogout = () => {
     logout();
@@ -227,15 +241,8 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
           </nav>
         </div>
 
-        {/* Sidebar Footer with Logout & Website Button */}
+        {/* Sidebar Footer with Logout */}
         <div className="p-4 border-t border-border-main bg-bg-main/40 space-y-2">
-          <Link
-            href="/"
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border border-border-main bg-bg-card hover:bg-bg-card-hover text-text-main transition-all active:scale-[0.98]"
-          >
-            <Globe className="w-4 h-4 text-primary" />
-            Exit to Website
-          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border border-border-main hover:bg-red-500/5 hover:text-red-500 hover:border-red-500/20 text-text-muted transition-all active:scale-[0.98]"
@@ -267,25 +274,53 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-4 text-xs font-semibold text-text-muted">
+          <div className="flex items-center gap-2 sm:gap-4 text-xs font-semibold text-text-muted">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg border border-border-main hover:bg-bg-card-hover text-text-muted hover:text-text-main transition-colors"
+              aria-label="Toggle color theme"
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-[10px] font-extrabold bg-primary text-text-inverse hover:brightness-110 px-3.5 py-2 rounded-lg shadow-sm shadow-primary/20 transition-all active:scale-[0.97]"
+              className="hidden sm:flex items-center gap-1.5 text-[10px] font-extrabold bg-primary text-text-inverse hover:brightness-110 px-3.5 py-2 rounded-lg shadow-sm shadow-primary/20 transition-all active:scale-[0.97]"
             >
               <Globe className="w-3.5 h-3.5" />
               Main Website
             </Link>
-            <span className="text-[10px] font-bold py-1 px-3 bg-primary-glow border border-primary/20 text-primary rounded-lg capitalize">
+            <span className="hidden sm:inline-block text-[10px] font-bold py-1 px-3 bg-primary-glow border border-primary/20 text-primary rounded-lg capitalize">
               Role: {role}
             </span>
           </div>
         </header>
 
         {/* Viewport Render Area */}
-        <div className="flex-grow overflow-y-auto p-6 md:p-8 bg-bg-main relative">
+        <div className="flex-grow overflow-y-auto p-6 md:p-8 bg-bg-main relative pb-24 md:pb-8">
           {children}
         </div>
       </main>
+
+      {/* Student bottom tab bar (mobile < md) */}
+      {bottomTabs.length > 0 && (
+        <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-border-main bg-bg-card/95 backdrop-blur-md flex items-stretch justify-around">
+          {bottomTabs.map((tab) => {
+            const active = (pathname ?? "").startsWith(tab.href);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 min-h-[56px] transition-colors ${
+                  active ? "text-primary" : "text-text-muted hover:text-text-main"
+                }`}
+              >
+                {tab.icon}
+                <span className="text-[10px] font-bold">{tab.name}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

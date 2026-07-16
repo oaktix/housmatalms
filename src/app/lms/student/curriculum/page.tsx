@@ -10,6 +10,7 @@ import {
   Sparkles,
   ExternalLink,
   Loader2,
+  X,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { db } from "@/lib/db";
@@ -18,9 +19,14 @@ import { StudentProgress, Quiz, QuizQuestion, Assignment } from "@/lib/mockData"
 import { phase1Curriculum, hcpaCurriculum, Lesson } from "@/lib/curriculum";
 import StudentLayout from "@/components/StudentLayout";
 import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { useToast } from "@/components/ui/Toast";
+import { Modal } from "@/components/ui/Modal";
+import { AiPanel } from "@/components/ui/AiPanel";
+import { LessonMarkdown } from "@/components/ui/LessonMarkdown";
 
 export default function StudentCurriculum() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
   
   // Navigation / Modal States
   const [activeTab, setActiveTab] = useState<"phase1" | "phase2" | "phase3">("phase1");
@@ -62,6 +68,7 @@ export default function StudentCurriculum() {
   const [aiAnswerLoading, setAiAnswerLoading] = useState(false);
   const [aiExplainLoading, setAiExplainLoading] = useState(false);
   const [aiExplainText, setAiExplainText] = useState("");
+  const [lessonScroll, setLessonScroll] = useState(0);
 
   // Curriculum Display State
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>("module-1");
@@ -97,7 +104,7 @@ export default function StudentCurriculum() {
       setAiSummary(data.result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI summarize failed: ${message}`);
+      toast(`AI summarize failed: ${message}`, "error");
     } finally {
       setAiSummaryLoading(false);
     }
@@ -122,7 +129,7 @@ export default function StudentCurriculum() {
       setAiAnswer(data.result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI question failed: ${message}`);
+      toast(`AI question failed: ${message}`, "error");
     } finally {
       setAiAnswerLoading(false);
     }
@@ -146,7 +153,7 @@ export default function StudentCurriculum() {
       setAiExplainText(data.result);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI explanation failed: ${message}`);
+      toast(`AI explanation failed: ${message}`, "error");
     } finally {
       setAiExplainLoading(false);
     }
@@ -269,7 +276,7 @@ export default function StudentCurriculum() {
         confetti({ particleCount: 100, spread: 50 });
       }
     } catch (err) {
-      alert("Error submitting quiz: " + err);
+      toast("Error submitting quiz: " + (err instanceof Error ? err.message : String(err)), "error");
     }
   };
 
@@ -604,154 +611,127 @@ export default function StudentCurriculum() {
         )}
       </div>
 
-      {/* Interactive Lesson Drawer Overlay */}
-      {selectedLesson && (
-        <div className="fixed inset-0 bg-bg-main/80 backdrop-blur-md z-50 flex items-center justify-end animate-fade-in">
-          <div className="w-full max-w-2xl h-full bg-bg-card border-l border-border-main shadow-2xl flex flex-col justify-between overflow-hidden animate-slide-left">
+      {/* Interactive Lesson Drawer Overlay (full-screen on mobile, right panel on >=sm) */}
+      <Modal
+        open={!!selectedLesson}
+        onClose={() => setSelectedLesson(null)}
+        variant="full"
+      >
+        {selectedLesson && (
+          <>
             {/* Header */}
-            <div className="p-6 border-b border-border-main flex justify-between items-center">
-              <div className="space-y-1">
+            <div className="flex-shrink-0 p-4 sm:p-6 border-b border-border-main flex justify-between items-center">
+              <div className="space-y-1 min-w-0">
                 <span className="text-[9px] font-black uppercase tracking-widest text-primary">
                   Module Lesson {selectedLesson.lessonIndex + 1}
                 </span>
-                <h2 className="text-base sm:text-lg font-heading font-bold text-text-main leading-snug">
+                <h2 className="text-base sm:text-lg font-heading font-bold text-text-main leading-snug truncate">
                   {selectedLesson.lesson.title}
                 </h2>
               </div>
               <button
                 onClick={() => setSelectedLesson(null)}
-                className="p-2 rounded-lg border border-border-main hover:bg-bg-card-hover text-text-muted hover:text-text-main transition-all"
+                className="p-2 rounded-lg border border-border-main hover:bg-bg-card-hover text-text-muted hover:text-text-main transition-all flex-shrink-0 ml-3"
+                aria-label="Close lesson"
               >
-                Close Drawer
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Reading Content */}
-            <div className="flex-grow p-6 sm:p-8 overflow-y-auto space-y-4 text-sm leading-relaxed text-text-main markdown-body">
-              {selectedLesson.lesson.content.flatMap((block) => block.split("\n")).map((line, idx) => {
-                const trimmed = line.trim();
-                if (!trimmed) return <div key={idx} className="h-2" />;
-
-                // Horizontal Rule
-                if (/^---+$/.test(trimmed) || /^___+$/.test(trimmed)) {
-                  return <hr key={idx} className="border-border-main my-6" />;
-                }
-
-                // Headers (##, ###, #)
-                if (trimmed.startsWith("#")) {
-                  // Strip the hash marks, any markdown bold/italic stars, and Lesson prefixes
-                  let headerText = trimmed.replace(/^#+\s*/, "").replace(/\*+/g, "").replace(/\*+/g, "");
-                  headerText = headerText.replace(/^Lesson\s+\d+:\s*/i, "");
-                  
-                  return (
-                    <h4 key={idx} className="text-base sm:text-lg font-black text-text-main mt-6 mb-3 tracking-tight">
-                      {headerText}
-                    </h4>
-                  );
-                }
-
-                // Blockquotes (> )
-                if (trimmed.startsWith(">")) {
-                  const quoteText = trimmed.replace(/^>\s*/, "").replace(/\[!.*?\]/g, "").replace(/\*+/g, "").trim();
-                  if (!quoteText) return null;
-                  return (
-                    <blockquote key={idx} className="border-l-4 border-primary/50 bg-primary-glow/20 px-4 py-3 rounded-r-xl text-xs text-text-muted my-4 italic leading-relaxed">
-                      {quoteText}
-                    </blockquote>
-                  );
-                }
-
-                // Bullet Lists (- or *)
-                if (trimmed.startsWith("-") || trimmed.startsWith("*")) {
-                  const listText = trimmed.replace(/^[-*]\s*/, "").replace(/\*+/g, "").trim();
-                  return (
-                    <ul key={idx} className="list-disc pl-5 space-y-1 my-2">
-                      <li className="text-xs sm:text-sm text-text-muted leading-relaxed">{listText}</li>
-                    </ul>
-                  );
-                }
-
-                // Standard Paragraph
-                // Clean up any remaining markdown stars in the paragraph
-                const cleanedText = trimmed.replace(/\*+/g, "");
-                return (
-                  <p key={idx} className="text-xs sm:text-sm leading-relaxed text-text-main mb-3">
-                    {cleanedText}
-                  </p>
-                );
-              })}
+            {/* Scroll progress bar */}
+            <div className="flex-shrink-0 h-0.5 bg-border-main">
+              <div
+                className="h-full bg-primary transition-all duration-150"
+                style={{ width: `${lessonScroll}%` }}
+              />
             </div>
 
-            {/* AI Lesson Assistant */}
-            <div className="px-6 pb-4 space-y-3 border-t border-border-main bg-bg-main/30">
-              <div className="flex flex-wrap items-center gap-2 pt-4">
-                <button
-                  type="button"
-                  onClick={handleLessonSummarize}
-                  disabled={aiSummaryLoading}
-                  className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
-                >
-                  {aiSummaryLoading ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Summarizing...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" /> Summarize Lesson
-                    </>
-                  )}
-                </button>
-                <span className="text-[10px] text-text-muted">or ask:</span>
-                <input
-                  type="text"
-                  value={aiQuestion}
-                  onChange={(e) => setAiQuestion(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") handleLessonAsk(); }}
-                  placeholder="e.g. What is the KYC process?"
-                  className="flex-1 min-w-[160px] px-3 py-2 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary"
+            {/* Reading Content (scrollable) */}
+            <div
+              className="flex-grow p-4 sm:p-8 overflow-y-auto bg-bg-card"
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                const max = el.scrollHeight - el.clientHeight;
+                setLessonScroll(max > 0 ? Math.min(100, Math.round((el.scrollTop / max) * 100)) : 100);
+              }}
+            >
+              <LessonMarkdown
+                content={selectedLesson.lesson.content.join("\n\n")}
+              />
+
+              {/* AI Lesson Assistant */}
+              <div className="mt-8 pt-6 border-t border-border-main space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleLessonSummarize}
+                    disabled={aiSummaryLoading}
+                    className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5 disabled:opacity-50 min-h-[44px]"
+                  >
+                    {aiSummaryLoading ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Summarizing...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" /> Summarize Lesson
+                      </>
+                    )}
+                  </button>
+                  <span className="text-[10px] text-text-muted">or ask:</span>
+                  <input
+                    type="text"
+                    value={aiQuestion}
+                    onChange={(e) => setAiQuestion(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleLessonAsk(); }}
+                    placeholder="e.g. What is the KYC process?"
+                    className="flex-1 min-w-[160px] px-3 py-2.5 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary min-h-[44px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLessonAsk}
+                    disabled={aiAnswerLoading || !aiQuestion.trim()}
+                    className="btn bg-primary text-text-inverse hover:brightness-110 px-3 py-2.5 rounded-xl text-[10px] font-bold transition-all disabled:opacity-50 min-h-[44px]"
+                  >
+                    {aiAnswerLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Ask"}
+                  </button>
+                </div>
+
+                <AiPanel
+                  title="Key Takeaways"
+                  content={aiSummary}
+                  loading={aiSummaryLoading}
+                  onClose={() => setAiSummary("")}
+                  emptyHint={null}
                 />
-                <button
-                  type="button"
-                  onClick={handleLessonAsk}
-                  disabled={aiAnswerLoading || !aiQuestion.trim()}
-                  className="btn bg-primary text-text-inverse hover:brightness-110 px-3 py-2 rounded-xl text-[10px] font-bold transition-all disabled:opacity-50"
-                >
-                  {aiAnswerLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Ask"}
-                </button>
+                <AiPanel
+                  title="Answer"
+                  content={aiAnswer}
+                  loading={aiAnswerLoading}
+                  onClose={() => setAiAnswer("")}
+                  emptyHint={null}
+                />
               </div>
-
-              {aiSummary && (
-                <div className="p-4 rounded-xl bg-primary-glow/20 border border-primary/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
-                  <span className="font-extrabold block mb-1 text-primary">✨ Key Takeaways</span>
-                  {aiSummary}
-                </div>
-              )}
-              {aiAnswer && (
-                <div className="p-4 rounded-xl bg-bg-main border border-border-main text-xs text-text-main leading-relaxed whitespace-pre-line">
-                  <span className="font-extrabold block mb-1 text-primary">✨ Answer</span>
-                  {aiAnswer}
-                </div>
-              )}
             </div>
 
-            {/* Footer */}
-            <div className="p-6 border-t border-border-main bg-bg-main/50 flex justify-between items-center gap-4">
+            {/* Footer (pinned) */}
+            <div className="flex-shrink-0 p-4 sm:p-6 border-t border-border-main bg-bg-main/50 flex justify-between items-center gap-4">
               <button
                 onClick={() => setSelectedLesson(null)}
-                className="btn border border-border-main text-text-muted hover:text-text-main px-6 py-3 rounded-xl text-xs font-bold transition-all"
+                className="btn border border-border-main text-text-muted hover:text-text-main px-6 py-3 rounded-xl text-xs font-bold transition-all min-h-[44px]"
               >
                 Close Lesson
               </button>
               <button
                 onClick={handleMarkLessonRead}
-                className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3 rounded-xl text-xs font-extrabold shadow-md transition-all"
+                className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3 rounded-xl text-xs font-extrabold shadow-md transition-all min-h-[44px]"
               >
                 Mark Read &amp; Continue
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       {/* Assessment Modal Overlay */}
       {activeAssessment && (

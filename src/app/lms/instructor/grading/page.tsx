@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { ClipboardList, CheckCircle2, ChevronRight, GraduationCap, FileText, Loader2, Sparkles } from "lucide-react";
+import { ClipboardList, CheckCircle2, ChevronRight, GraduationCap, FileText, Loader2, Sparkles, Maximize2, Download, X } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Submission, Assignment, Profile, StudentProgress } from "@/lib/mockData";
+import { Modal } from "@/components/ui/Modal";
 import confetti from "canvas-confetti";
 
 type SubmissionWithDetails = Submission & {
@@ -36,6 +37,7 @@ export default function InstructorGrading() {
   const [feedback, setFeedback] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [pdfFullscreen, setPdfFullscreen] = useState(false);
 
   // Track in-progress conversions to prevent duplicate parallel requests
   const convertingIds = useRef<Set<string>>(new Set());
@@ -362,26 +364,92 @@ export default function InstructorGrading() {
                   </p>
                 </div>
 
-                {/* PDF Viewer Block */}
+                {/* Submitted Document Panel — clickable, opens full-screen reader */}
                 {selectedSub.content_link ? (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest text-text-muted">
-                      <span>Submitted Document Panel</span>
-                      {selectedSub.content_file_name && <span className="text-primary truncate max-w-xs">{selectedSub.content_file_name}</span>}
+                      <span>Submitted Document</span>
+                      {selectedSub.content_file_name && (
+                        <span className="text-primary truncate max-w-[60%]">{selectedSub.content_file_name}</span>
+                      )}
                     </div>
-                    <div className="border border-border-main rounded-2xl overflow-hidden bg-bg-main h-[400px]">
-                      <iframe
-                        src={selectedSub.content_link}
-                        className="w-full h-full border-0"
-                        title="PDF Submission Viewer"
-                      />
-                    </div>
+
+                    {/* Clickable preview card — serves the raw PDF (no Cloudinary processing) */}
+                    <button
+                      type="button"
+                      onClick={() => setPdfFullscreen(true)}
+                      className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border-main bg-bg-main hover:border-primary/40 hover:bg-bg-card-hover transition-all text-left group"
+                    >
+                      <span className="w-12 h-14 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-red-500" />
+                      </span>
+                      <span className="flex-grow min-w-0">
+                        <span className="block font-bold text-text-main text-xs truncate">
+                          {selectedSub.content_file_name || "Submission document"}
+                        </span>
+                        <span className="block text-[10px] text-text-muted mt-0.5">
+                          Click to open full-screen reader
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-3 text-primary text-[10px] font-bold flex-shrink-0">
+                        <a
+                          href={selectedSub.content_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download={selectedSub.content_file_name || "submission.pdf"}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 hover:underline"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Save
+                        </a>
+                        <Maximize2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                      </span>
+                    </button>
                   </div>
                 ) : (
                   <div className="border border-border-main rounded-2xl bg-bg-main h-[120px] flex items-center justify-center text-xs text-text-muted animate-pulse">
                     Loading submitted document…
                   </div>
                 )}
+
+                {/* Full-screen PDF reader */}
+                <Modal open={pdfFullscreen && !!selectedSub} onClose={() => setPdfFullscreen(false)} variant="full">
+                  <div className="flex items-center justify-between p-4 border-b border-border-main bg-bg-card flex-shrink-0">
+                    <div className="min-w-0">
+                      <span className="text-[9px] font-black uppercase text-primary tracking-widest block">
+                        Submitted Document
+                      </span>
+                      <h2 className="font-heading font-bold text-sm text-text-main truncate">
+                        {selectedSub?.content_file_name || "Submission"}
+                      </h2>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <a
+                        href={selectedSub?.content_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={selectedSub?.content_file_name || "submission.pdf"}
+                        className="btn border border-border-main hover:bg-bg-card-hover text-text-muted px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Save
+                      </a>
+                      <button
+                        onClick={() => setPdfFullscreen(false)}
+                        className="p-2 rounded-lg border border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover transition-colors"
+                        aria-label="Close reader"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex-grow bg-bg-main overflow-hidden">
+                    <iframe
+                      src={selectedSub?.content_link}
+                      className="w-full h-full border-0"
+                      title="PDF Submission Reader"
+                    />
+                  </div>
+                </Modal>
 
                 {/* Additional remarks by student */}
                 {selectedSub.content_text && (

@@ -86,6 +86,7 @@ class LocalStorageDB {
   private isSyncing = false;
   private realtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
   public hasSynced = false;
+  private cloudStoreHydrated = false;
 
   constructor() {
     if (isSupabaseConfigured && supabase) {
@@ -109,34 +110,35 @@ class LocalStorageDB {
 
     // Permanent Cloudinary-store fallback: pull any records that were written
     // while Supabase was unavailable (or as the always-on backup) and merge
-    // them into the local cache so admin/instructor UIs see them. Runs
-    // opportunistically; failures are swallowed and never block startup.
-    if (isBrowser) {
+    // them into the local cache so admin/instructor UIs see them. Runs once
+    // on startup; failures are swallowed and never block startup.
+    if (isBrowser && !this.cloudStoreHydrated) {
+      this.cloudStoreHydrated = true;
       this.hydrateFromCloudStore();
     }
   }
 
   /**
    * Merge Cloudinary-stored records into the local cache for the collections
-   * that support write fallback. Records already present locally (by id) are
-   * kept (local is authoritative for the active session); cloud-only records
-   * are appended. This makes submissions / applications / quiz attempts that
-   * landed in the cloud store visible in every existing synchronous getter.
+   * that support write fallback. Local records are authoritative; cloud-only
+   * records are appended. For submissions we dedupe by (assignment_id, user_id)
+   * keeping the newest — exactly like syncFromSupabase — so orphaned
+   * resubmissions never reappear. Runs once; never throws.
    */
   private async hydrateFromCloudStore() {
     type StoreRecord = Record<string, unknown> & { id?: string };
-    const collections: { collection: string; key: string; idField: string }[] = [
-      { collection: "submissions", key: "lms_submissions", idField: "id" },
-      { collection: "applications", key: "lms_applications", idField: "id" },
-      { collection: "quiz_attempts", key: "lms_quiz_attempts", idField: "id" },
-      { collection: "student_progress", key: "lms_progress", idField: "id" },
-      { collection: "announcements", key: "lms_announcements", idField: "id" },
-      { collection: "meetings", key: "lms_meetings", idField: "id" },
-      { collection: "attendance", key: "lms_attendance", idField: "id" },
-      { collection: "certificates", key: "lms_certificates", idField: "id" },
-      { collection: "graduate_status", key: "lms_graduate_status", idField: "id" },
-      { collection: "email_logs", key: "lms_email_logs", idField: "id" },
-      { collection: "survey_responses", key: "lms_survey_responses", idField: "id" },
+    const collections: { collection: string; key: string }[] = [
+      { collection: "submissions", key: "lms_submissions" },
+      { collection: "applications", key: "lms_applications" },
+      { collection: "quiz_attempts", key: "lms_quiz_attempts" },
+      { collection: "student_progress", key: "lms_progress" },
+      { collection: "announcements", key: "lms_announcements" },
+      { collection: "meetings", key: "lms_meetings" },
+      { collection: "attendance", key: "lms_attendance" },
+      { collection: "certificates", key: "lms_certificates" },
+      { collection: "graduate_status", key: "lms_graduate_status" },
+      { collection: "email_logs", key: "lms_email_logs" },
+      { collection: "survey_responses", key: "lms_survey_responses" },
     ];
 
     try {
@@ -148,18 +150,42 @@ class LocalStorageDB {
       );
 
       let changed = false;
-      for (const { key, idField, remote } of results) {
+      for (const { key, collection, remote } of results) {
         if (!remote || remote.length === 0) continue;
         const local: StoreRecord[] = this.get<StoreRecord>(key, []);
-        const seen = new Set(local.map((r) => r?.[idField]));
-        const merged = [...local];
+        const merged: StoreRecord[] = [...local];
+
         for (const r of remote) {
-          if (r && r[idField] && !seen.has(r[idField])) {
-            merged.push(r);
-            seen.add(r[idField]);
-            changed = true;
+          if (!r || !r.id) continue;
+          const existsLocally = local.some((l) => l.id === r.id);
+          if (existsLocally) continue;
+
+          if (collection === "submissions") {
+            // Skip orphaned resubmissions: if a newer local submission exists
+            // for the same (assignment_id, user_id), the cloud copy is stale.
+            const localNewer = local.some(
+              (l) =>
+                l.assignment_id === r.assignment_id &&
+                l.user_id === r.user_id &&
+                new Date(String(l.submitted_at)) >= new Date(String(r.submitted_at))
+            );
+            if (localNewer) continue;
+            const cloudNewerThanLocal = local.filter(
+              (l) => l.assignment_id === r.assignment_id && l.user_id === r.user_id
+            );
+            if (cloudNewerThanLocal.length > 0) {
+              // Replace the older local copy with the newer cloud one.
+              for (const stale of cloudNewerThanLocal) {
+                const idx = merged.findIndex((m) => m.id === stale.id);
+                if (idx !== -1) merged.splice(idx, 1);
+              }
+            }
           }
+
+          merged.push(r);
+          changed = true;
         }
+
         if (changed) this.set<StoreRecord>(key, merged);
       }
 

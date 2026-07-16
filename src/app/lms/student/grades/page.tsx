@@ -12,9 +12,11 @@ import { useAuth } from "@/lib/useAuth";
 import { StudentProgress, Submission, QuizAttempt } from "@/lib/mockData";
 import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
 import StudentLayout from "@/components/StudentLayout";
+import { useToast } from "@/components/ui/Toast";
 
 export default function StudentGrades() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
   const [progress, setProgress] = useState<StudentProgress | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [attempts, setAttempts] = useState<QuizAttempt[]>([]);
@@ -85,7 +87,7 @@ export default function StudentGrades() {
       setAiInsight(data.result);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI insight failed: ${msg}`);
+      toast(`AI insight failed: ${msg}`, "error");
     } finally {
       setAiLoading(false);
     }
