@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { UserCheck, ChevronRight, XCircle, X } from "lucide-react";
+import { UserCheck, ChevronRight, XCircle, X, Sparkles, Loader2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Application, Cohort } from "@/lib/mockData";
@@ -16,6 +16,8 @@ export default function AdminApplications() {
   const [targetCohortId, setTargetCohortId] = useState("");
 
   const [message, setMessage] = useState("");
+  const [aiScreen, setAiScreen] = useState("");
+  const [aiScreenLoading, setAiScreenLoading] = useState(false);
 
   const loadApplications = useCallback(() => {
     setApps(db.getApplications());
@@ -30,6 +32,33 @@ export default function AdminApplications() {
     loadApplications();
     return db.subscribe(loadApplications);
   }, [currentUser, loadApplications]);
+
+  const handleAiScreen = async () => {
+    if (!selectedApp) return;
+    setAiScreenLoading(true);
+    setAiScreen("");
+    try {
+      const res = await fetch("/api/ai/screen-application", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          applicant_name: selectedApp.applicant_name,
+          state: selectedApp.state,
+          experience_level: selectedApp.experience_level,
+          course_id: selectedApp.course_id,
+          motivation: selectedApp.motivation,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) throw new Error(data.error || "Failed");
+      setAiScreen(data.result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      alert(`AI screening failed: ${msg}`);
+    } finally {
+      setAiScreenLoading(false);
+    }
+  };
 
   const handleApprove = async () => {
     if (!selectedApp || !targetCohortId) return;
@@ -246,6 +275,32 @@ export default function AdminApplications() {
               <div className="p-4 rounded-xl bg-bg-main border border-border-main text-xs sm:text-sm text-text-muted leading-relaxed whitespace-pre-line">
                 {selectedApp.motivation || "No statement submitted."}
               </div>
+            </div>
+
+            {/* AI Screening */}
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={handleAiScreen}
+                disabled={aiScreenLoading}
+                className="btn border border-primary/30 hover:bg-primary/5 text-primary px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {aiScreenLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Screening...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" /> AI Screen Application
+                  </>
+                )}
+              </button>
+              {aiScreen && (
+                <div className="p-4 rounded-xl bg-primary-glow/20 border border-primary/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
+                  <span className="font-extrabold block mb-1 text-primary">✨ AI Screening Recommendation</span>
+                  {aiScreen}
+                </div>
+              )}
             </div>
 
             {/* Action buttons with Cohort Selector */}
