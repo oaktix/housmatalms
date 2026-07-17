@@ -12,7 +12,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams ? searchParams.get("token") : null;
-  const { login, currentUser } = useAuth();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,12 +21,10 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [showForgotTip, setShowForgotTip] = useState(false);
 
-  useEffect(() => {
-    if (currentUser && !token) {
-      router.push("/lms");
-    }
-  }, [currentUser, token, router]);
-
+  // Handle token-based (magic link) login only. We intentionally do NOT
+  // reactively redirect on `currentUser` here: doing so causes an infinite
+  // redirect/blink loop because `useAuth` re-subscribes to db updates and
+  // re-fires. The /lms gateway handles post-login routing instead.
   useEffect(() => {
     if (token) {
       let profile = db.getProfile(token);
@@ -58,7 +56,7 @@ function LoginContent() {
       return;
     }
 
-    // Simple password validation — all seed accounts use password "housmata2024"
+    // Simple password validation: all seed accounts use password "housmata2024"
     // In production this would verify against Supabase Auth
     const DEMO_PASSWORD = "housmata2024";
     if (password !== DEMO_PASSWORD) {
@@ -67,9 +65,13 @@ function LoginContent() {
       return;
     }
 
-    // Force a Supabase sync so newly-approved student profiles are available
-    // before we attempt the lookup — prevents "account not found" on first login.
-    await db.sync();
+    // Best-effort Supabase sync so newly-approved profiles are available.
+    // Wrapped in a timeout race so a slow/hanging network call can never
+    // freeze the login screen. Login proceeds regardless of sync result.
+    await Promise.race([
+      db.sync(),
+      new Promise<void>((resolve) => setTimeout(resolve, 4000)),
+    ]);
 
     const res = login(email);
     setLoading(false);

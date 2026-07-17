@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Landmark, BookOpen, Check, Home as HomeIcon, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, Landmark, BookOpen, Check, Home as HomeIcon, TrendingUp, Sparkles, Award, UserCheck, AlertTriangle, FileText } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 
 export default function Home() {
@@ -132,8 +132,8 @@ export default function Home() {
               {/* Left Hero Details */}
               <div className="lg:col-span-7 space-y-8 text-left transition-all duration-700 transform translate-y-4 opacity-0 [animation-fill-mode:forwards] animate-slide-up">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-glow border border-primary/20 text-primary text-[0.7rem] font-extrabold uppercase tracking-widest shadow-[0_4px_20px_rgba(2,184,117,0.08)]">
-                  <BookOpen className="w-3.5 h-3.5" />
-                  Housmata Professional Academy
+                  <Sparkles className="w-3.5 h-3.5" />
+                  AI-Powered Real Estate Academy
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-7xl font-heading font-black tracking-tight leading-[0.98] text-text-main text-wrap-balance">
                   We train <br className="hidden md:inline" />
@@ -144,7 +144,7 @@ export default function Home() {
                   real estate experts
                 </h1>
                 <p className="text-text-muted text-base sm:text-lg max-w-xl leading-relaxed">
-                  Choose between two high-performance professional tracks: Rent Management (HCEM) or Property Advisory &amp; Title Verification (HCPA). Build practical, system-backed skills to standardise real estate operations.
+                  Choose between two high-performance professional tracks: Rent Management (HCEM) or Property Advisory &amp; Title Verification (HCPA). Train inside an AI-assisted learning environment that summarizes lessons, explains answers, screens applications, and flags at-risk students automatically.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 pt-2">
                   <Link
@@ -329,6 +329,87 @@ export default function Home() {
           </div>
         </section>
 
+        {/* 3.5 AI-Powered Learning Section */}
+        <section className="py-28 border-b border-border-main bg-bg-main relative scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(2,184,117,0.06),transparent_55%)] pointer-events-none" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="max-w-3xl mx-auto text-center space-y-4 mb-16">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-glow border border-primary/20 text-primary text-[0.7rem] font-extrabold uppercase tracking-widest shadow-[0_4px_20px_rgba(2,184,117,0.08)] mx-auto w-fit">
+                <Sparkles className="w-3.5 h-3.5" />
+                Built-In Artificial Intelligence
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
+                An Academy That Learns With You
+              </h2>
+              <p className="text-text-muted leading-relaxed text-base">
+                Every trainee trains inside a smart, AI-assisted environment. From the first lesson to final certification, our models help students move faster, instructors grade fairer, and admissions spot risk earlier.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: BookOpen,
+                  title: "AI Lesson Assistant",
+                  desc: "Summarize any lesson into key takeaways or ask plain-English questions about the handbook material as you study.",
+                  color: "bg-primary-glow text-primary border-primary/20",
+                },
+                {
+                  icon: CheckCircle2,
+                  title: "AI Answer Explanations",
+                  desc: "After every quiz, get a clear, conversational breakdown of why the correct answer is right and where you went wrong.",
+                  color: "bg-primary-glow text-primary border-primary/20",
+                },
+                {
+                  icon: Award,
+                  title: "Smart Scorecard Insights",
+                  desc: "Receive a personalized, encouraging read on your grades: what you are doing well and exactly where to focus next.",
+                  color: "bg-accent-glow text-accent border-accent/20",
+                },
+                {
+                  icon: UserCheck,
+                  title: "AI Application Screening",
+                  desc: "Admissions gets an instant, structured recommendation on each applicant so strong candidates are never missed.",
+                  color: "bg-secondary-glow text-secondary border-secondary/20",
+                },
+                {
+                  icon: AlertTriangle,
+                  title: "At-Risk Detection",
+                  desc: "Instructors and admins receive automatic briefings on students who are slipping, with suggested interventions.",
+                  color: "bg-error/10 text-error border-error/20",
+                },
+                {
+                  icon: FileText,
+                  title: "AI Grading Support",
+                  desc: "Instructors draft structured, consistent feedback in seconds while keeping the final human verdict in their hands.",
+                  color: "bg-secondary-glow text-secondary border-secondary/20",
+                },
+              ].map((f, idx) => (
+                <div
+                  key={idx}
+                  className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4 hover:border-primary/30 transition-all duration-300 scroll-stagger"
+                >
+                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${f.color}`}>
+                    <f.icon className="w-5 h-5" />
+                  </div>
+                  <h3 className="font-heading font-bold text-base text-text-main">{f.title}</h3>
+                  <p className="text-text-muted text-xs sm:text-sm leading-relaxed">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-12 text-center">
+              <Link
+                href="/programs"
+                className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3.5 rounded-xl font-bold inline-flex items-center gap-2 transition-all"
+              >
+                Explore the AI-Enhanced Tracks
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* 4. Certification Pathway */}
         <section className="py-28 border-b border-border-main bg-bg-card scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -367,7 +448,7 @@ export default function Home() {
         </section>
 
         {/* 5. Course Director */}
-        <section className="py-28 border-b border-border-main scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 bg-bg-main scroll-fade-in">
+        <section className="py-28 border-b border-border-main scroll-section transition-all duration-1000 bg-bg-main scroll-fade-in">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
               <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
@@ -411,7 +492,7 @@ export default function Home() {
         </section>
 
         {/* 6. Call to Action Banner */}
-        <section className="py-32 bg-bg-card relative overflow-hidden text-center scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-scale-in">
+        <section className="py-32 bg-bg-card relative overflow-hidden text-center scroll-section transition-all duration-1000 scroll-scale-in">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(2,184,117,0.08),transparent_55%)]" />
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
             <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tight text-text-main text-wrap-balance">

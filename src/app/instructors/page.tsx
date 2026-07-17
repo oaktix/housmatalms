@@ -19,7 +19,7 @@ export default function Instructors() {
             Meet the Course Director
           </h1>
           <p className="text-text-muted text-sm sm:text-base max-w-xl mx-auto mt-4 leading-relaxed">
-            Housmata Academy is guided by industry leaders with certified academic and global operational expertise.
+            Housmata Academy is guided by industry leaders with certified academic and global operational expertise, and powered by an AI-assisted learning platform that helps every student train smarter.
           </p>
         </div>
       </section>

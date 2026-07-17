@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Compass, Eye, Heart, Landmark } from "lucide-react";
+import { ArrowRight, Compass, Eye, Heart, Landmark, Sparkles, BookOpen, AlertTriangle, FileText } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 
 export default function About() {
@@ -53,7 +53,7 @@ export default function About() {
             </div>
             <h3 className="font-heading font-bold text-lg text-text-main">Our Philosophy</h3>
             <p className="text-text-muted text-xs sm:text-sm leading-relaxed">
-              <strong>&apos;We are not training agents to join a market. We are training operators to build a new one.&apos;</strong> Trust is the ultimate asset. Everything else—data entry, inspections, collection—serves to safeguard this currency.
+              <strong>&apos;We are not training agents to join a market. We are training operators to build a new one.&apos;</strong> Trust is the ultimate asset. Everything else, from data entry and inspections to collection, serves to safeguard this currency.
             </p>
           </div>
         </div>
@@ -92,6 +92,40 @@ export default function About() {
                 Ticketing distributes workflows to verified service vendors instantly.
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* AI-Powered Ecosystem */}
+        <div className="mt-20 premium-card rounded-2xl p-8 md:p-12 bg-bg-main border border-primary/20 grid grid-cols-1 md:grid-cols-12 gap-8 items-center scroll-scale-in">
+          <div className="md:col-span-6 space-y-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-text-inverse text-[0.7rem] font-extrabold uppercase tracking-widest">
+              <Sparkles className="w-3.5 h-3.5" />
+              Intelligence Built In
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-heading font-bold text-text-main">
+              A Smarter Real Estate Training Ecosystem
+            </h2>
+            <p className="text-text-muted text-sm leading-relaxed">
+              Housmata is more than a course library. Our platform embeds artificial intelligence across the entire learning journey so trainees absorb material faster, instructors grade more consistently, and admissions spot risk earlier. The result is a verifiable, system-backed operator, not just a certificate holder.
+            </p>
+          </div>
+
+          <div className="md:col-span-6 space-y-3">
+            {[
+              { icon: BookOpen, title: "AI Lesson Assistant", desc: "Summarizes handbook lessons and answers study questions in plain English." },
+              { icon: AlertTriangle, title: "At-Risk Detection", desc: "Flags slipping students automatically and suggests timely interventions." },
+              { icon: FileText, title: "AI Grading Support", desc: "Helps instructors draft structured, fair feedback while keeping the final verdict human." },
+            ].map((f, i) => (
+              <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-bg-card border border-border-main">
+                <div className="w-10 h-10 rounded-lg bg-primary-glow text-primary flex items-center justify-center flex-shrink-0">
+                  <f.icon className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="font-bold text-text-main text-sm">{f.title}</p>
+                  <p className="text-text-muted text-xs leading-relaxed mt-0.5">{f.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

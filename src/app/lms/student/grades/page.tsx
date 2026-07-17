@@ -144,7 +144,7 @@ export default function StudentGrades() {
             <p className="text-xs text-text-main leading-relaxed whitespace-pre-line">{aiInsight}</p>
           ) : (
             <p className="text-[11px] text-text-muted leading-relaxed">
-              Get a personalized, encouraging read on your scorecard — what you&apos;re doing well and where to focus next.
+              Get a personalized, encouraging read on your scorecard: what you&apos;re doing well and where to focus next.
             </p>
           )}
         </div>

@@ -2,14 +2,14 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Clock, Calendar, CheckCircle2, ChevronRight, Home, TrendingUp } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Calendar, CheckCircle2, ChevronRight, Home, TrendingUp, Sparkles, Award, UserCheck, AlertTriangle, FileText } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 
 const HCEM_PHASES = [
   {
     phase: "Phase 1",
     title: "Foundation Training: Real Estate OS",
-    desc: "Grounds trainees in fundamental real estate principles — ethics, landlord/tenant psychology, inspection forms, and tenancy documentation.",
+    desc: "Grounds trainees in fundamental real estate principles: ethics, landlord/tenant psychology, inspection forms, and tenancy documentation.",
     meta: [
       { icon: Clock, label: "Duration: 8–12 Weeks" },
       { icon: BookOpen, label: "Curriculum: 9 Modules" },
@@ -39,7 +39,7 @@ const HCEM_PHASES = [
   {
     phase: "Phase 3",
     title: "Field Practicals",
-    desc: "Supervised practical deployment — inspect real properties, manage a live portfolio, and document your fieldwork for certification submission.",
+    desc: "Supervised practical deployment: inspect real properties, manage a live portfolio, and document your fieldwork for certification submission.",
     meta: [
       { icon: Calendar, label: "Duration: 4–8 Weeks" },
       { icon: CheckCircle2, label: "Supervised Field Assessments" },
@@ -72,7 +72,7 @@ const HCPA_PHASES = [
   {
     phase: "Phase 2",
     title: "Live Bootcamp Sessions",
-    desc: "Intensive live-streamed sessions translating theory into applied advisory practice — case studies, negotiation tactics, deal structuring, and regulatory compliance.",
+    desc: "Intensive live-streamed sessions translating theory into applied advisory practice: case studies, negotiation tactics, deal structuring, and regulatory compliance.",
     meta: [
       { icon: Calendar, label: "Frequency: 3 Live Classes / Week" },
       { icon: Clock, label: "Duration: Intensive Bootcamp" },
@@ -87,7 +87,7 @@ const HCPA_PHASES = [
   {
     phase: "Phase 3",
     title: "Field Practicals",
-    desc: "Supervised practical deployment — conduct physical property verifications, assist in advisory transactions, and submit a documented client advisory project.",
+    desc: "Supervised practical deployment: conduct physical property verifications, assist in advisory transactions, and submit a documented client advisory project.",
     meta: [
       { icon: Calendar, label: "Duration: 4–8 Weeks" },
       { icon: CheckCircle2, label: "Supervised Field Assessments" },
@@ -147,7 +147,7 @@ export default function Programs() {
             Training &amp; Programs
           </h1>
           <p className="text-text-muted text-sm sm:text-base max-w-2xl mx-auto mt-4 leading-relaxed">
-            Two distinct professional certification tracks. Choose the path that fits your real estate career — estate management or property advisory.
+            Two distinct professional certification tracks. Choose the path that fits your real estate career: estate management or property advisory.
             Applications are open to one track at a time and require individual approval.
           </p>
         </div>
@@ -183,7 +183,7 @@ export default function Programs() {
                 href="/apply"
                 className="btn bg-primary text-text-inverse hover:brightness-110 px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
               >
-                Apply — HCEM
+                 Apply for HCEM
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -201,7 +201,7 @@ export default function Programs() {
 
           <div className="p-5 rounded-2xl bg-bg-card border border-border-main text-xs text-text-muted leading-relaxed">
             <span className="font-bold text-text-main">Who is HCEM for?</span>&nbsp;
-            Property managers, letting agents, and administrators who want to professionalize their estate management operations — handling rent collection, tenancy agreements, landlord-tenant relations, and facility upkeep.
+            Property managers, letting agents, and administrators who want to professionalize their estate management operations: handling rent collection, tenancy agreements, landlord-tenant relations, and facility upkeep.
           </div>
         </div>
 
@@ -232,7 +232,7 @@ export default function Programs() {
                 href="/apply"
                 className="btn bg-amber-500 text-white hover:brightness-110 px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
               >
-                Apply — HCPA
+                 Apply for HCPA
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -250,7 +250,46 @@ export default function Programs() {
 
           <div className="p-5 rounded-2xl bg-bg-card border border-border-main text-xs text-text-muted leading-relaxed">
             <span className="font-bold text-text-main">Who is HCPA for?</span>&nbsp;
-            Sales agents, property consultants, and investors who want to advise clients on acquiring, selling, or investing in property — mastering due diligence, title verification, market valuation, and fraud prevention.
+            Sales agents, property consultants, and investors who want to advise clients on acquiring, selling, or investing in property: mastering due diligence, title verification, market valuation, and fraud prevention.
+          </div>
+        </div>
+
+        {/* AI-Powered Learning Banner */}
+        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary-glow/40 to-bg-card p-8 md:p-10 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row md:items-center gap-8 relative z-10">
+            <div className="md:w-2/5 space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-text-inverse text-[0.7rem] font-extrabold uppercase tracking-widest">
+                <Sparkles className="w-3.5 h-3.5" />
+                AI-Assisted Training
+              </div>
+              <h3 className="text-xl sm:text-2xl font-heading font-extrabold text-text-main">
+                Both Tracks Run on an AI Learning Engine
+              </h3>
+              <p className="text-text-muted text-sm leading-relaxed">
+                Whichever path you choose, you train inside the same intelligent environment that helps you study faster and helps instructors and admissions act sooner.
+              </p>
+            </div>
+            <div className="md:w-3/5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                { icon: BookOpen, title: "AI Lesson Assistant", desc: "Summarize lessons and ask questions in plain English while you study." },
+                { icon: CheckCircle2, title: "AI Answer Explanations", desc: "Understand exactly why each quiz answer is correct after you attempt it." },
+                { icon: Award, title: "Smart Scorecard Insights", desc: "Get a personalized read on your grades and where to improve next." },
+                { icon: UserCheck, title: "AI Application Screening", desc: "Admissions receive instant, structured recommendations on every applicant." },
+                { icon: AlertTriangle, title: "At-Risk Detection", desc: "Automatic briefings flag slipping students with suggested interventions." },
+                { icon: FileText, title: "AI Grading Support", desc: "Instructors draft consistent feedback in seconds, keeping the final call human." },
+              ].map((f, i) => (
+                <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-bg-card border border-border-main">
+                  <div className="w-9 h-9 rounded-lg bg-primary-glow text-primary flex items-center justify-center flex-shrink-0">
+                    <f.icon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-text-main text-xs">{f.title}</p>
+                    <p className="text-text-muted text-[11px] leading-relaxed mt-0.5">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

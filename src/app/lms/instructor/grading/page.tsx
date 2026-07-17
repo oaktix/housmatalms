@@ -140,7 +140,7 @@ export default function InstructorGrading() {
   const handleAiRestructure = async () => {
     if (!selectedSub) return;
     if (!feedback.trim()) {
-      toast("Write a few draft notes first — the AI will restructure them into polished feedback.", "error");
+      toast("Write a few draft notes first: the AI will restructure them into polished feedback.", "error");
       return;
     }
 
@@ -366,7 +366,7 @@ export default function InstructorGrading() {
                   </p>
                 </div>
 
-                {/* Submitted Document Panel — clickable, opens full-screen reader */}
+                {/* Submitted Document Panel: clickable, opens full-screen reader */}
                 {selectedSub.content_link ? (
                   <div className="space-y-2">
                     <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest text-text-muted">
@@ -376,7 +376,7 @@ export default function InstructorGrading() {
                       )}
                     </div>
 
-                    {/* Clickable preview card — serves the raw PDF (no Cloudinary processing) */}
+                    {/* Clickable preview card: serves the raw PDF (no Cloudinary processing) */}
                     <button
                       type="button"
                       onClick={() => setPdfFullscreen(true)}

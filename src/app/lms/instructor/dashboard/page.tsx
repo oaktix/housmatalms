@@ -133,7 +133,7 @@ export default function InstructorDashboard() {
       const text = data.result;
       const annMatch = text.match(/Announcement:\s*([\s\S]+)/i);
       if (annMatch) setAiAnnDraft(annMatch[1].trim());
-      setNotification("Agenda generated — review the announcement draft below.");
+      setNotification("Agenda generated: review the announcement draft below.");
       setTimeout(() => setNotification(""), 4000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";

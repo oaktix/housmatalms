@@ -164,7 +164,7 @@ export default function AdminCohorts() {
                   type="text"
                   id="name"
                   className="w-full bg-bg-main border border-border-main rounded-xl px-3 py-2 text-xs text-text-main focus:outline-none focus:border-primary"
-                  placeholder="e.g. Cohort Alpha — 2026"
+                  placeholder="e.g. Cohort Alpha · 2026"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required

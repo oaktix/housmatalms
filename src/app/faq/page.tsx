@@ -39,6 +39,14 @@ export default function FAQ() {
       q: "How do certificate verifications work?",
       a: "All graduates receive a verified credential with a unique ID and a QR code linked to our central verification portal, letting developers, banks, and clients confirm active certification status.",
     },
+    {
+      q: "Is the Housmata Academy platform AI-powered?",
+      a: "Yes. Housmata Academy is built as an AI-assisted learning environment. Students get an AI Lesson Assistant that summarizes handbook material and answers study questions, plus instant AI explanations after every quiz. Instructors use AI to draft structured assignment feedback, admissions receive AI screening recommendations on applications, and the system automatically flags at-risk students so support can step in early. Every final grade and certification decision remains with a qualified human instructor.",
+    },
+    {
+      q: "How does the AI help me learn faster?",
+      a: "Instead of re-reading long handbook sections, you can ask the AI Lesson Assistant to summarize a lesson into key takeaways or clarify a confusing concept in plain English. After a quiz attempt, the AI explains exactly why the correct answer is right and where you went wrong, so you correct misunderstandings immediately rather than at the final exam.",
+    },
   ];
 
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
@@ -56,7 +64,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h1>
           <p className="text-text-muted text-sm sm:text-base max-w-xl mx-auto mt-4 leading-relaxed">
-            Get clear, direct answers about Housmata Academy&apos;s certification tracks, admissions, and grading.
+            Get clear, direct answers about Housmata Academy&apos;s AI-powered certification tracks, admissions, and grading.
           </p>
         </div>
       </section>

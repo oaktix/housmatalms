@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, FileText, Sparkles } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 import { seedModules, seedLessons, seedAssignments } from "@/lib/mockData";
 
@@ -43,7 +43,7 @@ export default function Curriculum() {
               href="/apply"
               className="btn bg-primary text-text-inverse hover:brightness-110 px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all"
             >
-              Apply — HCEM
+              Apply for HCEM
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -103,6 +103,21 @@ export default function Curriculum() {
               </p>
             </>
           )}
+        </div>
+
+        {/* AI-Assisted Study Banner */}
+        <div className="mb-10 p-5 rounded-2xl border border-primary/20 bg-primary-glow/30 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-primary text-text-inverse flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-bold text-text-main text-sm flex items-center gap-1.5">
+              AI-Assisted While You Study
+            </p>
+            <p className="text-text-muted text-xs leading-relaxed mt-0.5">
+              Inside the student portal, every lesson can be summarized on demand and any quiz answer explained in plain English by our built-in AI assistant.
+            </p>
+          </div>
         </div>
 
         {/* Modules List */}

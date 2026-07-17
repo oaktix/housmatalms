@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, ShieldCheck, Search } from "lucide-react";
+import { ArrowRight, CheckCircle2, ShieldCheck, Search, Sparkles, FileText } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 
 export default function Certification() {
@@ -117,7 +117,41 @@ export default function Certification() {
           </div>
         </div>
 
-        {/* CTA */}
+        {/* AI-Assisted Grading Note */}
+        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary-glow/40 to-bg-card p-8 md:p-10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+          <div className="md:col-span-5">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-text-inverse text-[0.7rem] font-extrabold uppercase tracking-widest">
+              <Sparkles className="w-3.5 h-3.5" />
+              AI-Assisted, Human-Verified
+            </div>
+            <h3 className="text-xl sm:text-2xl font-heading font-extrabold text-text-main mt-4">
+              Faster, Fairer Assessment
+            </h3>
+            <p className="text-text-muted text-sm leading-relaxed mt-3">
+              Our AI helps instructors draft consistent, structured feedback on assignments in seconds, and gives you instant explanations after every quiz. The final grade and certification decision always stays with a qualified human instructor.
+            </p>
+          </div>
+          <div className="md:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-bg-card border border-border-main">
+              <div className="w-9 h-9 rounded-lg bg-primary-glow text-primary flex items-center justify-center flex-shrink-0">
+                <FileText className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="font-bold text-text-main text-xs">AI Grading Support</p>
+                <p className="text-text-muted text-[11px] leading-relaxed mt-0.5">Structured feedback drafted fast, verified by instructors.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-bg-card border border-border-main">
+              <div className="w-9 h-9 rounded-lg bg-primary-glow text-primary flex items-center justify-center flex-shrink-0">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="font-bold text-text-main text-xs">AI Answer Explanations</p>
+                <p className="text-text-muted text-[11px] leading-relaxed mt-0.5">Clear breakdowns of every quiz result.</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div className="text-center pt-10 space-y-4">
           <h3 className="text-lg font-heading font-bold text-text-main">Apply to Begin</h3>
           <p className="text-text-muted text-xs max-w-sm mx-auto leading-relaxed">

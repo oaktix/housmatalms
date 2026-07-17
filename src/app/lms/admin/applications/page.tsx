@@ -67,7 +67,7 @@ export default function AdminApplications() {
 
     try {
       await db.updateApplicationStatus(selectedApp.id, "approved", targetCohortId);
-      setMessage(`Application for ${selectedApp.applicant_name} approved — student account created!`);
+      setMessage(`Application for ${selectedApp.applicant_name} approved: student account created!`);
     } catch (err) {
       console.error("Approval failed:", err);
       setMessage(`Approval failed: ${err instanceof Error ? err.message : "Unknown error. Check browser console."}`);

@@ -280,7 +280,7 @@ export default function StudentCurriculum() {
     }
   };
 
-  // Submit Assignment PDF — upload to Cloudinary, store only the lightweight URL
+  // Submit Assignment PDF: upload to Cloudinary, store only the lightweight URL
   const submitAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !activeAssessment || !activeAssessment.assignment || !assignmentFile) return;

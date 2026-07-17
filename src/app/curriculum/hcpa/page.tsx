@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, ChevronUp, CheckCircle2, FileText, TrendingUp } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, CheckCircle2, FileText, TrendingUp, Sparkles } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 import { hcpaCurriculum } from "@/lib/curriculum";
 
@@ -42,7 +42,7 @@ export default function HCPACurriculum() {
               href="/apply"
               className="btn bg-amber-500 text-white hover:brightness-110 px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 transition-all"
             >
-              Apply — HCPA
+              Apply for HCPA
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -54,9 +54,24 @@ export default function HCPACurriculum() {
         {/* Phase Badge */}
         <div className="flex items-center gap-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-xs font-bold text-amber-400 uppercase">
-            Phase 1 — Self-Paced Modules
+            Phase 1 · Self-Paced Modules
           </div>
           <span className="text-xs text-text-muted">{hcpaCurriculum.length} modules total</span>
+        </div>
+
+        {/* AI-Assisted Study Banner */}
+        <div className="p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="w-11 h-11 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="font-bold text-text-main text-sm flex items-center gap-1.5">
+              AI-Assisted While You Study
+            </p>
+            <p className="text-text-muted text-xs leading-relaxed mt-0.5">
+              Inside the student portal, every lesson can be summarized on demand and any quiz answer explained in plain English by our built-in AI assistant.
+            </p>
+          </div>
         </div>
 
         {/* Module List */}
@@ -157,7 +172,7 @@ export default function HCPACurriculum() {
             {
               phase: "Phase 3",
               title: "Field Practicals",
-              desc: "Supervised fieldwork — conduct physical property verifications, assist in advisory transactions, and submit your certified client advisory project.",
+              desc: "Supervised fieldwork: conduct physical property verifications, assist in advisory transactions, and submit your certified client advisory project.",
               locked: true,
             },
           ].map((p) => (

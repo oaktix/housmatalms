@@ -2,7 +2,7 @@ import PublicLayout from "@/components/PublicLayout";
 
 export const metadata = {
   title: "Terms of Service | Housmata Academy",
-  description: "Read the Terms of Service for Housmata Academy — your rights and obligations as a student, instructor, or administrator.",
+  description: "Read the Terms of Service for Housmata Academy: your rights and obligations as a student, instructor, or administrator.",
 };
 
 export default function TermsOfService() {

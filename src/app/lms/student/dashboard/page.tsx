@@ -88,7 +88,7 @@ export default function StudentDashboard() {
     }
   }, [currentPostSurveyStep]);
 
-  // Stable data loader — never changes identity so db.subscribe never
+  // Stable data loader: never changes identity so db.subscribe never
   // unsubscribes/resubscribes on every render (which was the survey flicker).
   const loadStudentData = useCallback(() => {
     const user = currentUserRef.current;
@@ -138,7 +138,7 @@ export default function StudentDashboard() {
         setShowPostSurvey(false);
       }
     }
-  }, []); // stable — reads currentUser via ref, never recreated
+  }, []); // stable: reads currentUser via ref, never recreated
 
   // Subscribe once on mount. loadStudentData identity never changes,
   // so this effect never re-fires due to function reference changes.
@@ -431,7 +431,7 @@ export default function StudentDashboard() {
             <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl animate-scale-in relative">
               <div className="text-center space-y-1">
                 <span className="text-[9px] font-black uppercase tracking-widest text-primary bg-primary-glow border border-primary/20 px-3 py-1 rounded-full">
-                  Outcome Harvesting — Step {currentPreSurveyStep} of 11
+                   Outcome Harvesting · Step {currentPreSurveyStep} of 11
                 </span>
                 <h2 className="text-lg sm:text-xl font-heading font-black text-text-main">
                   {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Pre-Survey" : "Real Estate Manager (HCEM) Pre-Survey"}
@@ -509,8 +509,8 @@ export default function StudentDashboard() {
                         ))}
                       </div>
                       <div className="flex justify-between text-[10px] text-text-muted px-1 font-bold">
-                        <span>1 — No Knowledge</span>
-                        <span>5 — Expert Profile</span>
+                        <span>1 · No Knowledge</span>
+                        <span>5 · Expert Profile</span>
                       </div>
                     </div>
                   </div>
@@ -587,7 +587,7 @@ export default function StudentDashboard() {
             <div className="premium-card rounded-2xl bg-bg-card border-border-main max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl animate-scale-in relative">
               <div className="text-center space-y-1">
                 <span className="text-[9px] font-black uppercase tracking-widest text-secondary bg-secondary/10 px-3 py-1 rounded-full">
-                  Post-Course Assessment — Step {currentPostSurveyStep} of 11
+                   Post-Course Assessment · Step {currentPostSurveyStep} of 11
                 </span>
                 <h2 className="text-lg sm:text-xl font-heading font-black text-text-main">
                   {progress?.course_id === "property-advisor-hcpa" ? "Property Advisor (HCPA) Post-Survey" : "Real Estate Manager (HCEM) Post-Survey"}
@@ -665,8 +665,8 @@ export default function StudentDashboard() {
                         ))}
                       </div>
                       <div className="flex justify-between text-[10px] text-text-muted px-1 font-bold">
-                        <span>1 — No Knowledge</span>
-                        <span>5 — Expert Profile</span>
+                        <span>1 · No Knowledge</span>
+                        <span>5 · Expert Profile</span>
                       </div>
                     </div>
                   </div>
