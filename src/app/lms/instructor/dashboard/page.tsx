@@ -18,9 +18,11 @@ import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Cohort, Profile, Meeting } from "@/lib/mockData";
 import StudentProgressSection from "@/components/StudentProgressSection";
+import { useToast } from "@/components/ui/Toast";
 
 export default function InstructorDashboard() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
   
   // Data States
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -116,7 +118,7 @@ export default function InstructorDashboard() {
 
   const handleAiAgenda = async () => {
     if (!meetTopic.trim()) {
-      alert("Enter a class topic first, then generate an agenda with AI.");
+      toast("Enter a class topic first, then generate an agenda with AI.", "error");
       return;
     }
     setAiAgendaLoading(true);
@@ -135,7 +137,7 @@ export default function InstructorDashboard() {
       setTimeout(() => setNotification(""), 4000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI agenda failed: ${msg}`);
+      toast(`AI agenda failed: ${msg}`, "error");
     } finally {
       setAiAgendaLoading(false);
     }

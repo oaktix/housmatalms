@@ -1,14 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Search, GraduationCap, X, BarChart2, Sparkles, Loader2, AlertTriangle } from "lucide-react";
+import { Search, GraduationCap, X, BarChart2, Sparkles, Loader2, AlertTriangle, Crown, Zap, Settings, Sprout, Sparkle } from "lucide-react";
 import { db } from "@/lib/db";
 import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
 import { Profile, Cohort } from "@/lib/mockData";
 import { getAtRiskStudents } from "@/lib/analytics";
 import StudentProgressSection from "@/components/StudentProgressSection";
+import { useToast } from "@/components/ui/Toast";
 
 export default function ProgressTrackerPortal() {
+  const { toast } = useToast();
   // Data States
   const [students, setStudents] = useState<Profile[]>([]);
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -111,7 +113,7 @@ export default function ProgressTrackerPortal() {
       setAiRiskBrief(data.result);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI risk briefing failed: ${msg}`);
+      toast(`AI risk briefing failed: ${msg}`, "error");
     } finally {
       setAiRiskLoading(false);
     }
@@ -252,17 +254,17 @@ export default function ProgressTrackerPortal() {
                           <div className="min-w-0">
                             {(() => {
                               const getBadge = (count: number) => {
-                                if (count >= 10) return { name: "Ecosystem Expert 👑", style: "bg-green-950/20 border-green-500/30 text-green-400" };
-                                if (count >= 8) return { name: "Specialist ⚡", style: "bg-accent-glow border-accent/20 text-accent" };
-                                if (count >= 4) return { name: "Apprentice ⚙️", style: "bg-secondary-glow border-secondary/20 text-secondary" };
-                                return { name: "Novice 🌱", style: "bg-bg-main border-border-main text-text-muted" };
+                                if (count >= 10) return { name: "Ecosystem Expert", icon: <Crown className="w-3 h-3" />, style: "bg-green-950/20 border-green-500/30 text-green-400" };
+                                if (count >= 8) return { name: "Specialist", icon: <Zap className="w-3 h-3" />, style: "bg-accent-glow border-accent/20 text-accent" };
+                                if (count >= 4) return { name: "Apprentice", icon: <Settings className="w-3 h-3" />, style: "bg-secondary-glow border-secondary/20 text-secondary" };
+                                return { name: "Novice", icon: <Sprout className="w-3 h-3" />, style: "bg-bg-main border-border-main text-text-muted" };
                               };
                               const badge = getBadge(progress.completed_modules.length);
                               return (
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-bold text-text-main truncate block">{student.full_name}</span>
-                                  <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase ${badge.style}`}>
-                                    {badge.name}
+                                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase ${badge.style}`}>
+                                    {badge.icon} {badge.name}
                                   </span>
                                 </div>
                               );
@@ -321,7 +323,10 @@ export default function ProgressTrackerPortal() {
       {aiRiskBrief && (
         <div className="premium-card rounded-2xl bg-bg-card border border-error/20 p-5 shadow-sm">
           <div className="p-4 rounded-xl bg-error/5 border border-error/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
-            <span className="font-extrabold block mb-1 text-error">✨ AI Attention Brief</span>
+            <span className="font-extrabold block mb-1 text-error flex items-center gap-1.5">
+              <Sparkle className="w-3.5 h-3.5" />
+              AI Attention Brief
+            </span>
             {aiRiskBrief}
           </div>
         </div>

@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle2, Landmark, Sparkles, Check, Home as HomeIcon, TrendingUp } from "lucide-react";
+import { ArrowRight, CheckCircle2, Landmark, BookOpen, Check, Home as HomeIcon, TrendingUp } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 
 export default function Home() {
@@ -107,23 +107,23 @@ export default function Home() {
             .animate-float-4 { animation: float-mid 8s ease-in-out infinite; }
           `}</style>
           
-          {/* Section 1 Hero Prominent Floating SVGs */}
-          <svg className="absolute top-[10%] left-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-1 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <svg className="absolute top-[22%] right-[8%] w-20 h-20 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-2 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3M15.5 7.5L14 9"/></svg>
-          <svg className="absolute bottom-[35%] left-[5%] w-18 h-18 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <svg className="absolute bottom-[46%] right-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+          {/* Section 1 Hero Prominent Floating SVGs - Parallax depth layers */}
+          <svg className="absolute top-[10%] left-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-1 parallax-layer-1 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <svg className="absolute top-[22%] right-[8%] w-20 h-20 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-2 parallax-layer-2 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3M15.5 7.5L14 9"/></svg>
+          <svg className="absolute bottom-[35%] left-[5%] w-18 h-18 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 parallax-layer-3 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <svg className="absolute bottom-[46%] right-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 parallax-layer-1 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
 
           {/* Section 2 Tracks Prominent Floating SVGs */}
-          <svg className="absolute top-[52%] left-[8%] w-22 h-22 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-2 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
-          <svg className="absolute top-[68%] right-[10%] w-20 h-20 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-1 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <svg className="absolute top-[52%] left-[8%] w-22 h-22 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-2 parallax-layer-2 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+          <svg className="absolute top-[68%] right-[10%] w-20 h-20 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-1 parallax-layer-3 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 
           {/* Section 3 Path Prominent Floating SVGs */}
-          <svg className="absolute bottom-[18%] left-[7%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
-          <svg className="absolute bottom-[5%] right-[9%] w-22 h-22 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          <svg className="absolute bottom-[18%] left-[7%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 parallax-layer-1 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
+          <svg className="absolute bottom-[5%] right-[9%] w-22 h-22 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 parallax-layer-2 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         </div>
 
         {/* 1. Hero Section */}
-        <section className="relative overflow-hidden pt-32 pb-36 md:pt-44 md:pb-48 border-b border-border-main scroll-section transition-all duration-1000">
+        <section className="relative overflow-hidden pt-32 pb-36 md:pt-44 md:pb-48 border-b border-border-main scroll-section transition-all duration-1000 scroll-fade-in">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(2,184,117,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(2,184,117,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.05)_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] animate-grid-move pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg-main/40 to-bg-main pointer-events-none" />
 
@@ -132,7 +132,7 @@ export default function Home() {
               {/* Left Hero Details */}
               <div className="lg:col-span-7 space-y-8 text-left transition-all duration-700 transform translate-y-4 opacity-0 [animation-fill-mode:forwards] animate-slide-up">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-glow border border-primary/20 text-primary text-[0.7rem] font-extrabold uppercase tracking-widest shadow-[0_4px_20px_rgba(2,184,117,0.08)]">
-                  <Sparkles className="w-3.5 h-3.5 animate-spin-slow" />
+                  <BookOpen className="w-3.5 h-3.5" />
                   Housmata Professional Academy
                 </div>
                 <h1 className="text-4xl sm:text-5xl lg:text-7xl font-heading font-black tracking-tight leading-[0.98] text-text-main text-wrap-balance">
@@ -228,7 +228,7 @@ export default function Home() {
         </section>
 
         {/* 2. Choose Your Track */}
-        <section className="py-28 border-b border-border-main bg-bg-card relative scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0">
+        <section className="py-28 border-b border-border-main bg-bg-card relative scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
               <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
@@ -240,9 +240,9 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 scroll-stagger">
               {tracks.map((track, idx) => (
-                <div key={idx} className="premium-card rounded-2.5xl p-8 bg-bg-main border-border-main space-y-6 flex flex-col justify-between shadow-lg hover:border-primary/30 transition-all duration-300">
+                <div key={idx} className="premium-card rounded-2.5xl p-8 bg-bg-main border-border-main space-y-6 flex flex-col justify-between shadow-lg hover:border-primary/30 transition-all duration-300 scroll-glow">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-bg-card border border-border-main flex items-center justify-center">
@@ -283,10 +283,10 @@ export default function Home() {
         </section>
 
         {/* 3. Replacement of Habits */}
-        <section className="py-28 border-b border-border-main bg-bg-main scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0">
+        <section className="py-28 border-b border-border-main bg-bg-main scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-              <div className="lg:col-span-7 space-y-8">
+              <div className="lg:col-span-7 space-y-8 scroll-stagger">
                 <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
                   Replacing Informal Real Estate Habits with Structured Technology
                 </h2>
@@ -330,7 +330,7 @@ export default function Home() {
         </section>
 
         {/* 4. Certification Pathway */}
-        <section className="py-28 border-b border-border-main bg-bg-card scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0">
+        <section className="py-28 border-b border-border-main bg-bg-card scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
               <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
@@ -342,11 +342,11 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 scroll-stagger">
               {levels.map((lvl) => (
                 <div 
                   key={lvl.num} 
-                  className="premium-card rounded-2xl p-7 bg-bg-main border-border-main relative flex flex-col gap-5 transition-all duration-500 shadow-md hover:-translate-y-1.5"
+                  className="premium-card rounded-2xl p-7 bg-bg-main border-border-main relative flex flex-col gap-5 transition-all duration-500 shadow-md hover:-translate-y-1.5 scroll-glow"
                 >
                   <div className="absolute top-4 right-4 font-heading font-black text-5xl text-primary/5 select-none transition-colors group-hover:text-primary/10">
                     0{lvl.num}
@@ -367,7 +367,7 @@ export default function Home() {
         </section>
 
         {/* 5. Course Director */}
-        <section className="py-28 border-b border-border-main scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 bg-bg-main">
+        <section className="py-28 border-b border-border-main scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 bg-bg-main scroll-fade-in">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
               <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
@@ -376,7 +376,7 @@ export default function Home() {
               <div className="h-1.5 w-16 bg-primary mx-auto rounded-full" />
             </div>
 
-            <div className="max-w-4xl mx-auto premium-card rounded-2.5xl bg-bg-card border-border-main p-8 md:p-14 grid grid-cols-1 md:grid-cols-12 gap-10 items-center relative shadow-lg">
+            <div className="max-w-4xl mx-auto premium-card rounded-2.5xl bg-bg-card border-border-main p-8 md:p-14 grid grid-cols-1 md:grid-cols-12 gap-10 items-center relative shadow-lg scroll-scale-in">
               <div className="absolute -inset-4 bg-gradient-to-tr from-primary/5 to-transparent rounded-[3rem] blur-xl opacity-30 pointer-events-none" />
               <div className="md:col-span-4 flex justify-center relative z-10">
                 <div className="w-48 h-48 sm:w-52 sm:h-52 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-heading font-extrabold text-text-inverse text-5xl shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-300">
@@ -411,7 +411,7 @@ export default function Home() {
         </section>
 
         {/* 6. Call to Action Banner */}
-        <section className="py-32 bg-bg-card relative overflow-hidden text-center scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0">
+        <section className="py-32 bg-bg-card relative overflow-hidden text-center scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-scale-in">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(2,184,117,0.08),transparent_55%)]" />
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
             <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tight text-text-main text-wrap-balance">

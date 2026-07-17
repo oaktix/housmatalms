@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Submission, Assignment, Profile, StudentProgress } from "@/lib/mockData";
 import { Modal } from "@/components/ui/Modal";
+import { useToast } from "@/components/ui/Toast";
 import confetti from "canvas-confetti";
 
 type SubmissionWithDetails = Submission & {
@@ -22,6 +23,7 @@ type StudentWithProgress = {
 
 export default function InstructorGrading() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
   
   // Data States
   const [submissions, setSubmissions] = useState<SubmissionWithDetails[]>([]);
@@ -138,7 +140,7 @@ export default function InstructorGrading() {
   const handleAiRestructure = async () => {
     if (!selectedSub) return;
     if (!feedback.trim()) {
-      alert("Write a few draft notes first — the AI will restructure them into polished feedback.");
+      toast("Write a few draft notes first — the AI will restructure them into polished feedback.", "error");
       return;
     }
 
@@ -158,7 +160,7 @@ export default function InstructorGrading() {
       setFeedback(data.restructured);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI restructure failed: ${message}`);
+      toast(`AI restructure failed: ${message}`, "error");
     } finally {
       setAiLoading(false);
     }
@@ -183,7 +185,7 @@ export default function InstructorGrading() {
   const handleRequestResubmission = () => {
     if (!selectedSub) return;
     if (!feedback.trim()) {
-      alert("Please provide feedback explaining why resubmission is requested.");
+      toast("Please provide feedback explaining why resubmission is requested.", "error");
       return;
     }
 

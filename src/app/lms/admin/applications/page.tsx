@@ -1,13 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { UserCheck, ChevronRight, XCircle, X, Sparkles, Loader2 } from "lucide-react";
+import { UserCheck, ChevronRight, XCircle, X, Sparkles, Sparkle, Loader2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Application, Cohort } from "@/lib/mockData";
+import { useToast } from "@/components/ui/Toast";
 
 export default function AdminApplications() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
   
   // Data States
   const [apps, setApps] = useState<Application[]>([]);
@@ -54,7 +56,7 @@ export default function AdminApplications() {
       setAiScreen(data.result);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI screening failed: ${msg}`);
+      toast(`AI screening failed: ${msg}`, "error");
     } finally {
       setAiScreenLoading(false);
     }
@@ -65,10 +67,10 @@ export default function AdminApplications() {
 
     try {
       await db.updateApplicationStatus(selectedApp.id, "approved", targetCohortId);
-      setMessage(`✅ Application for ${selectedApp.applicant_name} approved — student account created!`);
+      setMessage(`Application for ${selectedApp.applicant_name} approved — student account created!`);
     } catch (err) {
       console.error("Approval failed:", err);
-      setMessage(`❌ Approval failed: ${err instanceof Error ? err.message : "Unknown error. Check browser console."}`);
+      setMessage(`Approval failed: ${err instanceof Error ? err.message : "Unknown error. Check browser console."}`);
     }
 
     loadApplications();
@@ -297,7 +299,10 @@ export default function AdminApplications() {
               </button>
               {aiScreen && (
                 <div className="p-4 rounded-xl bg-primary-glow/20 border border-primary/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
-                  <span className="font-extrabold block mb-1 text-primary">✨ AI Screening Recommendation</span>
+                  <span className="font-extrabold block mb-1 text-primary flex items-center gap-1.5">
+                    <Sparkle className="w-3.5 h-3.5" />
+                    AI Screening Recommendation
+                  </span>
                   {aiScreen}
                 </div>
               )}

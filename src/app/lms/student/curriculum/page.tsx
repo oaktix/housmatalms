@@ -486,8 +486,9 @@ export default function StudentCurriculum() {
                               }
                             } else if (isCompleted) {
                               return (
-                                <div className="w-full py-2 p-3 rounded-xl border border-primary/20 bg-primary/5 text-xs font-bold text-primary text-center">
-                                  Module Completed ✓
+                                <div className="w-full py-2 p-3 rounded-xl border border-primary/20 bg-primary/5 text-xs font-bold text-primary text-center flex items-center justify-center gap-1.5">
+                                  <CheckCircle2 className="w-3.5 h-3.5" />
+                                  Module Completed
                                 </div>
                               );
                             }

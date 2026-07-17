@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { ShieldCheck, GraduationCap, Activity, Calendar, Mail, X, FileText, Award, Download } from "lucide-react";
+import { ShieldCheck, GraduationCap, Activity, Calendar, Mail, X, FileText, Award, Download, Zap } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Profile, GraduateStatus, Cohort, Certificate } from "@/lib/mockData";
 import StudentProgressSection from "@/components/StudentProgressSection";
 import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
+import { useToast } from "@/components/ui/Toast";
 import confetti from "canvas-confetti";
 
 type StudentWithDeployment = Profile & {
@@ -17,6 +18,7 @@ type StudentWithDeployment = Profile & {
 
 export default function AdminStudents() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
   
   // Data States
   const [students, setStudents] = useState<StudentWithDeployment[]>([]);
@@ -52,7 +54,7 @@ export default function AdminStudents() {
           a.click();
           document.body.removeChild(a);
         } else {
-          alert("Could not load the submitted file. Please try again.");
+          toast("Could not load the submitted file. Please try again.", "error");
         }
       } finally {
         setDownloadingSubId(null);
@@ -142,12 +144,19 @@ export default function AdminStudents() {
                     <div className="flex justify-between items-start gap-2">
                       <h4 className="font-bold text-text-main text-sm truncate">{student.full_name}</h4>
                       {prog.current_phase === 2 && prog.phase2_status === "in-progress" && (
-                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${
+                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-1 ${
                           isReadyForPromotion
                             ? "bg-accent-glow text-accent border border-accent/20 animate-pulse"
                             : "bg-secondary-glow text-secondary border border-secondary/20"
                         }`}>
-                          {isReadyForPromotion ? "Promotion Ready ⚡" : "Phase 2"}
+                          {isReadyForPromotion ? (
+                            <>
+                              <Zap className="w-3 h-3" />
+                              Promotion Ready
+                            </>
+                          ) : (
+                            "Phase 2"
+                          )}
                         </span>
                       )}
                       {prog.current_phase === 3 && (

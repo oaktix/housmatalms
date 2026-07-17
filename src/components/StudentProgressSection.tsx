@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
-import { BookOpen, CheckCircle2, Award, Clock, HelpCircle } from "lucide-react";
+import { BookOpen, CheckCircle2, Award, Clock, HelpCircle, Lock, X, Zap } from "lucide-react";
 import { db } from "@/lib/db";
 import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
 
@@ -57,15 +57,15 @@ export default function StudentProgressSection({ studentId }: StudentProgressSec
             )}
           </span>
         </div>
-        <div className="p-4 bg-bg-main border border-border-main rounded-2xl space-y-1">
-          <span className="text-[10px] text-text-muted font-bold block uppercase tracking-wider">Phase 2 Status</span>
-          <span className="font-heading font-black text-sm text-text-main uppercase tracking-wide">
-            {progress.phase2_status === "locked" && <span className="text-text-muted">Locked 🔒</span>}
-            {progress.phase2_status === "in-progress" && <span className="text-warning">In Progress ⚡</span>}
-            {progress.phase2_status === "passed" && <span className="text-primary">Passed ✓</span>}
-            {progress.phase2_status === "failed" && <span className="text-error">Failed ✗</span>}
-          </span>
-        </div>
+<div className="p-4 bg-bg-main border border-border-main rounded-2xl space-y-1">
+            <span className="text-[10px] text-text-muted font-bold block uppercase tracking-wider">Phase 2 Status</span>
+            <span className="font-heading font-black text-sm text-text-main uppercase tracking-wide">
+              {progress.phase2_status === "locked" && <span className="text-text-muted flex items-center gap-1"><Lock className="w-3 h-3" /> Locked</span>}
+              {progress.phase2_status === "in-progress" && <span className="text-warning flex items-center gap-1"><Zap className="w-3 h-3" /> In Progress</span>}
+              {progress.phase2_status === "passed" && <span className="text-primary flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Passed</span>}
+              {progress.phase2_status === "failed" && <span className="text-error flex items-center gap-1"><X className="w-3 h-3" /> Failed</span>}
+            </span>
+          </div>
       </div>
 
       {/* Progress Bar Header */}

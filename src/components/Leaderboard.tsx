@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Award, ChevronRight, X, Filter } from "lucide-react";
+import { Search, Award, ChevronRight, X, Filter, Crown, Zap, Settings, Sprout, Medal, Trophy } from "lucide-react";
 import { db } from "@/lib/db";
 import { phase1Curriculum, hcpaCurriculum } from "@/lib/curriculum";
 import StudentProgressSection from "@/components/StudentProgressSection";
@@ -154,26 +154,26 @@ export default function Leaderboard() {
                   return (
                     <tr key={entry.profile.id} className="hover:bg-bg-main/30 transition-colors">
                       <td className="py-4 px-6 text-center font-heading font-black text-sm">
-                        {rank === 1 && <span className="inline-flex w-7 h-7 bg-amber-500 text-white rounded-full items-center justify-center shadow-sm" title="1st Place Gold">🥇</span>}
-                        {rank === 2 && <span className="inline-flex w-7 h-7 bg-slate-300 text-slate-800 rounded-full items-center justify-center shadow-sm" title="2nd Place Silver">🥈</span>}
-                        {rank === 3 && <span className="inline-flex w-7 h-7 bg-amber-700 text-white rounded-full items-center justify-center shadow-sm" title="3rd Place Bronze">🥉</span>}
+                        {rank === 1 && <span className="inline-flex w-7 h-7 bg-amber-500 text-white rounded-full items-center justify-center shadow-sm" title="1st Place Gold"><Trophy className="w-4 h-4" /></span>}
+                        {rank === 2 && <span className="inline-flex w-7 h-7 bg-slate-300 text-slate-800 rounded-full items-center justify-center shadow-sm" title="2nd Place Silver"><Medal className="w-4 h-4" /></span>}
+                        {rank === 3 && <span className="inline-flex w-7 h-7 bg-amber-700 text-white rounded-full items-center justify-center shadow-sm" title="3rd Place Bronze"><Award className="w-4 h-4" /></span>}
                         {rank > 3 && <span className="text-text-muted">#{rank}</span>}
                       </td>
                       <td className="py-4 px-6 font-bold text-text-main">
                         {(() => {
                           const getBadge = (count: number) => {
-                            if (count >= 10) return { name: "Ecosystem Expert 👑", style: "bg-green-950/20 border-green-500/30 text-green-400" };
-                            if (count >= 8) return { name: "Specialist ⚡", style: "bg-accent-glow border-accent/20 text-accent" };
-                            if (count >= 4) return { name: "Apprentice ⚙️", style: "bg-secondary-glow border-secondary/20 text-secondary" };
-                            return { name: "Novice 🌱", style: "bg-bg-main border-border-main text-text-muted" };
+                            if (count >= 10) return { name: "Ecosystem Expert", icon: <Crown className="w-3 h-3" />, style: "bg-green-950/20 border-green-500/30 text-green-400" };
+                            if (count >= 8) return { name: "Specialist", icon: <Zap className="w-3 h-3" />, style: "bg-accent-glow border-accent/20 text-accent" };
+                            if (count >= 4) return { name: "Apprentice", icon: <Settings className="w-3 h-3" />, style: "bg-secondary-glow border-secondary/20 text-secondary" };
+                            return { name: "Novice", icon: <Sprout className="w-3 h-3" />, style: "bg-bg-main border-border-main text-text-muted" };
                           };
                           const badge = getBadge(entry.completedModulesCount);
                           return (
                             <div>
                               <div className="flex items-center gap-2">
                                 <p className="font-heading font-black text-sm">{entry.profile.full_name}</p>
-                                <span className={`inline-block px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase ${badge.style}`}>
-                                  {badge.name}
+                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-extrabold border uppercase ${badge.style}`}>
+                                  {badge.icon} {badge.name}
                                 </span>
                               </div>
                               <p className="text-[10px] text-text-muted font-normal">{entry.profile.email}</p>

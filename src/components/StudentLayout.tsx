@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, BookOpen, Calendar, Award, LogOut, Menu, X, Sparkles } from "lucide-react";
+import { LayoutDashboard, BookOpen, Calendar, Award, LogOut, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import Logo from "./Logo";
 import { db } from "@/lib/db";
@@ -53,9 +53,8 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
           <div className="flex items-center gap-3">
             <Logo height={28} />
             <span className="h-4 w-px bg-border-main/80 hidden sm:inline" />
-            <span className="text-[10px] uppercase tracking-widest font-black text-primary bg-primary-glow border border-primary/20 px-3 py-1 rounded-full hidden sm:inline-flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Student Portal
+            <span className="text-[10px] uppercase tracking-widest font-black text-primary hidden sm:inline">
+              {courseTitle || "Student Portal"}
             </span>
           </div>
 

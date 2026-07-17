@@ -14,16 +14,20 @@ import {
   Award,
   X,
   Sparkles,
+  Sparkle,
   Loader2,
   AlertTriangle,
+  PartyPopper,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Application, EmailLog } from "@/lib/mockData";
 import { getAtRiskStudents } from "@/lib/analytics";
+import { useToast } from "@/components/ui/Toast";
 
 export default function AdminDashboard() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
 
   // Data States
   const [appsCount, setAppsCount] = useState(0);
@@ -126,7 +130,7 @@ export default function AdminDashboard() {
       setAiRiskBrief(data.result);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI risk briefing failed: ${msg}`);
+      toast(`AI risk briefing failed: ${msg}`, "error");
     } finally {
       setAiRiskLoading(false);
     }
@@ -270,7 +274,10 @@ export default function AdminDashboard() {
             </div>
 
             {atRisk.length === 0 ? (
-              <p className="text-xs text-text-muted italic py-4 text-center">No at-risk trainees detected. 🎉</p>
+              <p className="text-xs text-text-muted italic py-4 text-center flex items-center justify-center gap-1.5">
+                <PartyPopper className="w-3.5 h-3.5 text-accent" />
+                No at-risk trainees detected
+              </p>
             ) : (
               <div className="space-y-3">
                 {atRisk.slice(0, 6).map((s) => (
@@ -298,7 +305,10 @@ export default function AdminDashboard() {
 
             {aiRiskBrief && (
               <div className="p-4 rounded-xl bg-error/5 border border-error/20 text-xs text-text-main leading-relaxed whitespace-pre-line">
-                <span className="font-extrabold block mb-1 text-error">✨ AI Attention Brief</span>
+                <span className="font-extrabold block mb-1 text-error flex items-center gap-1.5">
+                  <Sparkle className="w-3.5 h-3.5" />
+                  AI Attention Brief
+                </span>
                 {aiRiskBrief}
               </div>
             )}

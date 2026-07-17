@@ -11,6 +11,10 @@ import {
   Megaphone,
   ArrowRight,
   Shield,
+  Crown,
+  Zap,
+  Settings,
+  Sprout,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
@@ -213,14 +217,15 @@ export default function StudentDashboard() {
               <span className="text-text-muted block">Milestone Badge</span>
               {(() => {
                 const getBadge = (count: number) => {
-                  if (count >= 10) return { name: "Ecosystem Expert 👑", style: "bg-green-950/20 border-green-500/30 text-green-400" };
-                  if (count >= 8) return { name: "Specialist ⚡", style: "bg-accent-glow border-accent/20 text-accent" };
-                  if (count >= 4) return { name: "Apprentice ⚙️", style: "bg-secondary-glow border-secondary/20 text-secondary" };
-                  return { name: "Novice 🌱", style: "bg-bg-main border-border-main text-text-muted" };
+                  if (count >= 10) return { name: "Ecosystem Expert", icon: <Crown className="w-3 h-3" />, style: "bg-green-950/20 border-green-500/30 text-green-400" };
+                  if (count >= 8) return { name: "Specialist", icon: <Zap className="w-3 h-3" />, style: "bg-accent-glow border-accent/20 text-accent" };
+                  if (count >= 4) return { name: "Apprentice", icon: <Settings className="w-3 h-3" />, style: "bg-secondary-glow border-secondary/20 text-secondary" };
+                  return { name: "Novice", icon: <Sprout className="w-3 h-3" />, style: "bg-bg-main border-border-main text-text-muted" };
                 };
                 const badge = getBadge(progress.completed_modules.length);
                 return (
-                  <span className={`inline-block mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold border uppercase ${badge.style}`}>
+                  <span className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold border uppercase ${badge.style}`}>
+                    {badge.icon}
                     {badge.name}
                   </span>
                 );

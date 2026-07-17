@@ -5,9 +5,11 @@ import { Megaphone, Send, Users, User, Layers, Search, Mail, ShieldCheck, X, Spa
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Cohort, Profile, Announcement } from "@/lib/mockData";
+import { useToast } from "@/components/ui/Toast";
 
 export default function AdminAnnouncements() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
 
   // Data States
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
@@ -99,7 +101,7 @@ export default function AdminAnnouncements() {
       setContent(text.replace(/Subject:\s*.+\n?/i, "").trim());
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI draft failed: ${msg}`);
+      toast(`AI draft failed: ${msg}`, "error");
     } finally {
       setAiDraftLoading(false);
     }
@@ -107,7 +109,7 @@ export default function AdminAnnouncements() {
 
   const handleAiImprove = async () => {
     if (!content.trim()) {
-      alert("Write some announcement text first, then improve it with AI.");
+      toast("Write some announcement text first, then improve it with AI.", "error");
       return;
     }
     setAiImproveLoading(true);
@@ -122,7 +124,7 @@ export default function AdminAnnouncements() {
       setContent(data.result.trim());
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI improve failed: ${msg}`);
+      toast(`AI improve failed: ${msg}`, "error");
     } finally {
       setAiImproveLoading(false);
     }

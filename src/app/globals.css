@@ -347,3 +347,131 @@
     margin: 1.25rem 0;
   }
 }
+
+/* Immersive Scrolling Enhancements - Scroll-Driven Animations (Modern browsers) */
+@supports (animation-timeline: scroll()) {
+  .scroll-fade-in {
+    animation: fade-in linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+  .scroll-slide-up {
+    animation: slide-up-scroll linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+  .scroll-parallax {
+    animation: parallax linear both;
+    animation-timeline: scroll();
+  }
+  .scroll-scale-in {
+    animation: scale-in-scroll linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+}
+
+@keyframes slide-up-scroll {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes parallax {
+  from { transform: translateY(0); }
+  to { transform: translateY(-100px); }
+}
+
+@keyframes scale-in-scroll {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Staggered child animations within scroll sections */
+.scroll-stagger > * {
+  animation: fade-in linear both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 25%;
+}
+
+.scroll-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.scroll-stagger > *:nth-child(2) { animation-delay: 60ms; }
+.scroll-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.scroll-stagger > *:nth-child(4) { animation-delay: 180ms; }
+.scroll-stagger > *:nth-child(5) { animation-delay: 240ms; }
+.scroll-stagger > *:nth-child(6) { animation-delay: 300ms; }
+.scroll-stagger > *:nth-child(7) { animation-delay: 360ms; }
+.scroll-stagger > *:nth-child(8) { animation-delay: 420ms; }
+
+/* Will-change hints for performance on scroll-animated elements */
+.scroll-fade-in,
+.scroll-slide-up,
+.scroll-parallax,
+.scroll-scale-in,
+.scroll-stagger > * {
+  will-change: transform, opacity;
+}
+
+/* Floating elements - depth parallax layers tied to scroll */
+.animate-float-1,
+.animate-float-2,
+.animate-float-3,
+.animate-float-4 {
+  will-change: transform;
+}
+
+@supports (animation-timeline: scroll()) {
+  .parallax-layer-1 { animation: parallax linear both; animation-timeline: scroll(); animation-range: 0% 100%; }
+  .parallax-layer-2 { animation: parallax-fast linear both; animation-timeline: scroll(); animation-range: 0% 100%; }
+  .parallax-layer-3 { animation: parallax-slow linear both; animation-timeline: scroll(); animation-range: 0% 100%; }
+}
+
+@keyframes parallax-fast {
+  from { transform: translateY(0); }
+  to { transform: translateY(-160px); }
+}
+
+@keyframes parallax-slow {
+  from { transform: translateY(0); }
+  to { transform: translateY(-60px); }
+}
+
+/* Scroll-linked border glow for premium cards */
+@supports (animation-timeline: scroll()) {
+  .premium-card.scroll-glow {
+    animation: border-glow-scroll linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 50%;
+  }
+}
+
+@keyframes border-glow-scroll {
+  0% { box-shadow: var(--shadow-card); border-color: var(--border-color); }
+  50% { box-shadow: var(--shadow-glow), var(--shadow-card); border-color: var(--border-glow); }
+  100% { box-shadow: var(--shadow-card); border-color: var(--border-color); }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-fade-in,
+  .scroll-slide-up,
+  .scroll-parallax,
+  .scroll-scale-in,
+  .scroll-stagger > *,
+  .parallax-layer-1,
+  .parallax-layer-2,
+  .parallax-layer-3,
+  .premium-card.scroll-glow {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}

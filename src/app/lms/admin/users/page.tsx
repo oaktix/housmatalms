@@ -17,9 +17,11 @@ import {
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Profile, Cohort, Instructor } from "@/lib/mockData";
+import { useToast } from "@/components/ui/Toast";
 
 export default function AdminUsersCrud() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
 
   // Data States
   const [users, setUsers] = useState<Profile[]>([]);
@@ -284,7 +286,7 @@ Housmata Academy Admissions & Operations Team`;
   const handleDelete = (id: string) => {
     // Avoid self-deletion
     if (currentUser && currentUser.id === id) {
-      alert("Security rule: You cannot delete your own active administrator account.");
+      toast("Security rule: You cannot delete your own active administrator account.", "error");
       setConfirmDeleteId(null);
       return;
     }
@@ -709,9 +711,9 @@ Housmata Academy Admissions & Operations Team`;
                       value={role}
                       onChange={(e) => setRole(e.target.value as "admin" | "instructor" | "student")}
                     >
-                      <option value="student">🎓 Trainee / Student</option>
-                      <option value="instructor">👨‍🏫 Instructor</option>
-                      <option value="admin">🛡️ System Administrator</option>
+                      <option value="student">Trainee / Student</option>
+                      <option value="instructor">Instructor</option>
+                      <option value="admin">System Administrator</option>
                     </select>
                   </div>
 

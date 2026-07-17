@@ -5,6 +5,7 @@ import { TrendingUp, BarChart2, ClipboardCheck, ArrowLeft, Sparkles, Loader2 } f
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
+import { useToast } from "@/components/ui/Toast";
 
 const SURVEY_QUESTIONS = [
   { id: 1, text: "Agent vs. Manager Roles" },
@@ -21,6 +22,7 @@ const SURVEY_QUESTIONS = [
 
 export default function AdminSurveysPage() {
   const { currentUser } = useAuth();
+  const { toast } = useToast();
 
   const [stats, setStats] = useState({
     preAverages: [] as number[],
@@ -66,7 +68,7 @@ export default function AdminSurveysPage() {
       setAiSummary(data.result);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Something went wrong";
-      alert(`AI survey summary failed: ${msg}`);
+      toast(`AI survey summary failed: ${msg}`, "error");
     } finally {
       setAiSummaryLoading(false);
     }
