@@ -241,6 +241,14 @@ class LocalStorageDB {
       if (pErr) throw pErr;
       this.set("lms_profiles", profiles || []);
 
+      // If Supabase has no profiles, seed it with default profiles
+      if ((profiles || []).length === 0) {
+        await this.seedSupabase();
+        // Re-fetch profiles after seeding
+        const { data: seededProfiles } = await supabase.from("profiles").select("*");
+        this.set("lms_profiles", seededProfiles || []);
+      }
+
       // 2. Fetch other tables in parallel.
       // Tables that don't yet exist in Supabase (e.g. survey_responses) will
       // log a warning and be skipped; they never block the rest of the sync.
@@ -451,7 +459,11 @@ class LocalStorageDB {
   }
 
   getProfiles(): seeds.Profile[] {
-    return this.get<seeds.Profile>("lms_profiles", this.isSupabase ? [] : seeds.seedProfiles);
+    // Use seed profiles as fallback when Supabase is configured but sync hasn't completed
+    // or when profiles table is empty. This ensures login works for seed users even if
+    // Supabase sync is slow or fails.
+    const defaultProfiles = this.isSupabase && !this.hasSynced ? seeds.seedProfiles : (this.isSupabase ? [] : seeds.seedProfiles);
+    return this.get<seeds.Profile>("lms_profiles", defaultProfiles);
   }
 
   getProfile(id: string): seeds.Profile | undefined {
