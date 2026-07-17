@@ -125,13 +125,24 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
     ],
   }[role];
 
-  // Bottom tab bar (students only, mobile < md)
-  const bottomTabs = role === "student"
+  // Bottom tab bar (mobile < md) - only for admin/instructor roles
+  // Students use StudentLayout which has its own header/nav
+  const bottomTabs = role !== "student"
     ? [
-        { name: "Hub", href: "/lms/student/dashboard", icon: <ListTodo className="w-5 h-5" /> },
-        { name: "Learn", href: "/lms/student/curriculum", icon: <BookOpen className="w-5 h-5" /> },
-        { name: "Grades", href: "/lms/student/grades", icon: <Award className="w-5 h-5" /> },
-        { name: "Live", href: "/lms/student/meetings", icon: <Calendar className="w-5 h-5" /> },
+        // admin tabs
+        ...(role === "admin" ? [
+          { name: "Dashboard", href: "/lms/admin/dashboard", icon: <BarChart2 className="w-5 h-5" /> },
+          { name: "Users", href: "/lms/admin/users", icon: <Users className="w-5 h-5" /> },
+          { name: "Applications", href: "/lms/admin/applications", icon: <UserCheck className="w-5 h-5" /> },
+          { name: "Cohorts", href: "/lms/admin/cohorts", icon: <Layers className="w-5 h-5" /> },
+          { name: "Students", href: "/lms/admin/students", icon: <GraduationCap className="w-5 h-5" /> },
+        ] : []),
+        // instructor tabs
+        ...(role === "instructor" ? [
+          { name: "Dashboard", href: "/lms/instructor/dashboard", icon: <Layers className="w-5 h-5" /> },
+          { name: "Grading", href: "/lms/instructor/grading", icon: <ClipboardList className="w-5 h-5" /> },
+          { name: "Attendance", href: "/lms/instructor/attendance", icon: <FileCheck2 className="w-5 h-5" /> },
+        ] : []),
       ]
     : [];
 

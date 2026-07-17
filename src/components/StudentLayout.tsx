@@ -48,7 +48,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   return (
     <div className="min-h-screen bg-bg-main text-text-main flex flex-col font-sans">
       {/* Premium Student Top Navigation Header */}
-      <header className="sticky top-0 z-40 bg-bg-card/85 backdrop-blur-md border-b border-border-main/60 py-4 shadow-sm">
+      <header className="bg-bg-card/85 backdrop-blur-md border-b border-border-main/60 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Logo height={28} />

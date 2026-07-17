@@ -18,7 +18,7 @@ export async function callOpenRouter(
   opts: CallOpenRouterOptions
 ): Promise<AiResult> {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+  const model = process.env.OPENROUTER_MODEL || "nvidia/nemotron-3-ultra-550b-a55b:free";
 
   if (!apiKey) {
     const simulated = opts.fallback ? opts.fallback() : "";
