@@ -647,15 +647,22 @@ export default function StudentCurriculum() {
               />
             </div>
 
-            {/* Reading Content (scrollable) */}
-            <div
-              className="flex-grow p-4 sm:p-8 overflow-y-auto bg-bg-card"
-              onScroll={(e) => {
-                const el = e.currentTarget;
-                const max = el.scrollHeight - el.clientHeight;
-                setLessonScroll(max > 0 ? Math.min(100, Math.round((el.scrollTop / max) * 100)) : 100);
-              }}
-            >
+              {/* Reading Content (scrollable) */}
+              <div
+                className="flex-grow p-4 sm:p-8 overflow-y-auto bg-bg-card"
+                onScroll={(e) => {
+                  const el = e.currentTarget;
+                  // Don't fight the user while they're typing in the AI box —
+                  // re-rendering on scroll would blur the input and close the keyboard.
+                  const active = document.activeElement;
+                  if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA") && el.contains(active)) {
+                    return;
+                  }
+                  const max = el.scrollHeight - el.clientHeight;
+                  const next = max > 0 ? Math.min(100, Math.round((el.scrollTop / max) * 100)) : 100;
+                  setLessonScroll((prev) => (prev === next ? prev : next));
+                }}
+              >
               <LessonMarkdown
                 content={selectedLesson.lesson.content.join("\n\n")}
               />
@@ -686,7 +693,7 @@ export default function StudentCurriculum() {
                     onChange={(e) => setAiQuestion(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleLessonAsk(); }}
                     placeholder="e.g. What is the KYC process?"
-                    className="flex-1 min-w-[160px] px-3 py-2.5 border border-border-main rounded-xl bg-bg-main text-xs text-text-main focus:outline-none focus:border-primary min-h-[44px]"
+                    className="flex-1 min-w-[160px] px-3 py-2.5 border border-border-main rounded-xl bg-bg-main text-base sm:text-xs text-text-main focus:outline-none focus:border-primary min-h-[44px]"
                   />
                   <button
                     type="button"

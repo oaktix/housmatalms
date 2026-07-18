@@ -1,5 +1,48 @@
 export type AiResult = { text: string; simulated: boolean };
 
+/**
+ * Strips common "AI slop" from model output so summaries/readouts render cleanly:
+ *  - Markdown emphasis markers (**bold**, *italic*) left as plain text
+ *  - Em dashes (—) and en dashes (–) normalized to a hyphen or colon context
+ *  - Docusaurus/Markdown horizontal rules (---, ***, ___) removed
+ *  - Stray leading list markers cleaned, collapse excessive blank lines
+ */
+export function cleanAiText(raw: string): string {
+  if (!raw) return "";
+  let text = raw;
+
+  // Remove Markdown horizontal rules (---, ***, ___) on their own line
+  text = text.replace(/^\s*([-*_])(\s*\1){2,}\s*$/gm, "");
+
+  // Remove Markdown bold/italic emphasis markers (keep the inner text)
+  text = text.replace(/\*\*(.+?)\*\*/g, "$1");
+  text = text.replace(/\*(.+?)\*/g, "$1");
+  text = text.replace(/__(.+?)__/g, "$1");
+  text = text.replace(/_(.+?)_/g, "$1");
+
+  // Normalize em/en dashes to a regular hyphen with surrounding spaces trimmed.
+  // Keep a dash between numbers (e.g. 2020-2024) intact.
+  text = text.replace(/(?<!\d)\s*[—–]+\s*(?!\d)/g, " - ");
+  text = text.replace(/\s*[—–]+\s*/g, " - ");
+
+  // Tidy bullet lines: collapse "** -" or "* -" or "- -" artifacts and trim
+  text = text
+    .split("\n")
+    .map((line) => {
+      let l = line.trim();
+      // Remove a leading marker that the model added then removed via cleaning
+      l = l.replace(/^[-•·]\s*[-–—]\s*/, "• ");
+      l = l.replace(/^[-•·]\s*/, "• ");
+      return l;
+    })
+    .join("\n");
+
+  // Collapse 3+ blank lines into a single blank line and trim overall
+  text = text.replace(/\n{3,}/g, "\n\n").trim();
+
+  return text;
+}
+
 type CallOpenRouterOptions = {
   system: string;
   user: string;
@@ -24,7 +67,7 @@ export async function callOpenRouter(
     const simulated = opts.fallback ? opts.fallback() : "";
     console.log(`[OPENROUTER SIMULATION] (No API key)
 ${simulated}`);
-    return { text: simulated, simulated: true };
+    return { text: cleanAiText(simulated), simulated: true };
   }
 
   const host = request.headers.get("host") || "";
@@ -65,5 +108,5 @@ ${simulated}`);
     throw new Error("OpenRouter returned an empty response");
   }
 
-  return { text: content, simulated: false };
+  return { text: cleanAiText(content), simulated: false };
 }

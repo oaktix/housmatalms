@@ -21,7 +21,14 @@ export const metadata: Metadata = {
   description: "Learn to manage and operate premium digital real estate inside the Housmata ecosystem. Earn industry-recognized credentials as a certified estate operator.",
   icons: {
     icon: "/favicon.ico",
-  }
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+    viewportFit: "cover",
+  },
 };
 
 export default function RootLayout({

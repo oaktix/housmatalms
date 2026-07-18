@@ -22,7 +22,8 @@ export async function POST(request: Request) {
     const result = await callOpenRouter(request, {
       system: `You are a patient tutor for a real-estate training academy.
 Explain why the correct answer is right, and briefly why a common wrong choice is tempting but incorrect.
-Keep it to 2-3 encouraging sentences. Do not reveal the answer in a way that feels like a giveaway—name it as "the correct answer".`,
+Keep it to 2-3 encouraging sentences. Do not reveal the answer in a way that feels like a giveaway—name it as "the correct answer".
+Write in plain, clean text. Do NOT use markdown, asterisks, em dashes, or horizontal rules.`,
       user: `Question: ${question}
 Options:
 ${options.map((o: string, i: number) => `${i + 1}. ${o}`).join("\n")}
