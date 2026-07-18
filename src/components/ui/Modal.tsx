@@ -15,11 +15,16 @@ interface ModalProps {
 
 export function Modal({ open, onClose, children, variant = "center", title, className }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  // Keep latest onClose in a ref so the focus/scroll-lock effect only re-runs
+  // when `open` changes — not on every render (which would steal focus and
+  // blur/close the keyboard while typing in child inputs).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -29,22 +34,22 @@ export function Modal({ open, onClose, children, variant = "center", title, clas
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
   const shell =
     variant === "full"
-      ? "fixed inset-0 z-50 flex flex-col bg-bg-card animate-fade-in"
+      ? "fixed inset-0 z-50 flex flex-col bg-bg-card animate-fade-in overscroll-contain"
       : variant === "drawer-right"
-      ? "fixed inset-0 z-50 flex justify-end bg-bg-main/80 backdrop-blur-md animate-fade-in"
-      : "fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-main/80 backdrop-blur-md animate-fade-in";
+      ? "fixed inset-0 z-50 flex justify-end bg-bg-main/80 backdrop-blur-md animate-fade-in overscroll-contain"
+      : "fixed inset-0 z-50 flex items-center justify-center p-4 bg-bg-main/80 backdrop-blur-md animate-fade-in overscroll-contain";
 
   const panel =
     variant === "full"
-      ? "w-full h-full flex flex-col bg-bg-card"
+      ? "w-full h-[100dvh] max-w-full flex flex-col bg-bg-card [padding-top:env(safe-area-inset-top)] [padding-bottom:env(safe-area-inset-bottom)]"
       : variant === "drawer-right"
-      ? "w-full max-w-2xl h-full bg-bg-card border-l border-border-main shadow-2xl flex flex-col overflow-hidden"
+      ? "w-full max-w-2xl h-full max-h-full bg-bg-card border-l border-border-main shadow-2xl flex flex-col overflow-hidden"
       : `premium-card rounded-2xl bg-bg-card border-border-main max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl max-h-[90vh] overflow-y-auto ${className || ""}`;
 
   return (

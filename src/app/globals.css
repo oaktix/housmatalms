@@ -133,6 +133,18 @@
     margin: 0;
     padding: 0;
     letter-spacing: -0.011em;
+    /* Prevent horizontal overscroll/wobble on iOS */
+    overflow-x: hidden;
+    /* Kill 300ms tap delay + double-tap zoom that makes inputs feel janky */
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Stop the whole page from rubber-banding / shifting under modals on iOS */
+  html {
+    overflow-x: hidden;
+    position: relative;
   }
 
   /* Minimal, polished scrollbar */
