@@ -1,5 +1,15 @@
 # HANDOFF — UI/UX Overhaul & Cloudinary Mini-Backend
 
+> **UPDATE (2026-08): The Cloudinary mini-backend has been REMOVED.**
+> All DB access now goes through `src/app/api/db/[table]/route.ts`, a server
+> route authenticated with `SUPABASE_SERVICE_ROLE_KEY` (the browser never talks
+> to Supabase directly anymore). `cloudStore.ts`, `cloudStoreServer.ts` and
+> `/api/store` were deleted. Cloudinary is used only for media (PDF) uploads.
+> Stranded Cloudinary `_store` records were migrated to Supabase via
+> `scripts/migrate-cloudinary-store.mjs`. Pending: apply
+> `supabase/migrations/20260716_02_add_submission_public_id.sql` to the live DB,
+> then re-run the migration script to backfill `content_public_id`.
+
 This document lets another agent continue the UI/UX overhaul + Cloudinary fallback work
 if the current session is interrupted. Repo: `housmatalms-main` (Next.js 15, Tailwind v4,
 TypeScript, Supabase + Cloudinary).

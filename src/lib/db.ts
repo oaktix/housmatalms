@@ -1,12 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import * as seeds from "./mockData";
 import { phase1Curriculum, hcpaCurriculum } from "./curriculum";
 import { generatedQuizzesHCPA, generatedQuizQuestionsHCPA } from "./generatedQuizzesHCPA";
-import {
-  cloudStorePutClient,
-  cloudStoreListClient,
-  collectionForTable,
-} from "./cloudStore";
 
 export interface SurveyResponse {
   id: string;
@@ -16,19 +10,15 @@ export interface SurveyResponse {
   submitted_at: string;
 }
 
-// Retrieve keys from environment variables
+// The browser never talks to Supabase directly anymore. All reads/writes go
+// through /api/db/[table], a server route authenticated with the service-role
+// key (see src/app/api/db/[table]/route.ts). Only the URL is needed here to
+// decide whether server persistence is available.
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
 const isSupabaseConfigured =
   supabaseUrl &&
-  supabaseUrl !== "https://your-project-id.supabase.co" &&
-  supabaseAnonKey &&
-  supabaseAnonKey !== "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.your-anon-key";
-
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+  supabaseUrl !== "https://your-project-id.supabase.co";
 
 // Helper to check if running in browser
 const isBrowser = typeof window !== "undefined";
@@ -76,6 +66,88 @@ function generateUUID(): string {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Server DB proxy helpers
+//
+// These replace the old direct supabase-js client calls. Unlike before,
+// failures THROW so callers can surface them (the silent-failure workaround is
+// what hid the outage that made instructor dashboards go empty).
+// ---------------------------------------------------------------------------
+
+type DbSelectOptions = {
+  columns?: string;
+  filters?: Record<string, string>;
+  order?: string;
+  limit?: number;
+};
+
+async function apiSelect<T>(table: string, opts: DbSelectOptions = {}): Promise<T[]> {
+  const params = new URLSearchParams();
+  if (opts.columns) params.set("columns", opts.columns);
+  if (opts.filters) {
+    for (const [key, value] of Object.entries(opts.filters)) params.set(key, value);
+  }
+  if (opts.order) params.set("order", opts.order);
+  if (opts.limit) params.set("limit", String(opts.limit));
+
+  const res = await fetch(`/api/db/${encodeURIComponent(table)}?${params.toString()}`, {
+    cache: "no-store",
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.error || `Failed to read '${table}' (HTTP ${res.status})`);
+  }
+  return ((json.data as T[]) || []);
+}
+
+/** Select a single row by filters. Returns null when no row matches. */
+async function apiSelectOne<T>(
+  table: string,
+  opts: DbSelectOptions = {}
+): Promise<T | null> {
+  const params = new URLSearchParams({ single: "1" });
+  if (opts.columns) params.set("columns", opts.columns);
+  if (opts.filters) {
+    for (const [key, value] of Object.entries(opts.filters)) params.set(key, value);
+  }
+
+  const res = await fetch(`/api/db/${encodeURIComponent(table)}?${params.toString()}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+  const json = await res.json().catch(() => null);
+  if (!json?.success) return null;
+  return (json.data as T) ?? null;
+}
+
+async function apiWrite(
+  table: string,
+  records: unknown[],
+  mode: "insert" | "upsert",
+  onConflict?: string
+): Promise<void> {
+  const res = await fetch(`/api/db/${encodeURIComponent(table)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ records, mode, onConflict }),
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.error || `Failed to write '${table}' (HTTP ${res.status})`);
+  }
+}
+
+async function apiDeleteEq(table: string, filters: Record<string, string>): Promise<void> {
+  const params = new URLSearchParams(filters);
+  const res = await fetch(`/api/db/${encodeURIComponent(table)}?${params.toString()}`, {
+    method: "DELETE",
+  });
+  const json = await res.json().catch(() => null);
+  if (!res.ok || !json?.success) {
+    throw new Error(json?.error || `Failed to delete from '${table}' (HTTP ${res.status})`);
+  }
+}
+
 // LocalStorage Mock DB implementation with Supabase Synchronization
 class LocalStorageDB {
   private isSupabase = false;
@@ -84,117 +156,15 @@ class LocalStorageDB {
   private memoryCache: Record<string, any> = {};
   // Guards against overlapping / storm-triggered syncs
   private isSyncing = false;
-  private realtimeSyncTimer: ReturnType<typeof setTimeout> | null = null;
   public hasSynced = false;
-  private cloudStoreHydrated = false;
 
   constructor() {
-    if (isSupabaseConfigured && supabase) {
+    // Only pull data in the browser. During SSR/prerendering there is no
+    // session or localStorage, and the relative /api/db URLs cannot be
+    // fetched from the server side.
+    if (isBrowser && isSupabaseConfigured) {
       this.isSupabase = true;
       this.syncFromSupabase();
-
-      // Subscribe to Supabase Realtime changes.
-      // Use a 5-second debounce so that a burst of DB writes (e.g. during
-      // student approval) does not fan out into dozens of concurrent syncs.
-      supabase
-        .channel("db-changes")
-        .on("postgres_changes", { event: "*", schema: "public" }, (payload: { table?: string }) => {
-          console.log("Realtime change detected on:", payload.table, "— scheduling sync.");
-          if (this.realtimeSyncTimer) clearTimeout(this.realtimeSyncTimer);
-          this.realtimeSyncTimer = setTimeout(() => {
-            this.syncFromSupabase();
-          }, 5000);
-        })
-        .subscribe();
-    }
-
-    // Permanent Cloudinary-store fallback: pull any records that were written
-    // while Supabase was unavailable (or as the always-on backup) and merge
-    // them into the local cache so admin/instructor UIs see them. Runs once
-    // on startup; failures are swallowed and never block startup.
-    if (isBrowser && !this.cloudStoreHydrated) {
-      this.cloudStoreHydrated = true;
-      this.hydrateFromCloudStore();
-    }
-  }
-
-  /**
-   * Merge Cloudinary-stored records into the local cache for the collections
-   * that support write fallback. Local records are authoritative; cloud-only
-   * records are appended. For submissions we dedupe by (assignment_id, user_id)
-   * keeping the newest — exactly like syncFromSupabase — so orphaned
-   * resubmissions never reappear. Runs once; never throws.
-   */
-  private async hydrateFromCloudStore() {
-    type StoreRecord = Record<string, unknown> & { id?: string };
-    const collections: { collection: string; key: string }[] = [
-      { collection: "submissions", key: "lms_submissions" },
-      { collection: "applications", key: "lms_applications" },
-      { collection: "quiz_attempts", key: "lms_quiz_attempts" },
-      { collection: "student_progress", key: "lms_progress" },
-      { collection: "announcements", key: "lms_announcements" },
-      { collection: "meetings", key: "lms_meetings" },
-      { collection: "attendance", key: "lms_attendance" },
-      { collection: "certificates", key: "lms_certificates" },
-      { collection: "graduate_status", key: "lms_graduate_status" },
-      { collection: "email_logs", key: "lms_email_logs" },
-      { collection: "survey_responses", key: "lms_survey_responses" },
-    ];
-
-    try {
-      const results = await Promise.all(
-        collections.map(async (c) => {
-          const remote = await cloudStoreListClient<StoreRecord>(c.collection);
-          return { ...c, remote };
-        })
-      );
-
-      let changed = false;
-      for (const { key, collection, remote } of results) {
-        if (!remote || remote.length === 0) continue;
-        const local: StoreRecord[] = this.get<StoreRecord>(key, []);
-        const merged: StoreRecord[] = [...local];
-
-        for (const r of remote) {
-          if (!r || !r.id) continue;
-          const existsLocally = local.some((l) => l.id === r.id);
-          if (existsLocally) continue;
-
-          if (collection === "submissions") {
-            // Skip orphaned resubmissions: if a newer local submission exists
-            // for the same (assignment_id, user_id), the cloud copy is stale.
-            const localNewer = local.some(
-              (l) =>
-                l.assignment_id === r.assignment_id &&
-                l.user_id === r.user_id &&
-                new Date(String(l.submitted_at)) >= new Date(String(r.submitted_at))
-            );
-            if (localNewer) continue;
-            const cloudNewerThanLocal = local.filter(
-              (l) => l.assignment_id === r.assignment_id && l.user_id === r.user_id
-            );
-            if (cloudNewerThanLocal.length > 0) {
-              // Replace the older local copy with the newer cloud one.
-              for (const stale of cloudNewerThanLocal) {
-                const idx = merged.findIndex((m) => m.id === stale.id);
-                if (idx !== -1) merged.splice(idx, 1);
-              }
-            }
-          }
-
-          merged.push(r);
-          changed = true;
-        }
-
-        if (changed) this.set<StoreRecord>(key, merged);
-      }
-
-      if (changed) {
-        this.hasSynced = true;
-        this.notify();
-      }
-    } catch (err) {
-      console.warn("[cloudStore] hydrate failed (non-fatal):", err);
     }
   }
 
@@ -226,7 +196,7 @@ class LocalStorageDB {
   }
 
   private async syncFromSupabase() {
-    if (!supabase) return;
+    if (!this.isSupabase) return;
     // In-flight guard: skip if a sync is already running to prevent storms
     if (this.isSyncing) {
       console.log("Sync already in progress — skipping duplicate trigger.");
@@ -235,30 +205,26 @@ class LocalStorageDB {
     this.isSyncing = true;
     try {
       console.log("Synchronizing data from Supabase...");
-      
+
       // 1. Fetch profiles from Supabase
-      const { data: profiles, error: pErr } = await supabase.from("profiles").select("*");
-      if (pErr) throw pErr;
-      this.set("lms_profiles", profiles || []);
+      const profiles = await apiSelect<seeds.Profile>("profiles");
+      this.set("lms_profiles", profiles);
 
       // If Supabase has no profiles, seed it with default profiles
-      if ((profiles || []).length === 0) {
+      if (profiles.length === 0) {
         await this.seedSupabase();
         // Re-fetch profiles after seeding
-        const { data: seededProfiles } = await supabase.from("profiles").select("*");
-        this.set("lms_profiles", seededProfiles || []);
+        const seededProfiles = await apiSelect<seeds.Profile>("profiles");
+        this.set("lms_profiles", seededProfiles);
       }
 
-      // 2. Fetch other tables in parallel.
-      // Tables that don't yet exist in Supabase (e.g. survey_responses) will
-      // log a warning and be skipped; they never block the rest of the sync.
+      // 2. Fetch other tables.
       //
       // EGRESS OPTIMISATION: For heavy tables we select only the columns needed
       // for list/summary views. In particular `submissions.content_link` can
       // hold large base64 PDF blobs (legacy) or Cloudinary URLs — pulling it on
-      // every full sync (and every realtime change) is a major bandwidth sink
-      // and was blowing the Supabase egress quota. The actual file is fetched
-      // lazily via getSubmissionFile() only when a reviewer opens it.
+      // every full sync was blowing the Supabase egress quota. The actual file
+      // is fetched lazily via getSubmissionFile() only when a reviewer opens it.
       const tables: { name: string; key: string; columns?: string }[] = [
         { name: "instructors", key: "lms_instructors" },
         { name: "applications", key: "lms_applications" },
@@ -282,40 +248,30 @@ class LocalStorageDB {
         { name: "survey_responses", key: "lms_survey_responses" }
       ];
 
-      await Promise.all(
-        tables.map(async (t) => {
-          try {
-            const { data, error } = await supabase!.from(t.name).select(t.columns ?? "*");
-            if (error) {
-              // Log but never throw — a missing/broken table must not abort
-              // the whole sync or leave isSyncing=true indefinitely.
-              console.warn(`[Sync] Skipping table '${t.name}' (Supabase error: ${error.message || JSON.stringify(error)})`);
-              return;
-            }
-            if (data) {
-              if (t.name === "submissions") {
-                // Deduplicate: keep only the most recent submission per (assignment_id, user_id).
-                const deduped = Object.values(
-                  (data as unknown as seeds.Submission[]).reduce<Record<string, seeds.Submission>>((acc, sub) => {
-                    const key = `${sub.assignment_id}__${sub.user_id}`;
-                    if (!acc[key] || new Date(sub.submitted_at) > new Date(acc[key].submitted_at)) {
-                      acc[key] = sub;
-                    }
-                    return acc;
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  }, {} as any)
-                );
-                this.set(t.key, deduped);
-              } else {
-                // Supabase is the source of truth — overwrite local cache with remote data.
-                this.set(t.key, data);
-              }
-            }
-          } catch (tblErr) {
-            console.warn(`[Sync] Exception on table '${t.name}':`, tblErr);
+      for (const t of tables) {
+        try {
+          const data = await apiSelect<Record<string, unknown>>(t.name, { columns: t.columns });
+          if (t.name === "submissions") {
+            // Deduplicate: keep only the most recent submission per (assignment_id, user_id).
+            const deduped = Object.values(
+              (data as unknown as seeds.Submission[]).reduce<Record<string, seeds.Submission>>((acc, sub) => {
+                const key = `${sub.assignment_id}__${sub.user_id}`;
+                if (!acc[key] || new Date(sub.submitted_at) > new Date(acc[key].submitted_at)) {
+                  acc[key] = sub;
+                }
+                return acc;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              }, {} as any)
+            );
+            this.set(t.key, deduped);
+          } else {
+            // Supabase is the source of truth — overwrite local cache with remote data.
+            this.set(t.key, data);
           }
-        })
-      );
+        } catch (tblErr) {
+          console.warn(`[Sync] Skipping table '${t.name}':`, tblErr);
+        }
+      }
 
       console.log("Supabase synchronization successfully completed.");
 
@@ -344,18 +300,20 @@ class LocalStorageDB {
   }
 
   private async seedSupabase(profilesToSeed?: seeds.Profile[]) {
-    if (!supabase) return;
-    try {
-      const isFullSeed = !profilesToSeed;
-      const targetProfiles = profilesToSeed || seeds.seedProfiles;
-      console.log(isFullSeed ? "Full Supabase seed starting..." : `Inserting ${targetProfiles.length} missing profile(s)...`);
-      
-      // Seed profiles
-      const { error: pErr } = await supabase.from("profiles").upsert(targetProfiles, { onConflict: "email" });
-      if (pErr) console.error("Error seeding profiles:", pErr);
+    if (!this.isSupabase) return;
+    const isFullSeed = !profilesToSeed;
+    const targetProfiles = profilesToSeed || seeds.seedProfiles;
+    console.log(isFullSeed ? "Full Supabase seed starting..." : `Inserting ${targetProfiles.length} missing profile(s)...`);
 
-      // Seed instructors
-      const { error: iErr } = await supabase.from("instructors").insert(
+    try {
+      await apiWrite("profiles", targetProfiles, "upsert", "email");
+    } catch (e) {
+      console.error("Error seeding profiles:", e);
+    }
+
+    try {
+      await apiWrite(
+        "instructors",
         seeds.seedInstructors.map(inst => ({
           profile_id: inst.profile_id,
           full_name: inst.full_name,
@@ -363,12 +321,16 @@ class LocalStorageDB {
           qualifications: inst.qualifications,
           awards: inst.awards,
           philosophy: inst.philosophy
-        }))
+        })),
+        "insert"
       );
-      if (iErr) console.error("Error seeding instructors:", iErr);
+    } catch (e) {
+      console.error("Error seeding instructors:", e);
+    }
 
-      // Seed cohorts
-      const { error: cErr } = await supabase.from("cohorts").insert(
+    try {
+      await apiWrite(
+        "cohorts",
         seeds.seedCohorts.map(coh => ({
           id: coh.id,
           name: coh.name,
@@ -377,42 +339,37 @@ class LocalStorageDB {
           active: coh.active,
           capacity: coh.capacity,
           instructor_id: coh.instructor_id
-        }))
+        })),
+        "insert"
       );
-      if (cErr) console.error("Error seeding cohorts:", cErr);
-
-      // Seed cohort members
-      const { error: cmErr } = await supabase.from("cohort_members").insert(seeds.seedCohortMembers);
-      if (cmErr) console.error("Error seeding cohort members:", cmErr);
-      
-      console.log("Supabase seeding completed successfully.");
     } catch (e) {
-      console.error("Failed to seed Supabase:", e);
+      console.error("Error seeding cohorts:", e);
     }
+
+    try {
+      await apiWrite("cohort_members", seeds.seedCohortMembers, "insert");
+    } catch (e) {
+      console.error("Error seeding cohort members:", e);
+    }
+
+    console.log("Supabase seeding completed.");
   }
 
+  /**
+   * Persist a record to the server DB. Returns true on success; on failure it
+   * logs loudly and returns false — the local write has already happened, so
+   * callers decide whether the failure is user-facing (e.g. assignment
+   * submissions throw so students know their work was NOT saved).
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async saveToSupabase(table: string, record: any, isInsert: boolean = false) {
-    // Mirror every write to the Cloudinary store as a permanent, non-throwing
-    // fallback so submissions / applications keep working even when Supabase
-    // is over quota or unreachable. The local (localStorage) write always
-    // succeeds; this must never break the caller.
-    const collection = collectionForTable(table);
-    if (collection && record && record.id) {
-      cloudStorePutClient(collection, String(record.id), record).catch(() => {});
-    }
-
-    if (!this.isSupabase || !supabase) return;
-    const { error } = isInsert
-      ? await supabase.from(table).insert(record)
-      : await supabase.from(table).upsert(record);
-    if (error) {
-      // Do NOT throw — let the local write stand and the Cloudinary mirror
-      // carry the data. Logging only.
-      console.warn(`Supabase ${isInsert ? 'insert' : 'upsert'} unavailable on '${table}' (kept in local + cloud store):`, {
-        message: error.message,
-        code: error.code,
-      });
+  private async saveToSupabase(table: string, record: any, isInsert: boolean = false): Promise<boolean> {
+    if (!this.isSupabase) return false;
+    try {
+      await apiWrite(table, [record], isInsert ? "insert" : "upsert");
+      return true;
+    } catch (err) {
+      console.error(`[DB] Failed to persist '${table}' to server (kept locally):`, err);
+      return false;
     }
   }
 
@@ -514,120 +471,72 @@ class LocalStorageDB {
     this.deleteStudentCertificates(id);
     this.deleteStudentAttendance(id);
 
-    if (supabase) {
-      supabase
-        .from("profiles")
-        .delete()
-        .eq("id", id)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete profile ${id} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("profiles", { id }).catch((err) =>
+      console.error(`Failed to delete profile ${id} from server:`, err)
+    );
   }
 
   deleteInstructorByProfile(profileId: string): void {
     const list = this.getInstructors();
     const updatedList = list.filter((i) => i.profile_id !== profileId);
     this.set("lms_instructors", updatedList);
-    if (supabase) {
-      supabase
-        .from("instructors")
-        .delete()
-        .eq("profile_id", profileId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete instructor ${profileId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("instructors", { profile_id: profileId }).catch((err) =>
+      console.error(`Failed to delete instructor ${profileId} from server:`, err)
+    );
   }
 
   deleteGraduateStatus(userId: string): void {
     const list = this.get<seeds.GraduateStatus>("lms_graduate_status", []);
     const updatedList = list.filter((g) => g.user_id !== userId);
     this.set("lms_graduate_status", updatedList);
-    if (supabase) {
-      supabase
-        .from("graduate_status")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete graduate status for ${userId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("graduate_status", { user_id: userId }).catch((err) =>
+      console.error(`Failed to delete graduate status for ${userId} from server:`, err)
+    );
   }
 
   deleteStudentProgress(userId: string): void {
     const list = this.get<seeds.StudentProgress>("lms_progress", []);
     const updatedList = list.filter((p) => p.user_id !== userId);
     this.set("lms_progress", updatedList);
-    if (supabase) {
-      supabase
-        .from("student_progress")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete student progress for ${userId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("student_progress", { user_id: userId }).catch((err) =>
+      console.error(`Failed to delete student progress for ${userId} from server:`, err)
+    );
   }
 
   deleteStudentSubmissions(userId: string): void {
     const list = this.get<seeds.Submission>("lms_submissions", []);
     const updatedList = list.filter((s) => s.user_id !== userId);
     this.set("lms_submissions", updatedList);
-    if (supabase) {
-      supabase
-        .from("submissions")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete submissions for ${userId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("submissions", { user_id: userId }).catch((err) =>
+      console.error(`Failed to delete submissions for ${userId} from server:`, err)
+    );
   }
 
   deleteStudentQuizAttempts(userId: string): void {
     const list = this.get<seeds.QuizAttempt>("lms_quiz_attempts", []);
     const updatedList = list.filter((a) => a.user_id !== userId);
     this.set("lms_quiz_attempts", updatedList);
-    if (supabase) {
-      supabase
-        .from("quiz_attempts")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete quiz attempts for ${userId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("quiz_attempts", { user_id: userId }).catch((err) =>
+      console.error(`Failed to delete quiz attempts for ${userId} from server:`, err)
+    );
   }
 
   deleteStudentCertificates(userId: string): void {
     const list = this.get<seeds.Certificate>("lms_certificates", []);
     const updatedList = list.filter((c) => c.user_id !== userId);
     this.set("lms_certificates", updatedList);
-    if (supabase) {
-      supabase
-        .from("certificates")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete certificates for ${userId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("certificates", { user_id: userId }).catch((err) =>
+      console.error(`Failed to delete certificates for ${userId} from server:`, err)
+    );
   }
 
   deleteStudentAttendance(userId: string): void {
     const list = this.get<seeds.Attendance>("lms_attendance", []);
     const updatedList = list.filter((a) => a.user_id !== userId);
     this.set("lms_attendance", updatedList);
-    if (supabase) {
-      supabase
-        .from("attendance")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete attendance for ${userId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("attendance", { user_id: userId }).catch((err) =>
+      console.error(`Failed to delete attendance for ${userId} from server:`, err)
+    );
   }
 
   getInstructors(): seeds.Instructor[] {
@@ -667,8 +576,10 @@ class LocalStorageDB {
   async createApplication(app: Omit<seeds.Application, "id" | "status" | "created_at">): Promise<seeds.Application> {
     // If an existing application row for this email exists in Supabase, delete it first
     // to avoid the UNIQUE constraint on the email column blocking re-applications.
-    if (supabase) {
-      await supabase.from("applications").delete().eq("email", app.email);
+    try {
+      await apiDeleteEq("applications", { email: app.email });
+    } catch (err) {
+      console.warn(`Could not clear previous application for ${app.email}:`, err);
     }
 
     // Remove any old local entry for same email
@@ -807,10 +718,11 @@ class LocalStorageDB {
     const list = this.getCohorts();
     const filtered = list.filter((c) => c.id !== id);
     this.set("lms_cohorts", filtered);
-    if (this.isSupabase && supabase) {
-      const { error } = await supabase.from("cohorts").delete().eq("id", id);
-      if (error) {
-        console.error("Error deleting cohort from Supabase:", error);
+    if (this.isSupabase) {
+      try {
+        await apiDeleteEq("cohorts", { id });
+      } catch (err) {
+        console.error("Error deleting cohort from server:", err);
       }
     }
   }
@@ -868,15 +780,9 @@ class LocalStorageDB {
     const list = this.getCohortMembers();
     const updatedList = list.filter((m) => m.user_id !== userId);
     this.set("lms_cohort_members", updatedList);
-    if (supabase) {
-      supabase
-        .from("cohort_members")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error(`Failed to delete cohort member for ${userId} from Supabase:`, error);
-        });
-    }
+    apiDeleteEq("cohort_members", { user_id: userId }).catch((err) =>
+      console.error(`Failed to delete cohort member for ${userId} from server:`, err)
+    );
   }
 
   // --- Courses, Modules, Lessons ---
@@ -946,7 +852,7 @@ class LocalStorageDB {
       };
     }
 
-    if (!this.isSupabase || !supabase) {
+    if (!this.isSupabase) {
       return cached
         ? {
             content_link: cached.content_link,
@@ -957,14 +863,18 @@ class LocalStorageDB {
         : null;
     }
 
-    const { data, error } = await supabase
-      .from("submissions")
-      .select("content_link,content_text,content_public_id,content_file_name")
-      .eq("id", submissionId)
-      .single();
+    const data = await apiSelectOne<{
+      content_link?: string;
+      content_text?: string;
+      content_public_id?: string;
+      content_file_name?: string;
+    }>("submissions", {
+      columns: "content_link,content_text,content_public_id,content_file_name",
+      filters: { id: submissionId },
+    });
 
-    if (error) {
-      console.error(`Failed to fetch submission file for ${submissionId}:`, error.message);
+    if (!data) {
+      console.error(`Failed to fetch submission file for ${submissionId}.`);
       return null;
     }
 
@@ -979,14 +889,12 @@ class LocalStorageDB {
 
   async createSubmission(sub: Omit<seeds.Submission, "id" | "submitted_at" | "status">): Promise<seeds.Submission> {
     const list = this.getSubmissions();
-    
+
     // Remove existing submission for the same assignment and user to overwrite it (resubmission).
-    // Note: we intentionally do NOT attempt to DELETE the old row from Supabase here because
-    // the student RLS policy only grants INSERT, not DELETE. Supabase may accumulate duplicate
-    // rows on resubmission, but syncFromSupabase() deduplicates them on every sync so the
-    // client always works with the latest submission per (assignment_id, user_id).
+    // The server keeps the authoritative history; syncFromSupabase() deduplicates
+    // by (assignment_id, user_id) keeping the newest on every sync.
     const filtered = list.filter((s) => !(s.assignment_id === sub.assignment_id && s.user_id === sub.user_id));
-    
+
     const newSub: seeds.Submission = {
       ...sub,
       id: generateUUID(),
@@ -995,13 +903,21 @@ class LocalStorageDB {
     };
     filtered.push(newSub);
     this.set("lms_submissions", filtered);
-    await this.saveToSupabase("submissions", newSub, true);
-    
+
+    const persisted = await this.saveToSupabase("submissions", newSub, true);
+    if (!persisted) {
+      // Roll back the optimistic local write — the submission did NOT reach
+      // the server. Throwing lets the UI show a real error instead of the
+      // student believing they submitted.
+      this.set("lms_submissions", filtered.filter((s) => s.id !== newSub.id));
+      throw new Error("Could not upload your submission to the server. Please check your connection and try again.");
+    }
+
     const assignment = this.getAssignment(newSub.assignment_id);
     if (assignment) {
       this.checkAndPromoteModule(newSub.user_id, assignment.module_id);
     }
-    
+
     return newSub;
   }
 
@@ -1137,8 +1053,14 @@ class LocalStorageDB {
     };
     list.push(newAttempt);
     this.set("lms_quiz_attempts", list);
-    await this.saveToSupabase("quiz_attempts", newAttempt, true);
-    
+
+    const persisted = await this.saveToSupabase("quiz_attempts", newAttempt, true);
+    if (!persisted) {
+      // Roll back the optimistic local write and let the UI show the error.
+      this.set("lms_quiz_attempts", list.filter((a) => a.id !== newAttempt.id));
+      throw new Error("Could not save your quiz attempt to the server. Please check your connection and try again.");
+    }
+
     if (quiz) {
       this.checkAndPromoteModule(newAttempt.user_id, quiz.module_id);
     }
@@ -1567,17 +1489,10 @@ class LocalStorageDB {
       localStorage.removeItem(`survey_completed_post_${email}`);
     }
 
-    // Supabase deletion
-    if (supabase) {
-      supabase
-        .from("survey_responses")
-        .delete()
-        .eq("user_id", userId)
-        .then(({ error }) => {
-          if (error) console.error("Failed to delete survey responses from Supabase:", error);
-          else console.log(`Successfully deleted survey responses for ${email} from Supabase.`);
-        });
-    }
+    // Server deletion
+    apiDeleteEq("survey_responses", { user_id: userId })
+      .then(() => console.log(`Successfully deleted survey responses for ${email} from server.`))
+      .catch((err) => console.error("Failed to delete survey responses from server:", err));
   }
 
   deleteUserByEmailEntirely(email: string): void {
