@@ -156,13 +156,13 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
       {/* Dimmed backdrop for mobile sidebar */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/60 md:hidden backdrop-blur-sm transition-opacity duration-300"
+          className="fixed inset-0 z-40 bg-black/60 md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar Navigation Drawer */}
-      <aside className={`fixed inset-y-0 left-0 w-72 border-r border-border-main bg-bg-card glass flex flex-col justify-between flex-shrink-0 z-30 transition-transform duration-300 md:static md:translate-x-0 ${
+      <aside className={`fixed inset-y-0 left-0 w-72 border-r border-border-main bg-bg-card glass flex flex-col justify-between flex-shrink-0 z-50 transition-transform duration-300 md:static md:translate-x-0 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}>
         <div className="flex flex-col flex-grow overflow-y-auto">
@@ -312,9 +312,9 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
         </div>
       </main>
 
-      {/* Student bottom tab bar (mobile < md) */}
+      {/* Bottom tab bar (mobile < md) — must stay below the sidebar backdrop/drawer */}
       {bottomTabs.length > 0 && (
-        <nav className="fixed bottom-0 inset-x-0 z-40 md:hidden border-t border-border-main bg-bg-card/95 backdrop-blur-md flex items-stretch justify-around">
+        <nav className="fixed bottom-0 inset-x-0 z-30 md:hidden border-t border-border-main bg-bg-card/95 backdrop-blur-md flex items-stretch justify-around">
           {bottomTabs.map((tab) => {
             const active = (pathname ?? "").startsWith(tab.href);
             return (
