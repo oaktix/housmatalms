@@ -37,25 +37,20 @@ export default function AdminStudents() {
   // Tracks which submission's file is currently being fetched for download.
   const [downloadingSubId, setDownloadingSubId] = useState<string | null>(null);
 
-  // Lazily fetch a submission's file (omitted from list sync to save egress),
-  // then trigger the browser download.
+  // Triggers a direct download of a submission via the server file route,
+  // which resolves storage refs / legacy payloads behind the scenes.
   const handleDownloadSubmission = useCallback(
     async (submissionId: string, fileName?: string) => {
       setDownloadingSubId(submissionId);
       try {
-        const file = await db.getSubmissionFile(submissionId);
-        if (file?.content_link) {
-          const a = document.createElement("a");
-          a.href = file.content_link;
-          a.download = fileName || file.content_file_name || "submission.pdf";
-          a.target = "_blank";
-          a.rel = "noopener noreferrer";
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-        } else {
-          toast("Could not load the submitted file. Please try again.", "error");
-        }
+        const a = document.createElement("a");
+        a.href = `/api/media/file?id=${submissionId}&download=1`;
+        a.download = fileName || "submission";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        // Give the browser a beat to start the download before clearing state.
+        await new Promise((r) => setTimeout(r, 800));
       } finally {
         setDownloadingSubId(null);
       }

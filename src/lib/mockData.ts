@@ -101,7 +101,7 @@ export interface Submission {
   content_text?: string;
   content_link?: string;
   content_file_name?: string;
-  content_public_id?: string; // Cloudinary public_id for the uploaded file
+  content_public_id?: string; // Legacy external-media id (unused for new uploads)
   grade?: number;
   feedback?: string;
   status: "pending" | "graded" | "rejected";

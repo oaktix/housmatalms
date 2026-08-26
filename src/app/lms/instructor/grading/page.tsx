@@ -5,6 +5,7 @@ import { ClipboardList, CheckCircle2, ChevronRight, GraduationCap, FileText, Loa
 import { db } from "@/lib/db";
 import { useAuth } from "@/lib/useAuth";
 import { Submission, Assignment, Profile, StudentProgress } from "@/lib/mockData";
+import { mimeFromName } from "@/lib/files";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import confetti from "canvas-confetti";
@@ -41,8 +42,111 @@ export default function InstructorGrading() {
   const [aiLoading, setAiLoading] = useState(false);
   const [pdfFullscreen, setPdfFullscreen] = useState(false);
 
-  // Track in-progress conversions to prevent duplicate parallel requests
-  const convertingIds = useRef<Set<string>>(new Set());
+  // Submitted-document preview: fetched once per selected submission as a blob
+  // (via /api/media/file) so PDFs/images render reliably and failures are visible.
+  type DocPreview =
+    | { status: "idle" }
+    | { status: "loading" }
+    | { status: "ready"; url: string; mime: string }
+    | { status: "unsupported"; url: string; mime: string }
+    | { status: "error"; message: string };
+  const [docPreview, setDocPreview] = useState<DocPreview>({ status: "idle" });
+  const [previewNonce, setPreviewNonce] = useState(0);
+  const docUrlRef = useRef<string | null>(null);
+
+  const releaseDocUrl = useCallback(() => {
+    if (docUrlRef.current) {
+      URL.revokeObjectURL(docUrlRef.current);
+      docUrlRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selectedSub || !selectedSub.content_link) {
+      releaseDocUrl();
+      setDocPreview({ status: "idle" });
+      return;
+    }
+
+    const link = selectedSub.content_link;
+
+    // Cloudinary CDN rows: embed the URL directly in the iframe. No proxy
+    // fetch, no blob — iframes don't need CORS and the CDN is the source of
+    // truth. Only legacy storage:/data: links go through the blob path.
+    if (/^https?:\/\//i.test(link)) {
+      releaseDocUrl();
+      const mime = mimeFromName(selectedSub.content_file_name) || "application/octet-stream";
+      const previewable =
+        mime === "application/pdf" ||
+        mime.startsWith("image/") ||
+        mime.startsWith("video/") ||
+        mime.startsWith("audio/");
+      setDocPreview(
+        previewable
+          ? { status: "ready", url: link, mime }
+          : { status: "unsupported", url: link, mime }
+      );
+      return;
+    }
+
+    let cancelled = false;
+    setDocPreview({ status: "loading" });
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/media/file?id=${selectedSub.id}`);
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.error || `Could not load file (HTTP ${res.status})`);
+        }
+        const blob = await res.blob();
+        if (cancelled) return;
+
+        // A JSON error payload can still arrive with 200 from odd paths; guard it.
+        if (blob.type === "application/json") {
+          throw new Error("Submitted file could not be read.");
+        }
+
+        const url = URL.createObjectURL(blob);
+        releaseDocUrl();
+        docUrlRef.current = url;
+
+        const previewable =
+          blob.type === "application/pdf" ||
+          blob.type.startsWith("image/") ||
+          blob.type.startsWith("video/") ||
+          blob.type.startsWith("audio/");
+        setDocPreview(
+          previewable
+            ? { status: "ready", url, mime: blob.type }
+            : { status: "unsupported", url, mime: blob.type }
+        );
+      } catch (err) {
+        if (!cancelled) {
+          setDocPreview({
+            status: "error",
+            message: err instanceof Error ? err.message : "Something went wrong",
+          });
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSub?.id, selectedSub?.content_link, previewNonce, releaseDocUrl]);
+
+  // Release the current blob when the component unmounts.
+  useEffect(() => releaseDocUrl, [releaseDocUrl]);
+
+  // Save target: blob URLs download directly; CDN URLs need our proxy so the
+  // Content-Disposition: attachment header preserves the original filename.
+  const saveHref = () => {
+    if (docPreview.status !== "ready" && docPreview.status !== "unsupported") return undefined;
+    return docPreview.url.startsWith("blob:")
+      ? docPreview.url
+      : `/api/media/file?id=${selectedSub?.id}&download=1`;
+  };
 
   const loadData = useCallback(() => {
     // 1. Fetch Submissions
@@ -90,52 +194,6 @@ export default function InstructorGrading() {
     db.sync();
     return db.subscribe(loadData);
   }, [currentUser, loadData]);
-
-  useEffect(() => {
-    // Auto-heal legacy PowerPoint submissions by converting them to PDF
-    const allSubs = db.getSubmissions();
-    const pptxSubs = allSubs.filter((sub) => 
-      sub.content_link && 
-      (sub.content_file_name?.toLowerCase().endsWith(".pptx") || sub.content_file_name?.toLowerCase().endsWith(".ppt")) &&
-      !sub.content_link.startsWith("data:application/pdf") &&
-      !convertingIds.current.has(sub.id)
-    );
-
-    if (pptxSubs.length > 0) {
-      console.log(`[PPTX Auto-Heal] Found ${pptxSubs.length} legacy PowerPoint submissions to convert to PDF.`);
-      pptxSubs.forEach(async (sub) => {
-        convertingIds.current.add(sub.id);
-        try {
-          const res = await fetch("/api/convert-pptx", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              fileDataUrl: sub.content_link,
-              fileName: sub.content_file_name,
-            }),
-          });
-          
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.pdfDataUrl) {
-              db.updateSubmission({
-                ...sub,
-                content_link: data.pdfDataUrl,
-                content_file_name: sub.content_file_name!.replace(/\.pptx?$/i, ".pdf")
-              });
-              loadData();
-            }
-          }
-        } catch (err) {
-          console.error("Auto-conversion of legacy presentation failed:", sub.id, err);
-        } finally {
-          convertingIds.current.delete(sub.id);
-        }
-      });
-    }
-  }, [submissions, loadData]);
 
   const handleAiRestructure = async () => {
     if (!selectedSub) return;
@@ -283,17 +341,25 @@ export default function InstructorGrading() {
                     <button
                       key={sub.id}
                       onClick={async () => {
-                        // Show the row immediately, then lazily fetch the heavy
-                        // file payload (content_link/content_text) which is
+                        // Show the row immediately, then lazily fetch the file
+                        // reference/remarks (content_link/content_text) which are
                         // omitted from the list sync to save egress.
+                        releaseDocUrl();
+                        setPdfFullscreen(false);
                         setSelectedSub(sub);
                         setGrade(85);
                         setFeedback("");
+                        setDocPreview({ status: "loading" });
                         const file = await db.getSubmissionFile(sub.id);
                         if (file) {
                           setSelectedSub((prev) =>
                             prev && prev.id === sub.id ? { ...prev, ...file } : prev
                           );
+                        }
+                        if (!file?.content_link) {
+                          // No document attached (text-only submission): stop the spinner.
+                          releaseDocUrl();
+                          setDocPreview({ status: "idle" });
                         }
                       }}
                       className={`w-full p-4 rounded-2xl border text-left flex items-center justify-between transition-all ${
@@ -366,56 +432,96 @@ export default function InstructorGrading() {
                   </p>
                 </div>
 
-                {/* Submitted Document Panel: clickable, opens full-screen reader */}
-                {selectedSub.content_link ? (
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest text-text-muted">
-                      <span>Submitted Document</span>
-                      {selectedSub.content_file_name && (
-                        <span className="text-primary truncate max-w-[60%]">{selectedSub.content_file_name}</span>
-                      )}
-                    </div>
+                {/* Submitted Document Panel: inline preview + full-screen reader */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-[10px] uppercase font-black tracking-widest text-text-muted">
+                    <span>Submitted Document</span>
+                    {selectedSub.content_file_name && (
+                      <span className="text-primary truncate max-w-[60%]">{selectedSub.content_file_name}</span>
+                    )}
+                  </div>
 
-                    {/* Clickable preview card: serves the raw PDF (no Cloudinary processing) */}
-                    <button
-                      type="button"
-                      onClick={() => setPdfFullscreen(true)}
-                      className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border-main bg-bg-main hover:border-primary/40 hover:bg-bg-card-hover transition-all text-left group"
-                    >
-                      <span className="w-12 h-14 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-5 h-5 text-red-500" />
-                      </span>
-                      <span className="flex-grow min-w-0">
-                        <span className="block font-bold text-text-main text-xs truncate">
-                          {selectedSub.content_file_name || "Submission document"}
-                        </span>
-                        <span className="block text-[10px] text-text-muted mt-0.5">
-                          Click to open full-screen reader
-                        </span>
-                      </span>
-                      <span className="flex items-center gap-3 text-primary text-[10px] font-bold flex-shrink-0">
+                  {docPreview.status === "idle" && (
+                    <div className="border border-border-main rounded-2xl bg-bg-main p-4 flex items-center justify-center gap-2 text-xs text-text-muted italic">
+                      <FileText className="w-4 h-4 opacity-60" />
+                      No document was attached to this submission.
+                    </div>
+                  )}
+
+                  {docPreview.status === "loading" && (
+                    <div className="border border-border-main rounded-2xl bg-bg-main h-[300px] flex flex-col items-center justify-center gap-3 text-xs text-text-muted">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                      Loading submitted document…
+                    </div>
+                  )}
+
+                  {docPreview.status === "error" && (
+                    <div className="border border-error/30 bg-error/5 rounded-2xl p-4 flex items-start justify-between gap-3">
+                      <p className="text-xs text-text-main leading-relaxed">
+                        Could not load the submitted file: {docPreview.message}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewNonce((n) => n + 1)}
+                        className="btn border border-border-main hover:bg-bg-card-hover text-text-muted px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex-shrink-0"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
+
+                  {(docPreview.status === "ready" || docPreview.status === "unsupported") && (
+                    <div className="space-y-2">
+                      {docPreview.status === "ready" ? (
+                        <iframe
+                          src={docPreview.url}
+                          className="w-full h-[420px] rounded-xl border border-border-main bg-white"
+                          title="Submitted document preview"
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setPdfFullscreen(true)}
+                          className="w-full flex items-center gap-4 p-4 rounded-2xl border border-border-main bg-bg-main hover:border-primary/40 hover:bg-bg-card-hover transition-all text-left group"
+                        >
+                          <span className="w-12 h-14 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-red-500" />
+                          </span>
+                          <span className="flex-grow min-w-0">
+                            <span className="block font-bold text-text-main text-xs truncate">
+                              {selectedSub.content_file_name || "Submission document"}
+                            </span>
+                            <span className="block text-[10px] text-text-muted mt-0.5">
+                              Inline preview isn&apos;t available for this file type — open or download to review.
+                            </span>
+                          </span>
+                          <Maximize2 className="w-4 h-4 text-primary group-hover:scale-110 transition-transform flex-shrink-0" />
+                        </button>
+                      )}
+                      <div className="flex justify-end gap-2">
+                        {docPreview.status === "ready" && (
+                          <button
+                            type="button"
+                            onClick={() => setPdfFullscreen(true)}
+                            className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1"
+                          >
+                            <Maximize2 className="w-3.5 h-3.5" /> Full screen
+                          </button>
+                        )}
                         <a
-                          href={selectedSub.content_link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          download={selectedSub.content_file_name || "submission.pdf"}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 hover:underline"
+                          href={saveHref()}
+                          download={selectedSub.content_file_name || "submission"}
+                          className="btn border border-border-main hover:bg-bg-card-hover text-text-muted px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1"
                         >
                           <Download className="w-3.5 h-3.5" /> Save
                         </a>
-                        <Maximize2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      </span>
-                    </button>
-                  </div>
-                ) : (
-                  <div className="border border-border-main rounded-2xl bg-bg-main h-[120px] flex items-center justify-center text-xs text-text-muted animate-pulse">
-                    Loading submitted document…
-                  </div>
-                )}
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                {/* Full-screen PDF reader */}
-                <Modal open={pdfFullscreen && !!selectedSub} onClose={() => setPdfFullscreen(false)} variant="full">
+                {/* Full-screen reader */}
+                <Modal open={pdfFullscreen && docPreview.status === "ready"} onClose={() => setPdfFullscreen(false)} variant="full">
                   <div className="flex items-center justify-between p-4 border-b border-border-main bg-bg-card flex-shrink-0">
                     <div className="min-w-0">
                       <span className="text-[9px] font-black uppercase text-primary tracking-widest block">
@@ -426,15 +532,15 @@ export default function InstructorGrading() {
                       </h2>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <a
-                        href={selectedSub?.content_link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        download={selectedSub?.content_file_name || "submission.pdf"}
-                        className="btn border border-border-main hover:bg-bg-card-hover text-text-muted px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5"
-                      >
-                        <Download className="w-3.5 h-3.5" /> Save
-                      </a>
+                      {docPreview.status === "ready" && (
+                        <a
+                          href={saveHref()}
+                          download={selectedSub?.content_file_name || "submission"}
+                          className="btn border border-border-main hover:bg-bg-card-hover text-text-muted px-3 py-2 rounded-xl text-[10px] font-bold transition-all flex items-center gap-1.5"
+                        >
+                          <Download className="w-3.5 h-3.5" /> Save
+                        </a>
+                      )}
                       <button
                         onClick={() => setPdfFullscreen(false)}
                         className="p-2 rounded-lg border border-border-main text-text-muted hover:text-text-main hover:bg-bg-card-hover transition-colors"
@@ -445,11 +551,13 @@ export default function InstructorGrading() {
                     </div>
                   </div>
                   <div className="flex-grow bg-bg-main overflow-hidden">
-                    <iframe
-                      src={selectedSub?.content_link}
-                      className="w-full h-full border-0"
-                      title="PDF Submission Reader"
-                    />
+                    {docPreview.status === "ready" && (
+                      <iframe
+                        src={docPreview.url}
+                        className="w-full h-full border-0 bg-white"
+                        title="Submitted Document Reader"
+                      />
+                    )}
                   </div>
                 </Modal>
 

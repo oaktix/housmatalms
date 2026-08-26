@@ -1,14 +1,36 @@
 # HANDOFF — UI/UX Overhaul & Cloudinary Mini-Backend
 
+> **UPDATE (2026-08-26): Cloudinary is the sole media CDN again; Supabase stores data/state only.**
+> - New uploads: browser asks `POST /api/media/sign-upload` (server signs with
+>   `CLOUDINARY_*`), then POSTs the file straight to Cloudinary (no server proxy,
+>   real progress events). PDFs go up as `resource_type: raw` (extension kept in
+>   public_id); everything else uses `auto`. Folder: `housmata/submissions/<userId>`.
+> - Client helper: `src/lib/cloudinaryUpload.ts` (`uploadSubmissionFile` →
+>   `{ secureUrl, publicId, ... }`). The old `storageUpload.ts` and
+>   `/api/media/storage-upload` route were deleted.
+> - `submissions.content_link` = Cloudinary secure URL, `content_public_id` = asset id.
+> - Serving/preview still flows through `/api/media/file?id=...` which 302-redirects
+>   to the CDN. Downloads (`?download=1`) get a bare `fl_attachment` flag appended —
+>   Cloudinary then serves `Content-Disposition: attachment` with the asset's
+>   ORIGINAL filename (flag values containing dots are rejected with 400; do not
+>   use `fl_attachment:<name>`). Inline preview needs NO flag: raw deliveries carry
+>   no Content-Disposition, so browsers render them by content-type.
+>   Legacy `data:`/`storage:` rows are still streamed as before (none remain).
+> - MIGRATION COMPLETE (2026-08-26): all 181 submission rows now point at the CDN;
+>   the Supabase "submissions" bucket is EMPTY. Rollback map:
+>   `scripts/.cloudinary-migration-rollback.csv`. Re-run tools:
+>   `node scripts/migrate-submissions-to-cloudinary.mjs [--dry-run|--limit=N|--delete-source]`
+>   and `--cleanup-storage` (CSV-driven deletion with DB-link safety check).
+> - REQUIRED for PDF delivery: enable **Settings → Security → "Allow delivery of
+>   PDF and ZIP files"** in the Cloudinary console, otherwise PDF URLs return 401
+>   (verified live on this account). Images/videos are unaffected.
+
 > **UPDATE (2026-08): The Cloudinary mini-backend has been REMOVED.**
 > All DB access now goes through `src/app/api/db/[table]/route.ts`, a server
 > route authenticated with `SUPABASE_SERVICE_ROLE_KEY` (the browser never talks
 > to Supabase directly anymore). `cloudStore.ts`, `cloudStoreServer.ts` and
-> `/api/store` were deleted. Cloudinary is used only for media (PDF) uploads.
-> Stranded Cloudinary `_store` records were migrated to Supabase via
-> `scripts/migrate-cloudinary-store.mjs`. Pending: apply
-> `supabase/migrations/20260716_02_add_submission_public_id.sql` to the live DB,
-> then re-run the migration script to backfill `content_public_id`.
+> `/api/store` were deleted. Stranded Cloudinary `_store` records were migrated
+> to Supabase via `scripts/migrate-cloudinary-store.mjs`.
 
 This document lets another agent continue the UI/UX overhaul + Cloudinary fallback work
 if the current session is interrupted. Repo: `housmatalms-main` (Next.js 15, Tailwind v4,

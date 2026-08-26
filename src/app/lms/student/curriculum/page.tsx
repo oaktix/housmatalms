@@ -18,7 +18,7 @@ import { useAuth } from "@/lib/useAuth";
 import { StudentProgress, Quiz, QuizQuestion, Assignment } from "@/lib/mockData";
 import { phase1Curriculum, hcpaCurriculum, Lesson } from "@/lib/curriculum";
 import StudentLayout from "@/components/StudentLayout";
-import { uploadToCloudinary } from "@/lib/cloudinaryUpload";
+import { uploadSubmissionFile } from "@/lib/cloudinaryUpload";
 import { useToast } from "@/components/ui/Toast";
 import { Modal } from "@/components/ui/Modal";
 import { AiPanel } from "@/components/ui/AiPanel";
@@ -280,7 +280,7 @@ export default function StudentCurriculum() {
     }
   };
 
-  // Submit Assignment PDF: upload to Cloudinary, store only the lightweight URL
+  // Submit Assignment: upload straight to Cloudinary (signed), store only the CDN reference
   const submitAssignment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !activeAssessment || !activeAssessment.assignment || !assignmentFile) return;
@@ -289,18 +289,16 @@ export default function StudentCurriculum() {
     setSubmissionError(null);
 
     try {
-      // 1. Upload the PDF directly to Cloudinary (keeps large files out of the DB).
-      const media = await uploadToCloudinary(assignmentFile, {
-        folder: `housmata/submissions/${currentUser.id}`,
-      });
+      // 1. Upload the file directly to the Cloudinary CDN (server only signs).
+      const ref = await uploadSubmissionFile(assignmentFile, currentUser.id);
 
-      // 2. Persist the delivery URL + Cloudinary public_id (not the base64 blob).
+      // 2. Persist the lightweight reference (never the file bytes).
       await db.createSubmission({
         user_id: currentUser.id,
         assignment_id: activeAssessment.assignment!.id,
         content_file_name: assignmentFile.name,
-        content_link: media.secureUrl,
-        content_public_id: media.publicId,
+        content_link: ref.secureUrl,
+        content_public_id: ref.publicId,
         content_text: assignmentText,
       });
 

@@ -1,122 +1,113 @@
 /**
- * Cloudinary client-side upload helpers.
+ * Client-side submission upload helper.
  *
- * Flow:
- *  1. Ask our server (`/api/media/upload-signed`) for a signature.
- *  2. Upload the file DIRECTLY to Cloudinary from the browser (keeps large
- *     PDFs/videos off our server and out of localStorage/Postgres).
- *  3. Return a lightweight descriptor (URL + public_id) that we store in the DB.
+ * Two-step direct-to-Cloudinary upload:
+ *  1. POST /api/media/sign-upload  -> per-user folder + signature
+ *  2. XHR the file straight to Cloudinary (keeps real progress events)
  *
- * PDFs are uploaded as `image` resource type in Cloudinary. This is intentional:
- * Cloudinary treats PDFs as multi-page "images", which unlocks:
- *   - Automatic thumbnail generation (first page): `.../<public_id>.jpg`
- *   - Page count, on-the-fly format conversion, and inline preview.
- * If you prefer the file to stay a pure download (no transformations), switch
- * resourceType to 'raw'.
+ * The DB row stores the returned CDN URL in submissions.content_link and the
+ * asset id in content_public_id — Supabase keeps data only, never bytes.
  */
 
-export interface UploadedMedia {
-  publicId: string;
-  url: string;
+export interface UploadedFileRef {
   secureUrl: string;
-  resourceType: "image" | "video" | "raw";
-  format: string;
+  publicId: string;
+  resourceType: string;
+  fileName: string;
   bytes: number;
-  width?: number;
-  height?: number;
-  pages?: number;
-  originalFilename: string;
 }
 
 export type UploadProgressHandler = (percent: number) => void;
 
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-
-/** Decide the Cloudinary resource_type from a File's MIME type. */
-export function resourceTypeFor(file: File): "image" | "video" | "raw" {
-  if (file.type === "application/pdf") return "image"; // PDF => image for previews
-  if (file.type.startsWith("image/")) return "image";
-  if (file.type.startsWith("video/")) return "video";
-  return "raw"; // docx, pptx, zip, txt, etc.
+interface SignPayload {
+  success?: boolean;
+  error?: string;
+  cloudName?: string;
+  apiKey?: string;
+  timestamp?: number;
+  signature?: string;
+  folder?: string;
+  publicId?: string;
+  resourceType?: string;
+  uploadUrl?: string;
 }
 
-/**
- * Upload a single file to Cloudinary using a server-generated signature.
- * Uses XHR so we can report real upload progress.
- */
-export async function uploadToCloudinary(
-  file: File,
-  opts: {
-    folder?: string;
-    onProgress?: UploadProgressHandler;
-  } = {}
-): Promise<UploadedMedia> {
-  const folder = opts.folder ?? "housmata/submissions";
-  const resourceType = resourceTypeFor(file);
-
-  // 1. Get signature from our API
-  const sigRes = await fetch("/api/media/upload-signed", {
+async function fetchUploadSignature(userId: string, fileName: string): Promise<Required<SignPayload>> {
+  const res = await fetch("/api/media/sign-upload", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ folder, resourceType }),
+    body: JSON.stringify({ userId, fileName }),
   });
-  if (!sigRes.ok) {
-    throw new Error("Could not initialise upload. Please try again.");
+  const payload = (await res.json().catch(() => null)) as SignPayload | null;
+  if (!res.ok || !payload?.success || !payload.uploadUrl || !payload.signature) {
+    throw new Error(payload?.error || `Could not prepare the upload (${res.status}).`);
   }
-  const { signature, timestamp, apiKey, cloudName } = await sigRes.json();
-
-  // 2. Upload directly to Cloudinary
-  const endpoint = `https://api.cloudinary.com/v1_1/${
-    cloudName || CLOUD_NAME
-  }/${resourceType}/upload`;
-
-  const form = new FormData();
-  form.append("file", file);
-  form.append("api_key", apiKey);
-  form.append("timestamp", String(timestamp));
-  form.append("signature", signature);
-  form.append("folder", folder);
-
-  const result = await new Promise<Record<string, unknown>>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", endpoint);
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable && opts.onProgress) {
-        opts.onProgress(Math.round((e.loaded * 100) / e.total));
-      }
-    };
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(JSON.parse(xhr.responseText));
-      } else {
-        reject(new Error(`Upload failed (${xhr.status}). Please try again.`));
-      }
-    };
-    xhr.onerror = () => reject(new Error("Network error during upload."));
-    xhr.send(form);
-  });
-
-  return {
-    publicId: result.public_id as string,
-    url: result.url as string,
-    secureUrl: result.secure_url as string,
-    resourceType: (result.resource_type as UploadedMedia["resourceType"]) ?? resourceType,
-    format: (result.format as string) ?? file.name.split(".").pop() ?? "",
-    bytes: (result.bytes as number) ?? file.size,
-    width: result.width as number | undefined,
-    height: result.height as number | undefined,
-    pages: result.pages as number | undefined,
-    originalFilename: file.name,
-  };
+  return payload as Required<SignPayload>;
 }
 
-/** Build a first-page JPG thumbnail URL for a PDF stored on Cloudinary. */
-export function pdfThumbnailUrl(publicId: string, width = 400): string {
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/c_fill,w_${width},pg_1,f_jpg/${publicId}.jpg`;
+/** Map common Cloudinary errors to friendly messages. */
+function cloudinaryErrorMessage(err: string): string {
+  if (/file size too large|maximum file size/i.test(err)) {
+    return "File is too large for the media host. Please try a smaller file.";
+  }
+  return `Upload failed: ${err}`;
 }
 
-/** Build a delivery URL for a PDF (inline view / download). */
-export function pdfUrl(publicId: string): string {
-  return `https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${publicId}.pdf`;
+export function uploadSubmissionFile(
+  file: File,
+  userId: string,
+  opts: { onProgress?: UploadProgressHandler } = {}
+): Promise<UploadedFileRef> {
+  return (async () => {
+    // 1. Get a signature scoped to this user's folder.
+    let sig: Required<SignPayload>;
+    try {
+      sig = await fetchUploadSignature(userId, file.name);
+    } catch (err) {
+      throw err instanceof Error ? err : new Error("Could not prepare the upload.");
+    }
+
+    // 2. Upload directly to Cloudinary with progress callbacks.
+    return await new Promise<UploadedFileRef>((resolve, reject) => {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("api_key", sig.apiKey);
+      form.append("timestamp", String(sig.timestamp));
+      form.append("signature", sig.signature);
+      form.append("folder", sig.folder);
+      form.append("public_id", sig.publicId);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", sig.uploadUrl);
+
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && opts.onProgress) {
+          opts.onProgress(Math.round((e.loaded / e.total) * 100));
+        }
+      };
+
+      xhr.onload = () => {
+        let payload: { secure_url?: string; public_id?: string; resource_type?: string; error?: { message?: string } } | null = null;
+        try {
+          payload = JSON.parse(xhr.responseText);
+        } catch {
+          // fall through with null
+        }
+        if (xhr.status >= 200 && xhr.status < 300 && payload?.secure_url && payload?.public_id) {
+          resolve({
+            secureUrl: payload.secure_url,
+            publicId: payload.public_id,
+            resourceType: payload.resource_type || sig.resourceType,
+            fileName: file.name,
+            bytes: file.size,
+          });
+        } else {
+          reject(new Error(cloudinaryErrorMessage(payload?.error?.message || `HTTP ${xhr.status}`)));
+        }
+      };
+      xhr.onerror = () => reject(new Error("Network error during upload."));
+
+      xhr.send(form);
+    });
+  })();
 }
