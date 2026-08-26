@@ -14,6 +14,7 @@
  * Usage:
  *   node scripts/migrate-submissions-to-cloudinary.mjs [--dry-run] [--limit=N] [--delete-source]
  *   node scripts/migrate-submissions-to-cloudinary.mjs --cleanup-storage
+ *   node scripts/migrate-submissions-to-cloudinary.mjs --convert-raw-pdfs [--dry-run]
  *
  * `--cleanup-storage` is a second pass: it walks the rollback CSV and deletes
  * each Supabase object, but ONLY after re-verifying the DB row now points at
@@ -123,11 +124,12 @@ async function uploadToCloudinary(userId, fileName, bytes, contentType) {
   const ext = extMatch ? extMatch[1].toLowerCase() : "";
   const baseName = safeName(ext ? fileName.slice(0, fileName.length - extMatch[0].length) : fileName);
 
-  // PDFs as raw (bytes preserved); everything else auto-detected. Same rules
-  // as /api/media/sign-upload so delivery behaviour stays consistent.
-  const isPdf = ext === "pdf";
-  const resourceType = isPdf ? "raw" : "auto";
-  const publicId = isPdf ? `${randomUUID().slice(0, 8)}-${baseName}.${ext}` : `${randomUUID().slice(0, 8)}-${baseName}`;
+  // Everything uploads with resource_type "auto": Cloudinary detects the kind,
+  // so PDFs become IMAGE-type assets — original still delivers as
+  // application/pdf AND per-page transforms (pg_N,f_jpg) work for mobile
+  // inline preview. Matches /api/media/sign-upload behaviour.
+  const resourceType = "auto";
+  const publicId = `${randomUUID().slice(0, 8)}-${baseName}`;
   const folder = `${FOLDER_ROOT}/${userId}`;
   const timestamp = Math.round(Date.now() / 1000);
 
@@ -148,7 +150,7 @@ async function uploadToCloudinary(userId, fileName, bytes, contentType) {
   if (!res.ok || !body.secure_url) {
     throw new Error(`cloudinary upload -> ${res.status} ${body?.error?.message || ""}`.trim());
   }
-  return { secureUrl: body.secure_url, publicId: body.public_id, resourceType };
+  return { secureUrl: body.secure_url, publicId: body.public_id, resourceType: body.resource_type || "image" };
 }
 
 async function patchRow(id, { secureUrl, publicId }) {
@@ -239,8 +241,62 @@ async function getRowBytes(row) {
   throw new Error(`unknown link kind: ${link.slice(0, 40)}`);
 }
 
+/**
+ * --convert-raw-pdfs pass: re-upload every raw PDF submission as an image-type
+ * asset so per-page transforms work (mobile inline preview). Only touches rows
+ * whose content_link still matches the rollback CSV's recorded raw URL.
+ * Old raw assets are destroyed after the row is rewritten.
+ */
+async function convertRawPdfs() {
+  const lines = readFileSync(ROLLBACK_CSV, "utf8").split(/\r?\n/).filter(Boolean).slice(1);
+  const stats = { converted: 0, skipped: 0, failed: 0 };
+  for (const line of lines) {
+    const [id, , rawUrl] = parseCsvLine(line);
+    if (!rawUrl || !/res\.cloudinary\.com\/[^/]+\/raw\/upload\//i.test(rawUrl) || !/\.pdf(\?|$)/i.test(rawUrl)) continue;
+    const shortId = id.slice(0, 8);
+    try {
+      if (DRY_RUN) {
+        console.log(`[dry] ${shortId} would convert raw pdf -> image asset`);
+        continue;
+      }
+      const selRes = await fetch(`${SUPA_URL}/rest/v1/submissions?select=content_link,content_public_id,content_file_name&id=eq.${id}`, { headers: H });
+      const row = (await selRes.json())[0];
+      // Safety: skip rows that already moved on (converted earlier / changed).
+      if (!row || row.content_link !== rawUrl || !row.content_public_id) { stats.skipped++; continue; }
+
+      const bytes = Buffer.from(await (await fetch(row.content_link)).arrayBuffer());
+      const oldPublicId = row.content_public_id; // includes folder + ".pdf"
+      const folderPath = oldPublicId.slice(0, Math.max(oldPublicId.lastIndexOf("/"), 0));
+      const userId = folderPath.split("/").pop() || "unknown-user";
+
+      const uploaded = await uploadToCloudinary(userId, row.content_file_name || "document.pdf", bytes, "application/pdf");
+      await patchRow(id, uploaded);
+      appendFileSync(ROLLBACK_CSV, `${id},"${row.content_link.replace(/"/g, '""')}","${uploaded.secureUrl}"\n`, "utf8");
+
+      // Remove the superseded raw asset.
+      const ts = Math.round(Date.now() / 1000);
+      const form = new FormData();
+      form.append("public_id", oldPublicId);
+      form.append("timestamp", String(ts));
+      form.append("api_key", API_KEY);
+      form.append("signature", signParams({ public_id: oldPublicId, timestamp: String(ts) }));
+      await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/destroy`, { method: "POST", body: form });
+
+      stats.converted++;
+      console.log(`[conv] ${shortId} ${row.content_file_name} (${Math.round(bytes.length / 1024)} KB -> image/pdf)`);
+    } catch (err) {
+      console.error(`[fail] ${shortId}:`, err.message);
+      stats.failed++;
+    }
+  }
+  console.log("\n== CONVERT SUMMARY ==");
+  console.log(JSON.stringify(stats, null, 2));
+  process.exit(stats.failed ? 2 : 0);
+}
+
 (async () => {
   if (CLEANUP_STORAGE) await cleanupFromCsv();
+  if (process.argv.includes("--convert-raw-pdfs")) await convertRawPdfs();
   console.log(DRY_RUN ? "== DRY RUN ==" : "== LIVE MIGRATION ==");
   console.log(`delete supabase copies after success: ${DELETE_SOURCE ? "yes" : "no"}`);
 

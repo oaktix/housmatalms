@@ -22,6 +22,114 @@ type StudentWithProgress = {
   progress: StudentProgress;
 };
 
+/**
+ * Build a Cloudinary page-image URL for an image-type PDF submission.
+ * Returns null when the link is not a transformable (image/upload) asset —
+ * e.g. legacy raw uploads.
+ */
+function cloudinaryPdfPageUrl(link: string, page: number): string | null {
+  if (!/res\.cloudinary\.com\/[^/]+\/image\/upload\//i.test(link)) return null;
+  if (!/\.pdf(\?|$)/i.test(link)) return null;
+  return link.replace(/\/upload\//i, `/upload/pg_${page},f_jpg,dpr_2,w_1100/`).replace(/\.pdf(\?.*)?$/i, ".jpg");
+}
+
+const MAX_PREVIEW_PAGES = 12;
+
+/**
+ * Mobile-friendly PDF preview: renders each page as a Cloudinary-generated
+ * JPEG, stacked and scrollable. Mobile browsers can't display native PDFs in
+ * iframes, so this is how submissions stay reviewable on phones/tablets.
+ * Pages load sequentially until Cloudinary 404s (end of document) or cap.
+ */
+function PdfPagePreview({ url }: { url: string }) {
+  const [pages, setPages] = useState<string[]>([]);
+  const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+
+  useEffect(() => {
+    let cancelled = false;
+    const collected: string[] = [];
+    setPages([]);
+    setState("loading");
+
+    const tryNext = async (page: number) => {
+      if (cancelled) return;
+      if (page > MAX_PREVIEW_PAGES) {
+        setState("ready");
+        return;
+      }
+      const u = cloudinaryPdfPageUrl(url, page);
+      if (!u) {
+        setState(collected.length ? "ready" : "error");
+        return;
+      }
+      const ok = await new Promise<boolean>((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(true);
+        img.onerror = () => resolve(false);
+        img.src = u;
+      });
+      if (cancelled) return;
+      if (ok) {
+        collected.push(u);
+        setPages([...collected]);
+        tryNext(page + 1);
+      } else {
+        setState(collected.length ? "ready" : "error");
+      }
+    };
+
+    tryNext(1);
+    return () => {
+      cancelled = true;
+    };
+  }, [url]);
+
+  if (state === "error") {
+    return (
+      <div className="rounded-xl border border-border-main bg-bg-main p-6 text-center space-y-2">
+        <p className="text-xs text-text-muted italic">Page previews are unavailable for this document.</p>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all inline-flex items-center gap-1"
+        >
+          Open full document <Maximize2 className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="max-h-[560px] overflow-y-auto rounded-xl border border-border-main bg-white">
+        {pages.map((p, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={p} src={p} alt={`Submitted document page ${i + 1}`} className="w-full h-auto block" loading="lazy" />
+        ))}
+        {state === "loading" && pages.length === 0 && (
+          <div className="h-[420px] flex items-center justify-center text-xs text-text-muted gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" /> Rendering document…
+          </div>
+        )}
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] text-text-muted font-bold">
+          {pages.length > 0 ? `Showing ${pages.length}${pages.length >= MAX_PREVIEW_PAGES ? "+" : ""} page${pages.length === 1 ? "" : "s"} inline` : ""}
+        </span>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn border border-primary/30 hover:bg-primary/5 text-primary px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1"
+        >
+          Open full document <Maximize2 className="w-3.5 h-3.5" />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 export default function InstructorGrading() {
   const { currentUser } = useAuth();
   const { toast } = useToast();
@@ -53,6 +161,17 @@ export default function InstructorGrading() {
   const [docPreview, setDocPreview] = useState<DocPreview>({ status: "idle" });
   const [previewNonce, setPreviewNonce] = useState(0);
   const docUrlRef = useRef<string | null>(null);
+
+  // Touch / narrow layout: mobile browsers can't render native PDFs in
+  // iframes, so PDFs switch to the page-image preview.
+  const [touchLayout, setTouchLayout] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: none) and (pointer: coarse), (max-width: 767px)");
+    const update = () => setTouchLayout(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const releaseDocUrl = useCallback(() => {
     if (docUrlRef.current) {
@@ -473,11 +592,15 @@ export default function InstructorGrading() {
                   {(docPreview.status === "ready" || docPreview.status === "unsupported") && (
                     <div className="space-y-2">
                       {docPreview.status === "ready" ? (
-                        <iframe
-                          src={docPreview.url}
-                          className="w-full h-[420px] rounded-xl border border-border-main bg-white"
-                          title="Submitted document preview"
-                        />
+                        docPreview.mime === "application/pdf" && touchLayout ? (
+                          <PdfPagePreview url={docPreview.url} />
+                        ) : (
+                          <iframe
+                            src={docPreview.url}
+                            className="w-full h-[420px] rounded-xl border border-border-main bg-white"
+                            title="Submitted document preview"
+                          />
+                        )
                       ) : (
                         <button
                           type="button"
@@ -499,7 +622,7 @@ export default function InstructorGrading() {
                         </button>
                       )}
                       <div className="flex justify-end gap-2">
-                        {docPreview.status === "ready" && (
+                        {docPreview.status === "ready" && !(touchLayout && docPreview.mime === "application/pdf") && (
                           <button
                             type="button"
                             onClick={() => setPdfFullscreen(true)}

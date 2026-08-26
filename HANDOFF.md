@@ -3,8 +3,11 @@
 > **UPDATE (2026-08-26): Cloudinary is the sole media CDN again; Supabase stores data/state only.**
 > - New uploads: browser asks `POST /api/media/sign-upload` (server signs with
 >   `CLOUDINARY_*`), then POSTs the file straight to Cloudinary (no server proxy,
->   real progress events). PDFs go up as `resource_type: raw` (extension kept in
->   public_id); everything else uses `auto`. Folder: `housmata/submissions/<userId>`.
+>   real progress events). PDFs go up as `resource_type: image` so the original
+>   still delivers as application/pdf AND per-page JPEG transforms work
+>   (`pg_N,f_jpg` — powers inline preview on mobile browsers, which cannot
+>   render native PDFs in iframes); everything else uses `auto`.
+>   Folder: `housmata/submissions/<userId>`.
 > - Client helper: `src/lib/cloudinaryUpload.ts` (`uploadSubmissionFile` →
 >   `{ secureUrl, publicId, ... }`). The old `storageUpload.ts` and
 >   `/api/media/storage-upload` route were deleted.

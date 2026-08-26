@@ -62,16 +62,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: "Missing or invalid file name" }, { status: 400 });
   }
 
-  // Split off the extension. Raw assets (PDF) must keep it inside public_id,
-  // while image/video assets must NOT include it (Cloudinary appends format).
+  // Split off the extension. Assets are stored WITHOUT extensions in
+  // public_id (Cloudinary appends the detected format).
+  //
+  // PDFs are uploaded as resource_type "image": the original still delivers
+  // as application/pdf (requires the dashboard setting "Allow delivery of PDF
+  // and ZIP files"), AND per-page transformations become available
+  // (pg_N,f_jpg -> JPEG) which powers inline previews on mobile browsers,
+  // where native PDF-in-iframe rendering is not supported.
   const extMatch = fileName.match(/\.([A-Za-z0-9]{1,10})$/);
   const ext = extMatch ? extMatch[1].toLowerCase() : "";
   const baseName = safeFileName(extMatch ? fileName.slice(0, fileName.length - extMatch[0].length) : fileName);
 
   const isPdf = ext === "pdf";
-  const resourceType = isPdf ? "raw" : "auto";
+  const resourceType = isPdf ? "image" : "auto";
   const suffix = randomUUID().slice(0, 8);
-  const publicId = isPdf ? `${suffix}-${baseName}.${ext}` : `${suffix}-${baseName}`;
+  const publicId = `${suffix}-${baseName}`;
   const folder = `${SUBMISSIONS_FOLDER_ROOT}/${userId}`;
   const timestamp = Math.round(Date.now() / 1000);
 
