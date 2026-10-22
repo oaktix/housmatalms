@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { db } from "./db";
 import { Profile } from "./mockData";
 
@@ -8,76 +8,123 @@ export function useAuth() {
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  // Synchronize authenticated session state between server cookie and local profile
+  const syncSession = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/session", { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated && data.user) {
+          const profile = db.getProfile(data.user.id) || data.user;
+          setCurrentUser(profile);
+          if (typeof window !== "undefined") {
+            localStorage.setItem("lms_current_user_id", data.user.id);
+          }
+          setLoading(false);
+          return profile;
+        }
+      }
+    } catch {
+      // Offline or network error: fall back to local check below
+    }
 
-    // Keep a ref to the last-set profile ID so we don't call setCurrentUser
-    // (and cause a cascade of re-renders) when the data hasn't actually changed.
-    let lastSetUserId: string | null = null;
-
-    const checkAuth = () => {
+    // Fallback: check saved local ID
+    if (typeof window !== "undefined") {
       const savedUserId = localStorage.getItem("lms_current_user_id");
       if (savedUserId) {
         const profile = db.getProfile(savedUserId);
         if (profile) {
-          // Only update React state if the profile actually changed,
-          // not on every db.notify() call which creates a new object ref.
-          if (profile.id !== lastSetUserId) {
-            lastSetUserId = profile.id;
-            setCurrentUser(profile);
-          }
+          setCurrentUser(profile);
           setLoading(false);
-        } else {
-          // Only clear if the database has successfully synchronized from Supabase
-          if (db.hasSynced) {
-            lastSetUserId = null;
-            localStorage.removeItem("lms_current_user_id");
-            setCurrentUser(null);
-            setLoading(false);
-          }
-          // Otherwise keep loading=true and wait for the next notify()
+          return profile;
         }
-      } else {
-        lastSetUserId = null;
-        setLoading(false);
       }
-    };
+    }
 
-    checkAuth();
-    
-    // Subscribe to database updates (like Supabase sync completing)
-    const unsubscribe = db.subscribe(checkAuth);
-
-    // Safety timeout to ensure loading screen closes even on slow network
-    const timer = setTimeout(() => {
-      const savedUserId = localStorage.getItem("lms_current_user_id");
-      // Only force-disable loading if there is no session to verify,
-      // or if the profiles are loaded and we can do a proper check.
-      if (!savedUserId || db.hasSynced) {
-        setLoading(false);
-      }
-    }, 8000);
-
-    return () => {
-      unsubscribe();
-      clearTimeout(timer);
-    };
+    setLoading(false);
+    return null;
   }, []);
 
-  const login = (email: string): { success: boolean; error?: string } => {
-    const profile = db.getProfileByEmail(email);
-    if (!profile) {
-      return { success: false, error: "No account found for this email. Applications must be approved by an administrator before you can access the LMS." };
-    }
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
-    if (typeof window !== "undefined") {
-      localStorage.setItem("lms_current_user_id", profile.id);
+    let mounted = true;
+    syncSession().then(() => {
+      if (!mounted) return;
+    });
+
+    const checkLocalAuth = () => {
+      const savedUserId = localStorage.getItem("lms_current_user_id");
+      if (savedUserId) {
+        const profile = db.getProfile(savedUserId);
+        if (profile) {
+          setCurrentUser((prev) => (prev?.id === profile.id ? prev : profile));
+        }
+      }
+    };
+
+    const unsubscribe = db.subscribe(checkLocalAuth);
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, [syncSession]);
+
+  const login = async (
+    emailOrToken: string,
+    password?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const isToken = !password && (emailOrToken.includes("-") || !emailOrToken.includes("@"));
+      const payload = isToken
+        ? { token: emailOrToken }
+        : { email: emailOrToken, password: password || "housmata2024" };
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return {
+          success: false,
+          error: data.error || "Login failed. Please check your credentials.",
+        };
+      }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("lms_current_user_id", data.user.id);
+      }
+
+      // Also ensure local mock database has profile populated
+      const localProfile = db.getProfile(data.user.id) || data.user;
+      setCurrentUser(localProfile);
+
+      return { success: true };
+    } catch (err) {
+      console.error("[useAuth] Login network error:", err);
+      // Fallback for offline local dev mode
+      const localProfile = db.getProfileByEmail(emailOrToken);
+      if (localProfile) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("lms_current_user_id", localProfile.id);
+        }
+        setCurrentUser(localProfile);
+        return { success: true };
+      }
+      return { success: false, error: "Network error connecting to authentication server." };
     }
-    setCurrentUser(profile);
-    return { success: true };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.warn("[useAuth] Logout error:", err);
+    }
     if (typeof window !== "undefined") {
       localStorage.removeItem("lms_current_user_id");
     }

@@ -206,16 +206,19 @@ class LocalStorageDB {
     try {
       console.log("Synchronizing data from Supabase...");
 
-      // 1. Fetch profiles from Supabase
-      const profiles = await apiSelect<seeds.Profile>("profiles");
-      this.set("lms_profiles", profiles);
-
-      // If Supabase has no profiles, seed it with default profiles
-      if (profiles.length === 0) {
-        await this.seedSupabase();
-        // Re-fetch profiles after seeding
-        const seededProfiles = await apiSelect<seeds.Profile>("profiles");
-        this.set("lms_profiles", seededProfiles);
+      // 1. Fetch profiles from Supabase (if authenticated)
+      try {
+        const profiles = await apiSelect<seeds.Profile>("profiles");
+        if (profiles.length > 0) {
+          this.set("lms_profiles", profiles);
+        } else {
+          await this.seedSupabase();
+          // Re-fetch profiles after seeding
+          const seededProfiles = await apiSelect<seeds.Profile>("profiles");
+          this.set("lms_profiles", seededProfiles);
+        }
+      } catch (err) {
+        console.warn("Profiles sync skipped (requires authentication):", err);
       }
 
       // 2. Fetch other tables.

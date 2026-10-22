@@ -1,9 +1,29 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { generateEmailHtml } from "@/lib/emailTemplate";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get("x-forwarded-for") || "client";
+    const rl = checkRateLimit(`email:${ip}`, { maxRequests: 15, windowMs: 60 * 1000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Email transmission rate limit reached. Please wait ${rl.resetSeconds}s.`,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rl.resetSeconds),
+            "X-RateLimit-Limit": String(rl.limit),
+            "X-RateLimit-Remaining": String(rl.remaining),
+          },
+        }
+      );
+    }
+
     const { recipient, subject, body } = await request.json();
 
     if (!recipient || !subject || !body) {

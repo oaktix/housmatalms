@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server";
+import { getSessionFromRequest, SessionPayload } from "@/lib/session";
 
 /**
- * Secure database proxy.
+ * Hardened Database Proxy Route.
  *
- * The browser app must never talk to Supabase directly: the anon key can be
- * revoked/rotated platform-side (which silently broke every read/write once
- * already), and RLS policies assume Supabase Auth sessions this app doesn't
- * use. Instead all reads/writes go through this route, which runs on the
- * server and authenticates with SUPABASE_SERVICE_ROLE_KEY (never exposed to
- * the client).
- *
- * - GET    /api/db/<table>?columns=..&field=value&order=..&limit=..&single=1
- * - POST   /api/db/<table>          body: { records | record, mode, onConflict }
- * - DELETE /api/db/<table>?field=value
+ * Implements strict Role-Based Access Control (RBAC) and row-level ownership
+ * constraints. Replaces the insecure open superuser proxy with authenticated
+ * session gates, preventing data dumps, privilege escalations, and unauthorized
+ * data mutations.
  */
 
 const SUPABASE_URL = (process.env.NEXT_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
@@ -35,6 +30,9 @@ const ALLOWED_TABLES = new Set([
   "announcements",
   "survey_responses",
 ]);
+
+// Tables that can be read without an active session (public catalog data)
+const PUBLIC_READ_TABLES = new Set(["instructors", "cohorts", "announcements"]);
 
 // Params that configure the request rather than act as eq() filters.
 const RESERVED_PARAMS = new Set(["columns", "order", "limit", "single"]);
@@ -119,6 +117,27 @@ async function errorFromResponse(res: Response): Promise<{ message: string; stat
   return { message, status: res.status };
 }
 
+async function resolveSession(request: Request): Promise<SessionPayload | null> {
+  // Check forwarded headers from middleware
+  const headerUserId = request.headers.get("x-lms-user-id");
+  const headerRole = request.headers.get("x-lms-user-role") as SessionPayload["role"] | null;
+  const headerEmail = request.headers.get("x-lms-user-email");
+
+  if (headerUserId && headerRole && headerEmail) {
+    return {
+      userId: headerUserId,
+      role: headerRole,
+      email: headerEmail,
+    };
+  }
+
+  // Fallback to cookie/bearer token verification
+  return await getSessionFromRequest(request);
+}
+
+// =============================================================================
+// GET HANDLER
+// =============================================================================
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ table: string }> }
@@ -131,7 +150,65 @@ export async function GET(
     return NextResponse.json({ success: false, error: "Database not configured" }, { status: 503 });
   }
 
+  const session = await resolveSession(request);
+
+  // 1. Unauthenticated checks
+  if (!session) {
+    // Allow public tables
+    if (PUBLIC_READ_TABLES.has(table)) {
+      // Allowed
+    } else if (table === "certificates") {
+      // Allow public verification if filtered by verification_code or certificate number
+      const query = parseQuery(request);
+      if (!query.filters.id && !query.filters.verification_code) {
+        return NextResponse.json(
+          { success: false, error: "Authentication required to query certificate records" },
+          { status: 401 }
+        );
+      }
+    } else {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized access to private database table" },
+        { status: 401 }
+      );
+    }
+  }
+
   const query = parseQuery(request);
+
+  // 2. Role-Based Scoping & Privacy Enforcement
+  if (session && session.role === "student") {
+    // Prevent students from viewing admin communications or other applicants
+    if (table === "applications" || table === "email_logs") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Access restricted to platform administrators" },
+        { status: 403 }
+      );
+    }
+
+    // Automatically enforce row ownership for student private data
+    if (
+      table === "submissions" ||
+      table === "quiz_attempts" ||
+      table === "survey_responses" ||
+      table === "student_progress"
+    ) {
+      query.filters.user_id = session.userId;
+    }
+
+    if (table === "attendance" && !query.filters.user_id) {
+      query.filters.user_id = session.userId;
+    }
+  } else if (session && session.role === "instructor") {
+    // Prevent instructors from viewing sensitive admin tables
+    if (table === "email_logs" || table === "applications") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Access restricted to platform administrators" },
+        { status: 403 }
+      );
+    }
+  }
+
   try {
     const res = await fetch(buildRestUrl(table, query), {
       headers: restHeaders(query.single ? { Accept: "application/vnd.pgrst.object+json" } : undefined),
@@ -150,6 +227,9 @@ export async function GET(
   }
 }
 
+// =============================================================================
+// POST HANDLER (Insert / Upsert)
+// =============================================================================
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ table: string }> }
@@ -160,6 +240,20 @@ export async function POST(
   }
   if (!isConfigured()) {
     return NextResponse.json({ success: false, error: "Database not configured" }, { status: 503 });
+  }
+
+  const session = await resolveSession(request);
+
+  // Allow unauthenticated insertion ONLY for the public admissions application form
+  if (!session) {
+    if (table === "applications") {
+      // Allowed for new candidate applications
+    } else {
+      return NextResponse.json(
+        { success: false, error: "Authentication required to perform database writes" },
+        { status: 401 }
+      );
+    }
   }
 
   const body = await request.json().catch(() => null);
@@ -173,6 +267,46 @@ export async function POST(
       : null;
   if (!records || records.length === 0) {
     return NextResponse.json({ success: false, error: "No records provided" }, { status: 400 });
+  }
+
+  // 3. Write Permission Validation
+  if (session && session.role === "student") {
+    // Prohibited student write tables
+    const prohibitedTables = new Set([
+      "instructors",
+      "cohorts",
+      "announcements",
+      "email_logs",
+      "graduate_status",
+      "applications",
+    ]);
+    if (prohibitedTables.has(table)) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Students cannot modify this resource" },
+        { status: 403 }
+      );
+    }
+
+    // Verify all records belong to the student
+    for (const rec of records) {
+      if (typeof rec === "object" && rec !== null) {
+        const recordUserId = (rec as Record<string, unknown>).user_id || (rec as Record<string, unknown>).id;
+        if (recordUserId && recordUserId !== session.userId) {
+          return NextResponse.json(
+            { success: false, error: "Forbidden: Cannot write records for another user ID" },
+            { status: 403 }
+          );
+        }
+      }
+    }
+  } else if (session && session.role === "instructor") {
+    // Prohibit instructors from altering admissions and email logs
+    if (table === "applications" || table === "email_logs") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: Restricted to platform administrators" },
+        { status: 403 }
+      );
+    }
   }
 
   const mode: "insert" | "upsert" = body.mode === "insert" ? "insert" : "upsert";
@@ -204,6 +338,9 @@ export async function POST(
   }
 }
 
+// =============================================================================
+// DELETE HANDLER
+// =============================================================================
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ table: string }> }
@@ -214,6 +351,31 @@ export async function DELETE(
   }
   if (!isConfigured()) {
     return NextResponse.json({ success: false, error: "Database not configured" }, { status: 503 });
+  }
+
+  const session = await resolveSession(request);
+
+  if (!session) {
+    return NextResponse.json(
+      { success: false, error: "Authentication required to perform database deletions" },
+      { status: 401 }
+    );
+  }
+
+  // Students are completely barred from destructive DELETE queries
+  if (session.role === "student") {
+    return NextResponse.json(
+      { success: false, error: "Forbidden: Students are not authorized to delete database records" },
+      { status: 403 }
+    );
+  }
+
+  // Instructors can only delete meeting records
+  if (session.role === "instructor" && table !== "meetings") {
+    return NextResponse.json(
+      { success: false, error: "Forbidden: Instructors can only delete meeting items" },
+      { status: 403 }
+    );
   }
 
   const query = parseQuery(request);

@@ -33,12 +33,13 @@ function LoginContent() {
       }
       
       if (profile) {
-        const res = login(profile.email);
-        if (res.success) {
-          router.push("/lms");
-        } else {
-          setError(res.error || "Token login failed.");
-        }
+        login(token).then((res) => {
+          if (res.success) {
+            router.push("/lms");
+          } else {
+            setError(res.error || "Token login failed.");
+          }
+        });
       } else {
         setError("Invalid or expired login token.");
       }
@@ -56,24 +57,13 @@ function LoginContent() {
       return;
     }
 
-    // Simple password validation: all seed accounts use password "housmata2024"
-    // In production this would verify against Supabase Auth
-    const DEMO_PASSWORD = "housmata2024";
-    if (password !== DEMO_PASSWORD) {
-      setError("Incorrect password. Please try again.");
-      setLoading(false);
-      return;
-    }
-
     // Best-effort Supabase sync so newly-approved profiles are available.
-    // Wrapped in a timeout race so a slow/hanging network call can never
-    // freeze the login screen. Login proceeds regardless of sync result.
     await Promise.race([
       db.sync(),
-      new Promise<void>((resolve) => setTimeout(resolve, 4000)),
+      new Promise<void>((resolve) => setTimeout(resolve, 3000)),
     ]);
 
-    const res = login(email);
+    const res = await login(email, password);
     setLoading(false);
     if (res.success) {
       router.push("/lms");

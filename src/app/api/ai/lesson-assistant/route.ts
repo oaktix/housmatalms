@@ -1,8 +1,29 @@
 import { NextResponse } from "next/server";
 import { callOpenRouter } from "@/lib/ai";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
   try {
+    // Rate limiting: max 10 requests / minute per client
+    const ip = request.headers.get("x-forwarded-for") || "client";
+    const rl = checkRateLimit(`ai:lesson-assistant:${ip}`, { maxRequests: 10, windowMs: 60 * 1000 });
+    if (!rl.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `AI query limit reached. Please wait ${rl.resetSeconds}s before asking again.`,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rl.resetSeconds),
+            "X-RateLimit-Limit": String(rl.limit),
+            "X-RateLimit-Remaining": String(rl.remaining),
+          },
+        }
+      );
+    }
+
     const { context, question, mode } = await request.json();
 
     if (!context || typeof context !== "string" || !context.trim()) {
