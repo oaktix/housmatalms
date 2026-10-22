@@ -8,6 +8,18 @@
 create extension if not exists "uuid-ossp";
 
 -- =====================================================================
+-- PART 0: SCHEMA CONVERGENCE (Ensure optional tracking columns exist)
+-- =====================================================================
+
+alter table public.student_progress 
+    add column if not exists total_points integer default 0,
+    add column if not exists completed_lessons integer default 0,
+    add column if not exists last_activity timestamp with time zone default timezone('utc'::text, now());
+
+alter table public.certificates 
+    add column if not exists verification_code text;
+
+-- =====================================================================
 -- PART 1: HIGH-FREQUENCY B-TREE INDEXES
 -- Optimizes query performance under concurrent live session loads
 -- =====================================================================
@@ -17,8 +29,7 @@ create index if not exists idx_submissions_user_assignment
     on public.submissions (user_id, assignment_id);
 
 create index if not exists idx_submissions_status 
-    on public.submissions (status) 
-    where status = 'submitted';
+    on public.submissions (status);
 
 create index if not exists idx_submissions_user_id 
     on public.submissions (user_id);
@@ -31,12 +42,16 @@ create index if not exists idx_quiz_attempts_user_passed
     on public.quiz_attempts (user_id, passed) 
     where passed = true;
 
--- Cohort memberships & Attendance
-create index if not exists idx_cohort_members_cohort_user 
-    on public.cohort_members (cohort_id, user_id);
+-- Cohort memberships
+create index if not exists idx_cohort_members_user_id 
+    on public.cohort_members (user_id);
 
-create index if not exists idx_attendance_cohort_session 
-    on public.attendance (cohort_id, session_date);
+-- Meetings & Attendance (Linked by meeting_id)
+create index if not exists idx_meetings_cohort_scheduled 
+    on public.meetings (cohort_id, scheduled_at);
+
+create index if not exists idx_attendance_meeting_user 
+    on public.attendance (meeting_id, user_id);
 
 create index if not exists idx_attendance_user_id 
     on public.attendance (user_id);
@@ -48,12 +63,9 @@ create index if not exists idx_profiles_role
 create index if not exists idx_profiles_email_lower 
     on public.profiles (lower(email));
 
--- Student Progress & Certificates
-create index if not exists idx_student_progress_user 
-    on public.student_progress (user_id);
-
-create index if not exists idx_certificates_verification 
-    on public.certificates (verification_code);
+-- Certificates
+create index if not exists idx_certificates_code 
+    on public.certificates (certificate_code);
 
 create index if not exists idx_certificates_user 
     on public.certificates (user_id);
@@ -124,19 +136,18 @@ begin
     select exists (
         select 1 from public.quiz_attempts 
         where user_id::text = p_user_id 
-          and quiz_id = p_quiz_id 
+          and quiz_id::text = p_quiz_id 
           and passed = true
     ) into v_existing_passed;
 
     -- Insert new attempt record
-    insert into public.quiz_attempts (id, user_id, quiz_id, score, passed, answers, submitted_at)
+    insert into public.quiz_attempts (id, user_id, quiz_id, score, passed, attempted_at)
     values (
         v_attempt_id,
         p_user_id::uuid,
-        p_quiz_id,
+        p_quiz_id::uuid,
         p_score,
         p_passed,
-        p_answers,
         timezone('utc'::text, now())
     );
 
@@ -147,8 +158,8 @@ begin
         insert into public.student_progress (user_id, completed_lessons, total_points, last_activity)
         values (p_user_id::uuid, 1, v_new_points, timezone('utc'::text, now()))
         on conflict (user_id) do update set
-            completed_lessons = public.student_progress.completed_lessons + 1,
-            total_points = public.student_progress.total_points + v_new_points,
+            completed_lessons = coalesce(public.student_progress.completed_lessons, 0) + 1,
+            total_points = coalesce(public.student_progress.total_points, 0) + v_new_points,
             last_activity = timezone('utc'::text, now());
     end if;
 
@@ -204,7 +215,7 @@ begin
     insert into public.student_progress (user_id, completed_lessons, total_points, last_activity)
     values (v_sub.user_id, 1, p_grade, timezone('utc'::text, now()))
     on conflict (user_id) do update set
-        total_points = greatest(0, public.student_progress.total_points + v_points_delta),
+        total_points = greatest(0, coalesce(public.student_progress.total_points, 0) + v_points_delta),
         last_activity = timezone('utc'::text, now());
 
     -- Record immutable audit log
