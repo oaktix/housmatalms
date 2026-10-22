@@ -1,11 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
 import { db } from "@/lib/db";
 import { Cohort } from "@/lib/mockData";
+import {
+  Button,
+  SpotlightCard,
+  ShimmerBadge,
+  HairlineDivider,
+} from "@/components/ui/hashicorp";
 
 export default function Apply() {
   const [formData, setFormData] = useState({
@@ -24,7 +29,6 @@ export default function Apply() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Load available cohorts for the dropdown
     const availableCohorts = db.getCohorts();
     setCohorts(availableCohorts);
     if (availableCohorts.length > 0) {
@@ -32,7 +36,9 @@ export default function Apply() {
     }
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -41,23 +47,31 @@ export default function Apply() {
     e.preventDefault();
     setError("");
 
-    if (!formData.name || !formData.email || !formData.phone || !formData.state || !formData.motivation) {
-      setError("Please fill out all required fields.");
+    if (
+      !formData.name ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.state ||
+      !formData.motivation
+    ) {
+      setError("Please complete all required fields before submitting.");
       return;
     }
 
-    // Check if user is already enrolled and has not reached Phase 3
     const existingProfile = db.getProfileByEmail(formData.email);
     if (existingProfile && existingProfile.role === "student") {
       const progress = db.getProgress(existingProfile.id);
       if (progress && progress.current_phase < 3) {
-        setError(`You are already enrolled in a course track (${progress.course_id === "property-advisor-hcpa" ? "HCPA" : "HCEM"}) and have not completed Phase 2. You must reach Phase 3 (Field Practicals) before you are permitted to apply for another track.`);
+        setError(
+          `You are already enrolled in a course track (${
+            progress.course_id === "property-advisor-hcpa" ? "HCPA" : "HCEM"
+          }) and have not completed Phase 2. You must reach Phase 3 (Field Practicals) before applying for a second track.`
+        );
         return;
       }
     }
 
     try {
-      // Save application
       await db.createApplication({
         applicant_name: formData.name,
         email: formData.email,
@@ -68,15 +82,12 @@ export default function Apply() {
         course_id: formData.courseId as "real-estate-os" | "property-advisor-hcpa",
       });
 
-
-      // Log email confirmation simulation
       db.logEmail(
         formData.email,
         "Housmata Academy - Application Received",
         `Hello ${formData.name},\n\nWe have received your admission application for Housmata Academy.\nOur academic board will review your profile and motivation statement within 3 business days.\n\nThank you,\nHousmata Admissions Office`
       );
 
-      // Notify administrator of new application
       db.logEmail(
         "myhousmata@gmail.com",
         `New Admission Application Submitted: ${formData.name}`,
@@ -85,206 +96,259 @@ export default function Apply() {
 
       setSubmitted(true);
     } catch {
-      setError("This email address has already submitted an application.");
+      setError("This email address has already submitted an active admission application.");
     }
   };
 
   return (
     <PublicLayout>
-      <section className="relative py-16 md:py-20 border-b border-border-main bg-bg-card overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(38,196,150,0.08),transparent_40%)]" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight text-text-main">
-            Admission Intake Form
-          </h1>
-          <p className="text-text-muted text-sm sm:text-base max-w-xl mx-auto mt-4 leading-relaxed">
-            Submit your candidate profile below. Accepted applicants are assigned directly to active cohorts.
-          </p>
-        </div>
-      </section>
+      <div className="bg-black text-white min-h-screen selection:bg-product-hcem/20 selection:text-product-hcem">
+        <section className="relative py-20 md:py-24 border-b border-white/10 bg-black overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(2,184,117,0.08),transparent_50%)]" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <ShimmerBadge variant="hcem" dot className="mb-4">
+              Cohort Admissions // 2026 Intake
+            </ShimmerBadge>
+            <h1 className="text-display-lg font-bold tracking-tight text-white max-w-2xl mx-auto">
+              Candidate Admission Form
+            </h1>
+            <p className="text-body-lg text-zinc-400 max-w-xl mx-auto mt-4 leading-relaxed">
+              Submit your operator profile below. Qualified candidates are vetted weekly by the academic board and assigned to active cohorts.
+            </p>
+          </div>
+        </section>
 
-      <section className="py-20 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        {!submitted ? (
-          <div className="premium-card rounded-2xl bg-bg-card border-border-main p-8 shadow-md">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
-                <div className="p-3 bg-error/10 border border-error/20 text-error text-xs font-semibold rounded-lg">
-                  {error}
-                </div>
-              )}
+        <section className="py-20 max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          {!submitted ? (
+            <SpotlightCard
+              variant="surface-2"
+              radius="xl"
+              interactive={false}
+              className="p-8 sm:p-10 bg-zinc-950 border-white/10 shadow-2xl"
+            >
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="p-3.5 bg-product-consul/10 border border-product-consul/30 text-product-consul text-xs font-semibold rounded-md">
+                    {error}
+                  </div>
+                )}
 
-              {/* Full Name & Email */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="name" className="text-xs font-extrabold text-text-muted mb-1 block">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="e.g. John Doe"
-                    required
-                  />
+                {/* Full Name & Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="name"
+                      className="text-eyebrow text-zinc-400 block font-mono"
+                    >
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="e.g. Babatunde Adeleke"
+                      className="w-full h-11 px-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="email"
+                      className="text-eyebrow text-zinc-400 block font-mono"
+                    >
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="e.g. b.adeleke@example.com"
+                      className="w-full h-11 px-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="email" className="text-xs font-extrabold text-text-muted mb-1 block">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="e.g. john@example.com"
-                    required
-                  />
-                </div>
-              </div>
 
-              {/* Phone & State */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="phone" className="text-xs font-extrabold text-text-muted mb-1 block">
-                    Phone Number *
-                  </label>
-                  <input
-                    type="text"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="e.g. +234 809 123 4567"
-                    required
-                  />
+                {/* Phone & State */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="phone"
+                      className="text-eyebrow text-zinc-400 block font-mono"
+                    >
+                      Phone Number *
+                    </label>
+                    <input
+                      type="text"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+234 809 123 4567"
+                      className="w-full h-11 px-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="state"
+                      className="text-eyebrow text-zinc-400 block font-mono"
+                    >
+                      State of Residence *
+                    </label>
+                    <input
+                      type="text"
+                      id="state"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleChange}
+                      placeholder="e.g. Lagos, Abuja, Oyo"
+                      className="w-full h-11 px-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label htmlFor="state" className="text-xs font-extrabold text-text-muted mb-1 block">
-                    State of Residence (Nigeria) *
-                  </label>
-                  <input
-                    type="text"
-                    id="state"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleChange}
-                    placeholder="e.g. Lagos"
-                    required
-                  />
-                </div>
-              </div>
 
-              {/* Track Selection */}
-              <div className="form-group">
-                <label htmlFor="courseId" className="text-xs font-extrabold text-text-muted mb-1 block">
-                  Select Target Certification Track *
-                </label>
-                <select
-                  id="courseId"
-                  name="courseId"
-                  value={formData.courseId}
-                  onChange={handleChange}
-                >
-                  <option value="real-estate-os">Housmata Certified Estate Manager (HCEM)</option>
-                  <option value="property-advisor-hcpa">Housmata Certified Property Advisor (HCPA)</option>
-                </select>
-              </div>
-
-              {/* Cohort Selector & Experience */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="form-group">
-                  <label htmlFor="cohort" className="text-xs font-extrabold text-text-muted mb-1 block">
-                    Select Target Cohort *
+                {/* Track Selection */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="courseId"
+                    className="text-eyebrow text-zinc-400 block font-mono"
+                  >
+                    Target Certification Track *
                   </label>
                   <select
-                    id="cohort"
-                    value={selectedCohort}
-                    onChange={(e) => setSelectedCohort(e.target.value)}
-                  >
-                    {cohorts.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="experience" className="text-xs font-extrabold text-text-muted mb-1 block">
-                    Real Estate Experience Level *
-                  </label>
-                  <select
-                    id="experience"
-                    name="experience"
-                    value={formData.experience}
+                    id="courseId"
+                    name="courseId"
+                    value={formData.courseId}
                     onChange={handleChange}
+                    className="w-full h-11 px-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
                   >
-                    <option value="Beginner">Beginner (No experience)</option>
-                    <option value="Intermediate">Intermediate (1-2 years)</option>
-                    <option value="Advanced">Advanced (3+ years)</option>
+                    <option value="real-estate-os">
+                      Housmata Certified Estate Manager (HCEM) — Rent &amp; Operations
+                    </option>
+                    <option value="property-advisor-hcpa">
+                      Housmata Certified Property Advisor (HCPA) — Advisory &amp; Title Verification
+                    </option>
                   </select>
                 </div>
+
+                {/* Cohort Selector & Experience */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="cohort"
+                      className="text-eyebrow text-zinc-400 block font-mono"
+                    >
+                      Target Cohort *
+                    </label>
+                    <select
+                      id="cohort"
+                      value={selectedCohort}
+                      onChange={(e) => setSelectedCohort(e.target.value)}
+                      className="w-full h-11 px-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
+                    >
+                      {cohorts.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="experience"
+                      className="text-eyebrow text-zinc-400 block font-mono"
+                    >
+                      Real Estate Experience Level *
+                    </label>
+                    <select
+                      id="experience"
+                      name="experience"
+                      value={formData.experience}
+                      onChange={handleChange}
+                      className="w-full h-11 px-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
+                    >
+                      <option value="Beginner">Beginner (No prior real estate experience)</option>
+                      <option value="Intermediate">Intermediate (1–2 years practice)</option>
+                      <option value="Advanced">Advanced (3+ years practice)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Motivation */}
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="motivation"
+                    className="text-eyebrow text-zinc-400 block font-mono"
+                  >
+                    Motivation Statement *
+                  </label>
+                  <textarea
+                    id="motivation"
+                    name="motivation"
+                    value={formData.motivation}
+                    onChange={handleChange}
+                    placeholder="Describe how mastering this certification track will elevate your property management or advisory career..."
+                    rows={4}
+                    className="w-full p-3.5 rounded-md bg-zinc-900 border border-white/10 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-product-hcem focus:ring-1 focus:ring-product-hcem transition-all"
+                    required
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    icon={<ArrowRight className="w-4 h-4" />}
+                  >
+                    Submit Application for Board Review
+                  </Button>
+                </div>
+              </form>
+            </SpotlightCard>
+          ) : (
+            <SpotlightCard
+              variant="hcem"
+              radius="xl"
+              className="p-10 bg-zinc-950 border-white/10 text-center space-y-6 shadow-2xl animate-fade-in"
+            >
+              <div className="w-16 h-16 rounded-full bg-product-hcem/10 border border-product-hcem/30 flex items-center justify-center mx-auto text-product-hcem shadow-[0_0_20px_rgba(2,184,117,0.2)]">
+                <ClipboardCheck className="w-8 h-8" />
+              </div>
+              <div className="space-y-3">
+                <ShimmerBadge variant="hcem">
+                  Application Logged
+                </ShimmerBadge>
+                <h2 className="text-2xl font-bold text-white">
+                  Admission Dossier Under Review
+                </h2>
+                <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
+                  Your candidate profile has been recorded and an email confirmation dispatched to{" "}
+                  <strong className="text-white">{formData.email}</strong>. The academic admissions board will review your credentials within 3 business days.
+                </p>
               </div>
 
-              {/* Motivation */}
-              <div className="form-group">
-                <label htmlFor="motivation" className="text-xs font-extrabold text-text-muted mb-1 block">
-                  Motivation Statement (Why do you want to join Housmata Academy?) *
-                </label>
-                <textarea
-                  id="motivation"
-                  name="motivation"
-                  value={formData.motivation}
-                  onChange={handleChange}
-                  placeholder="Explain how this program fits into your career objectives..."
-                  rows={4}
-                  required
-                />
-              </div>
+              <HairlineDivider variant="subtle" />
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  className="btn bg-primary text-text-inverse hover:brightness-110 w-full py-3.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
-                >
-                  Submit Application
-                  <ArrowRight className="w-5 h-5" />
-                </button>
+              <div className="pt-2 flex flex-wrap gap-3 justify-center">
+                <Button variant="secondary" size="md" href="/">
+                  Return to Home
+                </Button>
+                <Button variant="hcem" size="md" href="/lms">
+                  Access LMS Portal
+                </Button>
               </div>
-            </form>
-          </div>
-        ) : (
-          <div className="premium-card rounded-2xl bg-bg-card border-border-main p-8 text-center space-y-6 shadow-md animate-fade-in">
-            <div className="w-16 h-16 rounded-full bg-primary-glow border border-primary/20 flex items-center justify-center mx-auto text-primary">
-              <ClipboardCheck className="w-8 h-8" />
-            </div>
-            <div className="space-y-2">
-              <h2 className="text-2xl font-heading font-bold text-text-main">
-                Congratulations, your application has been received!
-              </h2>
-              <p className="text-text-muted text-xs sm:text-sm leading-relaxed max-w-md mx-auto">
-                Thank you for applying to Housmata Academy. A confirmation email has been sent to **{formData.email}**. Our admissions board will review your profile and motivation statement within 3 business days.
-              </p>
-            </div>
-            <div className="pt-4 flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/lms"
-                className="btn bg-primary text-text-inverse hover:brightness-110 px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-all"
-              >
-                Go to LMS Portal
-              </Link>
-              <Link
-                href="/"
-                className="btn border border-border-main hover:bg-bg-card-hover text-text-main px-6 py-2.5 rounded-xl text-sm font-bold transition-all"
-              >
-                Return to Home
-              </Link>
-            </div>
-          </div>
-        )}
-      </section>
+            </SpotlightCard>
+          )}
+        </section>
+      </div>
     </PublicLayout>
   );
 }

@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { SmoothScrollProvider } from "@/components/providers/SmoothScrollProvider";
 
 const outfit = Outfit({
   variable: "--font-heading",
@@ -22,13 +23,14 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    viewportFit: "cover",
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -42,7 +44,9 @@ export default function RootLayout({
         className={`${outfit.variable} ${plusJakartaSans.variable} font-sans antialiased bg-bg-main text-text-main`}
       >
         <ThemeProvider>
-          <ToastProvider>{children}</ToastProvider>
+          <SmoothScrollProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </SmoothScrollProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -1,523 +1,654 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import Link from "next/link";
-import { ArrowRight, CheckCircle2, Landmark, BookOpen, Check, Home as HomeIcon, TrendingUp, Sparkles, Award, UserCheck, AlertTriangle, FileText } from "lucide-react";
+import React, { useRef } from "react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Landmark,
+  BookOpen,
+  Check,
+  Home as HomeIcon,
+  TrendingUp,
+  Sparkles,
+  Award,
+  UserCheck,
+  AlertTriangle,
+  FileText,
+  ShieldCheck,
+  ExternalLink,
+} from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
+import {
+  Button,
+  SpotlightCard,
+  ShimmerBadge,
+  SectionHeader,
+  HairlineDivider,
+  MagneticButton,
+  RollingNumber,
+} from "@/components/ui/hashicorp";
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("section-visible");
-          }
-        });
-      },
-      { threshold: 0.15 }
-    );
-
-    const sections = document.querySelectorAll(".scroll-section");
-    sections.forEach((sec) => observer.observe(sec));
-
-    return () => {
-      sections.forEach((sec) => observer.unobserve(sec));
-    };
-  }, []);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return;
-    const cards = containerRef.current.getElementsByClassName("premium-card");
-    for (const card of Array.from(cards) as HTMLElement[]) {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      card.style.setProperty("--mouse-x", `${x}px`);
-      card.style.setProperty("--mouse-y", `${y}px`);
-    }
-  };
-
-  const tracks = [
-    {
-      icon: <HomeIcon className="w-6 h-6 text-primary" />,
-      title: "Housmata Certified Estate Manager (HCEM)",
-      subtitle: "Rent Management & Operations",
-      desc: "Designed for property managers, letting agents, and facility operators. Focuses on daily rent collection cycles, tenancy agreement writing, tenant-landlord mediation, maintenance tickets, and utility logs.",
-      link: "/curriculum",
-      badgeColor: "bg-primary-glow border-primary/20 text-primary",
-    },
-    {
-      icon: <TrendingUp className="w-6 h-6 text-amber-400" />,
-      title: "Housmata Certified Property Advisor (HCPA)",
-      subtitle: "Property Advisory & Verification",
-      desc: "Designed for independent property consultants, sales agents, and investment advisors. Focuses on title verification searches, coordinate charting for forest reserves, land banking analysis, and property finance eligibility.",
-      link: "/curriculum/hcpa",
-      badgeColor: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-    },
-  ];
-
   const levels = [
     {
-      num: 1,
+      num: "01",
       name: "Digital Property Management Operator",
-      desc: "Core competence in digital listing standardisation, KYC verifications, and property documentation.",
+      eyebrow: "LEVEL 01 FOUNDATION",
+      desc: "Standardization of listing data, KYC identity verification, tenant digital onboarding, and inventory audit logs.",
+      badge: "Operator Ground",
     },
     {
-      num: 2,
+      num: "02",
       name: "Certified Estate Manager / Advisor",
-      desc: "Proficient in managing cohort portfolios, service vendors, maintenance tickets, or client investment advisory cases.",
+      eyebrow: "LEVEL 02 PROFESSIONAL",
+      desc: "Portfolio rent collection governance, tenancy agreement drafting, Land Use Act compliance, and maintenance ticket telemetry.",
+      badge: "HCEM / HCPA",
     },
     {
-      num: 3,
+      num: "03",
       name: "Verified Independent Property Consultant",
-      desc: "Capable of mapping complex landlord database structures, advising on asset value, and onboarding multi-unit assets.",
+      eyebrow: "LEVEL 03 SPECIALIST",
+      desc: "Lands registry charting, surveyor coordinate vetting, forest-reserve exclusion searches, and institutional property advisory.",
+      badge: "Title Consultant",
     },
     {
-      num: 4,
+      num: "04",
       name: "Housmata Partner Agency",
-      desc: "Full operational credentials to scale estate management franchises using the Housmata platform backend.",
+      eyebrow: "LEVEL 04 ENTERPRISE",
+      desc: "Full operational credentials to scale estate management branches and portfolio hubs using the Housmata infrastructure backend.",
+      badge: "Agency Director",
     },
   ];
 
   return (
     <PublicLayout>
-      <div ref={containerRef} onMouseMove={handleMouseMove} className="relative overflow-hidden bg-bg-main selection:bg-primary/30 selection:text-text-main">
-        {/* Ambient Moving Background Lights across the whole landing page */}
-        <div className="absolute top-[5%] left-[10%] w-[35vw] h-[35vw] rounded-full bg-primary/8 blur-[130px] animate-pulse-slow pointer-events-none" />
-        <div className="absolute top-[30%] right-[5%] w-[40vw] h-[40vw] rounded-full bg-secondary/8 blur-[160px] animate-pulse-slow pointer-events-none [animation-delay:3s]" />
-        <div className="absolute bottom-[25%] left-[5%] w-[45vw] h-[45vw] rounded-full bg-primary/8 blur-[180px] animate-pulse-slow pointer-events-none [animation-delay:6s]" />
+      <div ref={containerRef} className="relative overflow-hidden bg-black text-white selection:bg-product-hcem/20 selection:text-product-hcem">
+        {/* Subtle Ambient Background Lighting (Preserving Brand Emerald & Sovereign Violet) */}
+        <div className="absolute top-[3%] left-[15%] w-[45vw] h-[45vw] rounded-full bg-product-hcem/[0.04] blur-[150px] pointer-events-none" />
+        <div className="absolute top-[28%] right-[10%] w-[40vw] h-[40vw] rounded-full bg-product-hcpa/[0.05] blur-[160px] pointer-events-none" />
+        <div className="absolute bottom-[20%] left-[8%] w-[50vw] h-[50vw] rounded-full bg-product-hcem/[0.03] blur-[180px] pointer-events-none" />
 
-        {/* Floating Real Estate Vector Animations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-10 select-none">
-          <style>{`
-            @keyframes float-slow {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-30px) rotate(8deg); }
-            }
-            @keyframes float-mid {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-40px) rotate(-12deg); }
-            }
-            .animate-float-1 { animation: float-slow 7s ease-in-out infinite; }
-            .animate-float-2 { animation: float-mid 9s ease-in-out infinite; }
-            .animate-float-3 { animation: float-slow 12s ease-in-out infinite; }
-            .animate-float-4 { animation: float-mid 8s ease-in-out infinite; }
-          `}</style>
-          
-          {/* Section 1 Hero Prominent Floating SVGs - Parallax depth layers */}
-          <svg className="absolute top-[10%] left-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-1 parallax-layer-1 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <svg className="absolute top-[22%] right-[8%] w-20 h-20 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-2 parallax-layer-2 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3M15.5 7.5L14 9"/></svg>
-          <svg className="absolute bottom-[35%] left-[5%] w-18 h-18 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 parallax-layer-3 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <svg className="absolute bottom-[46%] right-[6%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 parallax-layer-1 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        {/* Technical Coordinate Grid Background */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem] pointer-events-none opacity-40" />
 
-          {/* Section 2 Tracks Prominent Floating SVGs */}
-          <svg className="absolute top-[52%] left-[8%] w-22 h-22 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-2 parallax-layer-2 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
-          <svg className="absolute top-[68%] right-[10%] w-20 h-20 text-emerald-600/[0.14] dark:text-white/[0.08] stroke-current stroke-[2] animate-float-1 parallax-layer-3 transition-all duration-300 hover:text-secondary/30" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-
-          {/* Section 3 Path Prominent Floating SVGs */}
-          <svg className="absolute bottom-[18%] left-[7%] w-24 h-24 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-4 parallax-layer-1 transition-all duration-300 hover:text-primary/30" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/><path d="M3 9h18"/><path d="M3 15h18"/></svg>
-          <svg className="absolute bottom-[5%] right-[9%] w-22 h-22 text-emerald-600/[0.15] dark:text-white/[0.09] stroke-current stroke-[2] animate-float-3 parallax-layer-2 transition-all duration-300 hover:text-amber-400/30" viewBox="0 0 24 24" fill="none"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-        </div>
-
-        {/* 1. Hero Section */}
-        <section className="relative overflow-hidden pt-32 pb-36 md:pt-44 md:pb-48 border-b border-border-main scroll-section transition-all duration-1000 scroll-fade-in">
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(2,184,117,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.03)_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,rgba(2,184,117,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(2,184,117,0.05)_1px,transparent_1px)] bg-[size:4.5rem_4.5rem] animate-grid-move pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-bg-main/40 to-bg-main pointer-events-none" />
-
+        {/* 1. HERO SECTION — Engineered Display Architecture */}
+        <section className="relative pt-24 pb-28 md:pt-36 md:pb-36 border-b border-white/10 overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-              {/* Left Hero Details */}
-              <div className="lg:col-span-7 space-y-8 text-left transition-all duration-700 transform translate-y-4 opacity-0 [animation-fill-mode:forwards] animate-slide-up">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-glow border border-primary/20 text-primary text-[0.7rem] font-extrabold uppercase tracking-widest shadow-[0_4px_20px_rgba(2,184,117,0.08)]">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  AI-Powered Real Estate Academy
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+              
+              {/* Left Column: Mission Pitch & CTAs */}
+              <div className="lg:col-span-7 space-y-7 text-left">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <ShimmerBadge variant="hcem" dot>
+                    Operator-Grade Property Education
+                  </ShimmerBadge>
+                  <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-widest hidden sm:inline">
+                    {"// NG REAL ESTATE INFRASTRUCTURE"}
+                  </span>
                 </div>
-                <h1 className="text-4xl sm:text-5xl lg:text-7xl font-heading font-black tracking-tight leading-[0.98] text-text-main text-wrap-balance">
-                  We train <br className="hidden md:inline" />
-                  <span className="text-primary font-black relative inline-block">
+
+                <h1 className="text-display-xl font-bold tracking-tight text-white leading-[1.08] text-balance">
+                  We engineer <br />
+                  <span className="text-product-hcem underline decoration-product-hcem/30 decoration-wavy underline-offset-8">
                     system-backed
-                    <span className="absolute left-0 bottom-2 h-4 w-full bg-primary-glow/60 -z-10 rounded-full" />
-                  </span> <br />
-                  real estate experts
+                  </span>{" "}
+                  real estate operators.
                 </h1>
-                <p className="text-text-muted text-base sm:text-lg max-w-xl leading-relaxed">
-                  Choose between two high-performance professional tracks: Rent Management (HCEM) or Property Advisory &amp; Title Verification (HCPA). Train inside an AI-assisted learning environment that summarizes lessons, explains answers, screens applications, and flags at-risk students automatically.
+
+                <p className="text-body-lg text-zinc-400 max-w-xl leading-relaxed">
+                  Transform informal property habits into institutional precision. Master rent cycle collection, C of O verification, GPS coordinate charting, and digital tenancy mediation inside an AI-assisted operational console.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <Link
+
+                {/* 8px Engineered HashiCorp CTAs */}
+                <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <MagneticButton
+                    variant="primary"
+                    size="lg"
                     href="/apply"
-                    className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-primary-glow hover:shadow-[0_0_30px_rgba(2,184,117,0.4)] transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                    icon={<ArrowRight className="w-4 h-4" />}
+                    iconPosition="right"
                   >
                     Start Admission Form
-                    <ArrowRight className="w-4.5 h-4.5" />
-                  </Link>
-                  <Link
+                  </MagneticButton>
+                  <Button
+                    variant="secondary"
+                    size="lg"
                     href="/programs"
-                    className="btn border border-border-main bg-bg-card/40 backdrop-blur-sm hover:bg-bg-card-hover text-text-main px-8 py-4 rounded-xl font-bold flex items-center justify-center transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                   >
                     Compare Tracks &amp; Curriculums
-                  </Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    href="/verify"
+                    icon={<ExternalLink className="w-3.5 h-3.5" />}
+                  >
+                    Verify Credential
+                  </Button>
+                </div>
+
+                {/* Micro Brand Endorsement */}
+                <div className="pt-4 flex items-center gap-4 text-xs text-zinc-500 font-mono">
+                  <div className="flex items-center gap-1.5 text-zinc-400">
+                    <ShieldCheck className="w-4 h-4 text-product-hcem" />
+                    <span>Property Max Results Certified</span>
+                  </div>
+                  <span>•</span>
+                  <span>Land Use Act 1978 Standardized</span>
                 </div>
               </div>
 
-              {/* Right Hero Interactive Interface Graphic */}
-              <div className="lg:col-span-5 flex justify-center lg:justify-end w-full relative transition-all duration-1000 delay-200 transform translate-y-8 opacity-0 [animation-fill-mode:forwards] animate-slide-up">
-                <div className="absolute -inset-6 bg-gradient-to-tr from-primary/30 to-secondary/30 rounded-[3rem] blur-3xl opacity-50 animate-pulse-slow" />
-                <div className="relative w-full max-w-[420px] rounded-2xl premium-card glass p-6 border-border-main z-10 shadow-[0_30px_80px_rgba(0,0,0,0.25)] hover:border-primary/50 group transition-all duration-500">
-                  <div className="flex items-center justify-between border-b border-border-main/50 pb-4 mb-5">
+              {/* Right Column: High-Focus Command Console Graphic */}
+              <div className="lg:col-span-5 flex justify-center lg:justify-end w-full">
+                <SpotlightCard
+                  variant="hcem"
+                  radius="xl"
+                  className="w-full max-w-[440px] bg-zinc-950/80 border-white/10 p-6 backdrop-blur-xl shadow-2xl"
+                >
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
                     <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
+                      <span className="text-[11px] font-mono text-zinc-500 pl-1">runtime.housmata.lms</span>
                     </div>
-                    <div className="text-[0.65rem] uppercase tracking-wider font-extrabold text-primary bg-primary-glow px-2.5 py-1 rounded-md">
-                      Live Academy Portal
-                    </div>
+                    <ShimmerBadge variant="waypoint" dot>
+                      Active Cohort 04
+                    </ShimmerBadge>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="p-4 rounded-xl bg-bg-main/50 border border-border-main/60 flex items-center justify-between">
-                      <div>
-                        <div className="text-[0.6rem] text-text-muted uppercase tracking-wider font-black">Active Curriculum</div>
-                        <div className="text-sm font-bold text-text-main">Dynamic Multi-Track LMS</div>
+                    {/* Active Track Spec */}
+                    <div className="p-4 rounded-lg bg-zinc-900/60 border border-white/5 space-y-1.5">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 uppercase tracking-wider">
+                        <span>OPERATOR CERTIFICATION</span>
+                        <span className="text-product-hcem font-bold">LIVE TELEMETRY</span>
                       </div>
-                      <div className="w-8 h-8 rounded-lg bg-primary-glow flex items-center justify-center text-primary font-black text-xs">
-                        2x
+                      <div className="text-base font-semibold text-white">
+                        Housmata Certified Estate Manager (HCEM)
                       </div>
-                    </div>
-
-                    <div className="p-4 rounded-xl bg-bg-main/50 border border-border-main/60 space-y-2">
-                      <div className="flex justify-between items-center text-[0.6rem] text-text-muted uppercase tracking-wider font-black">
-                        <span>Checklist Milestones</span>
-                        <span className="text-primary">Track-Aware</span>
+                      <div className="flex items-center justify-between text-xs text-zinc-400 pt-1">
+                        <span>Cohort Progress</span>
+                        <span className="font-mono text-white font-semibold">68%</span>
                       </div>
-                      <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-text-main">
-                          <Check className="w-3.5 h-3.5 text-primary" />
-                          <span>Pre-Course Competency Survey</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-text-main">
-                          <Check className="w-3.5 h-3.5 text-primary" />
-                          <span>10-Question Module Quizzes (75%+)</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-text-muted">
-                          <div className="w-3.5 h-3.5 rounded-full border border-border-main flex-shrink-0" />
-                          <span>Final Certification Harvest</span>
-                        </div>
+                      <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                        <div className="h-full bg-product-hcem rounded-full w-[68%] shadow-[0_0_8px_#02b875]" />
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
-                      <div className="flex-1 p-3.5 rounded-xl bg-bg-main/30 border border-border-main/40 text-center">
-                        <div className="text-[0.55rem] text-text-muted uppercase tracking-wider font-black">Certified Tracks</div>
-                        <div className="text-lg font-black text-primary">HCEM &amp; HCPA</div>
+                    {/* Operational Rubric Metrics */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3.5 rounded-lg bg-zinc-900/40 border border-white/5">
+                        <div className="text-[10px] font-mono text-zinc-500 uppercase">QUIZ BENCHMARK</div>
+                        <div className="text-xl font-bold font-mono text-white mt-0.5">
+                          <RollingNumber value={94} suffix="%" />
+                        </div>
+                        <div className="text-[11px] text-zinc-400 mt-0.5">Passing: 75%+</div>
                       </div>
-                      <div className="flex-1 p-3.5 rounded-xl bg-bg-main/30 border border-border-main/40 text-center">
-                        <div className="text-[0.55rem] text-text-muted uppercase tracking-wider font-black">Mode</div>
-                        <div className="text-sm font-black text-secondary">Self-Paced</div>
+                      <div className="p-3.5 rounded-lg bg-zinc-900/40 border border-white/5">
+                        <div className="text-[10px] font-mono text-zinc-500 uppercase">SUBMISSIONS</div>
+                        <div className="text-xl font-bold font-mono text-product-hcem mt-0.5">
+                          8 <span className="text-xs text-zinc-500 font-normal">/ 10 Done</span>
+                        </div>
+                        <div className="text-[11px] text-zinc-400 mt-0.5">PDF Audits Validated</div>
+                      </div>
+                    </div>
+
+                    {/* AI Verification Indicator */}
+                    <div className="p-3.5 rounded-lg bg-product-hcem/[0.04] border border-product-hcem/20 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-md bg-product-hcem/20 flex items-center justify-center text-product-hcem flex-shrink-0">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div className="text-xs">
+                        <div className="font-semibold text-white">AI Real Estate Tutor Active</div>
+                        <div className="text-zinc-400 text-[11px]">Instant statutory breakdown for Land Use Act Section 5</div>
                       </div>
                     </div>
                   </div>
+                </SpotlightCard>
+              </div>
+
+            </div>
+          </div>
+        </section>
+
+        {/* 2. TELEMETRY MARQUEE — High-Frequency Numbers */}
+        <section className="py-12 border-b border-white/10 bg-zinc-950/70">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              <div className="space-y-1">
+                <div className="text-[11px] font-mono uppercase text-zinc-500 tracking-wider">
+                  CERTIFIED OPERATORS
                 </div>
+                <div className="text-3xl sm:text-4xl font-bold font-mono text-white">
+                  <RollingNumber value={1480} suffix="+" />
+                </div>
+                <div className="text-xs text-zinc-400">Active throughout Nigeria</div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[11px] font-mono uppercase text-zinc-500 tracking-wider">
+                  TITLE VERIFICATION ACCURACY
+                </div>
+                <div className="text-3xl sm:text-4xl font-bold font-mono text-product-hcem">
+                  <RollingNumber value={99.8} decimals={1} suffix="%" />
+                </div>
+                <div className="text-xs text-zinc-400">Zero forest reserve overlap</div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[11px] font-mono uppercase text-zinc-500 tracking-wider">
+                  MANAGED ASSET VALUE
+                </div>
+                <div className="text-3xl sm:text-4xl font-bold font-mono text-white">
+                  ₦<RollingNumber value={4} suffix=".2B+" />
+                </div>
+                <div className="text-xs text-zinc-400">Portfolio under governance</div>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-[11px] font-mono uppercase text-zinc-500 tracking-wider">
+                  STATUTORY COMPLIANCE
+                </div>
+                <div className="text-3xl sm:text-4xl font-bold font-mono text-product-vault">
+                  <RollingNumber value={100} suffix="%" />
+                </div>
+                <div className="text-xs text-zinc-400">Governor&apos;s Consent protocol</div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 2. Choose Your Track */}
-        <section className="py-28 border-b border-border-main bg-bg-card relative scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
+        {/* 3. DUAL CHROMATIC PRODUCT SHOWCASE (HCEM vs HCPA) */}
+        <section className="py-24 border-b border-white/10 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
-              <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
-                Select Your Professional Pathway
-              </h2>
-              <div className="h-1.5 w-16 bg-primary mx-auto rounded-full" />
-              <p className="text-text-muted leading-relaxed text-base">
-                Trainees may only take one certification track at a time. Each track is designed for specific career goals and features specialized self-paced modules, bootcamp sandboxes, and field practicals.
-              </p>
-            </div>
+            <SectionHeader
+              align="center"
+              eyebrow="SELECT YOUR PROFESSIONAL OPERATIONAL TRACK"
+              eyebrowColor="hcem"
+              title="Two Specialized Certification Pathways"
+              description="Trainees specialize in one core discipline at a time. Each pathway combines self-paced statutory theory, live sandbox masterclasses, and practical document submissions."
+              className="mb-16"
+            />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 scroll-stagger">
-              {tracks.map((track, idx) => (
-                <div key={idx} className="premium-card rounded-2.5xl p-8 bg-bg-main border-border-main space-y-6 flex flex-col justify-between shadow-lg hover:border-primary/30 transition-all duration-300 scroll-glow">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-bg-card border border-border-main flex items-center justify-center">
-                        {track.icon}
-                      </div>
-                      <div>
-                        <span className={`inline-block text-[9px] font-extrabold px-2 py-0.5 rounded-full border uppercase ${track.badgeColor}`}>
-                          {track.subtitle}
-                        </span>
-                        <h3 className="font-heading font-extrabold text-base sm:text-lg text-text-main mt-0.5">
-                          {track.title}
-                        </h3>
-                      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* Product 1: HCEM (Housmata Emerald #02b875) */}
+              <SpotlightCard
+                variant="hcem"
+                radius="xl"
+                className="p-8 sm:p-10 bg-zinc-950 border-white/10 hover:border-product-hcem/50 transition-all flex flex-col justify-between"
+              >
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-lg bg-product-hcem/10 border border-product-hcem/30 flex items-center justify-center text-product-hcem">
+                      <HomeIcon className="w-6 h-6" />
                     </div>
-                    <p className="text-text-muted text-xs sm:text-sm leading-relaxed">
-                      {track.desc}
-                    </p>
+                    <ShimmerBadge variant="hcem">
+                      Track A // Operations
+                    </ShimmerBadge>
                   </div>
-                  <div className="pt-4 border-t border-border-main/50 flex gap-3">
-                    <Link
-                      href={track.link}
-                      className="btn border border-border-main text-text-muted hover:text-text-main px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-                    >
-                      View Curriculum
-                    </Link>
-                    <Link
-                      href="/apply"
-                      className="btn bg-primary text-text-inverse hover:brightness-110 px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-                    >
-                      Apply Now
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
+
+                  <div>
+                    <span className="text-eyebrow text-product-hcem font-mono">RENT MANAGEMENT &amp; OPERATIONS</span>
+                    <h3 className="text-card-title text-white font-bold mt-1">
+                      Housmata Certified Estate Manager (HCEM)
+                    </h3>
+                  </div>
+
+                  <p className="text-body-sm text-zinc-400 leading-relaxed">
+                    Designed for property managers, letting agents, and facility custodians. Focuses on daily rent collection cycles, structured tenancy agreements, tenant-landlord dispute mediation, vendor ticket dispatch, and computerized utility accounting.
+                  </p>
+
+                  <div className="space-y-2.5 pt-2">
+                    {[
+                      "Tenancy Agreement Drafting under State Tenancy Laws",
+                      "Automated Rent Roll & Late Penalty Enforcement",
+                      "Move-in/Move-out Photographic Inventory Audits",
+                      "Preventive Facility Maintenance Ticketing",
+                    ].map((spec, i) => (
+                      <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-300">
+                        <Check className="w-4 h-4 text-product-hcem flex-shrink-0 mt-0.5" />
+                        <span>{spec}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
+
+                <div className="pt-8 mt-8 border-t border-white/10 flex items-center justify-between gap-4">
+                  <Button variant="ghost" size="sm" href="/curriculum">
+                    View Syllabus
+                  </Button>
+                  <Button variant="hcem" size="sm" href="/apply">
+                    Apply for HCEM
+                  </Button>
+                </div>
+              </SpotlightCard>
+
+              {/* Product 2: HCPA (Sovereign Violet #7b42bc) */}
+              <SpotlightCard
+                variant="hcpa"
+                radius="xl"
+                className="p-8 sm:p-10 bg-zinc-950 border-white/10 hover:border-product-hcpa/50 transition-all flex flex-col justify-between"
+              >
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="w-12 h-12 rounded-lg bg-product-hcpa/10 border border-product-hcpa/30 flex items-center justify-center text-[#a855f7]">
+                      <TrendingUp className="w-6 h-6" />
+                    </div>
+                    <ShimmerBadge variant="hcpa">
+                      Track B // Advisory
+                    </ShimmerBadge>
+                  </div>
+
+                  <div>
+                    <span className="text-eyebrow text-[#a855f7] font-mono">PROPERTY ADVISORY &amp; VERIFICATION</span>
+                    <h3 className="text-card-title text-white font-bold mt-1">
+                      Housmata Certified Property Advisor (HCPA)
+                    </h3>
+                  </div>
+
+                  <p className="text-body-sm text-zinc-400 leading-relaxed">
+                    Designed for independent real estate consultants, investment scouts, and sales advisors. Focuses on root of title searches, surveyor coordinate charting, forest reserve exclusion checks, and land banking due diligence.
+                  </p>
+
+                  <div className="space-y-2.5 pt-2">
+                    {[
+                      "Survey Plan Plotting (UTM Minna / WGS84 Datum)",
+                      "Certificate of Occupancy (C of O) & Governor's Consent Trace",
+                      "Gazette & Excision Verification at State Lands Bureau",
+                      "Institutional Land Banking & Capital Yield Modeling",
+                    ].map((spec, i) => (
+                      <div key={i} className="flex items-start gap-2.5 text-xs text-zinc-300">
+                        <Check className="w-4 h-4 text-[#a855f7] flex-shrink-0 mt-0.5" />
+                        <span>{spec}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-8 mt-8 border-t border-white/10 flex items-center justify-between gap-4">
+                  <Button variant="ghost" size="sm" href="/curriculum/hcpa">
+                    View Syllabus
+                  </Button>
+                  <Button variant="hcpa" size="sm" href="/apply">
+                    Apply for HCPA
+                  </Button>
+                </div>
+              </SpotlightCard>
+
             </div>
           </div>
         </section>
 
-        {/* 3. Replacement of Habits */}
-        <section className="py-28 border-b border-border-main bg-bg-main scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
+        {/* 4. REPLACING INFORMAL HABITS — Enterprise Real Estate Reality */}
+        <section className="py-24 border-b border-white/10 bg-zinc-950/40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
-              <div className="lg:col-span-7 space-y-8 scroll-stagger">
-                <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
-                  Replacing Informal Real Estate Habits with Structured Technology
-                </h2>
-                <p className="text-text-muted leading-relaxed text-base">
-                  Disputes and losses in real estate rarely stem from a lack of market opportunities. They arise from unverified titles, forest-reserve coordination failures, co-mingling of client funds, and verbal tenancy agreements. Housmata Academy provides the technical framework to eliminate these risks.
-                </p>
-                <div className="space-y-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              
+              <div className="lg:col-span-7 space-y-6">
+                <SectionHeader
+                  eyebrow="RISK MITIGATION FRAMEWORK"
+                  title="Replacing Informal Habits with Software & Legal Structure"
+                  description="Property losses in Nigeria rarely stem from a lack of capital. They occur when transactions rely on verbal agreements, un-charted survey beacons, and un-reconciled client funds."
+                />
+
+                <div className="space-y-4 pt-2">
                   {[
-                    "Enforces coordinate checks and Lands Registry verification standards.",
-                    "Systematizes tenant profiling and KYC screening parameters.",
-                    "Digitalizes rent ledgers, maintenance tickets, and compliance document flows.",
+                    {
+                      title: "Strict Coordinate Verification Protocol",
+                      desc: "Mandates beacon coordinate plotting before client funds are escrowed, preventing uncommitted acquisition disputes.",
+                    },
+                    {
+                      title: "Standardized Statutory Tenancy Documentation",
+                      desc: "Converts customary handshake leases into enforceable legal deeds with explicit repair covenants and notice intervals.",
+                    },
+                    {
+                      title: "Transparent Cloud Accounting",
+                      desc: "Automates tenant service-charge apportionment and utility pass-throughs, eliminating personal fund co-mingling.",
+                    },
                   ].map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-3.5">
-                      <CheckCircle2 className="w-5.5 h-5.5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-text-main text-sm font-semibold">{item}</span>
+                    <div key={idx} className="flex items-start gap-3.5 p-4 rounded-lg bg-zinc-900/40 border border-white/5">
+                      <CheckCircle2 className="w-5 h-5 text-product-hcem flex-shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-sm font-semibold text-white">{item.title}</div>
+                        <div className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{item.desc}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="lg:col-span-5 premium-card rounded-2xl p-8 bg-bg-card border-border-main space-y-8 relative shadow-lg shadow-black/5">
-                <div className="font-heading font-extrabold text-lg text-text-main flex items-center gap-2">
-                  <Landmark className="w-5 h-5 text-primary" />
-                  Under the Auspices of Property Max
-                </div>
-                <p className="text-text-muted text-xs sm:text-sm leading-relaxed">
-                  Designed and directed by <strong>Property Max Results Ltd</strong>, a leading real estate training and management institution shaping Nigeria&apos;s economic landscape. Our certifications are backed by verified industry authority.
-                </p>
-                <div className="p-4.5 rounded-xl bg-bg-main border border-border-main flex items-center gap-4.5">
-                  <div className="w-12 h-12 rounded-xl bg-primary-glow flex items-center justify-center font-heading font-extrabold text-primary flex-shrink-0">
-                    LMS
+              <div className="lg:col-span-5">
+                <SpotlightCard
+                  variant="vault"
+                  radius="xl"
+                  className="p-8 bg-zinc-950 border-white/10 space-y-6"
+                >
+                  <div className="flex items-center gap-2.5 text-product-vault font-semibold text-sm">
+                    <Landmark className="w-5 h-5" />
+                    <span>Property Max Results Institutional Custodianship</span>
                   </div>
-                  <div className="text-xs">
-                    <p className="font-bold text-text-main">Dynamic Graduate Deployment status</p>
-                    <p className="text-text-muted mt-0.5 leading-relaxed">Graduates enter our tracking database for immediate career status verification by our developer network.</p>
+
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    Designed and directed by <strong>Property Max Results Ltd</strong>, a premier Nigerian real estate training and asset management institution. Handbooks and assessment rubrics are curated directly by seasoned counsel and registered surveyors.
+                  </p>
+
+                  <HairlineDivider variant="subtle" />
+
+                  <div className="space-y-3">
+                    <div className="text-[11px] font-mono text-zinc-500 uppercase">ACCREDITATION BADGE</div>
+                    <div className="p-4 rounded-md bg-zinc-900/70 border border-white/10 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-md bg-product-vault/20 flex items-center justify-center font-bold text-product-vault">
+                        LMS
+                      </div>
+                      <div className="text-xs">
+                        <div className="font-semibold text-white">Central Graduate Registry</div>
+                        <div className="text-zinc-500 text-[11px]">Instant verifiable employer search via QR code</div>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </SpotlightCard>
               </div>
+
             </div>
           </div>
         </section>
 
-        {/* 3.5 AI-Powered Learning Section */}
-        <section className="py-28 border-b border-border-main bg-bg-main relative scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(2,184,117,0.06),transparent_55%)] pointer-events-none" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div className="max-w-3xl mx-auto text-center space-y-4 mb-16">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-glow border border-primary/20 text-primary text-[0.7rem] font-extrabold uppercase tracking-widest shadow-[0_4px_20px_rgba(2,184,117,0.08)] mx-auto w-fit">
-                <Sparkles className="w-3.5 h-3.5" />
-                Built-In Artificial Intelligence
-              </div>
-              <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
-                An Academy That Learns With You
-              </h2>
-              <p className="text-text-muted leading-relaxed text-base">
-                Every trainee trains inside a smart, AI-assisted environment. From the first lesson to final certification, our models help students move faster, instructors grade fairer, and admissions spot risk earlier.
-              </p>
-            </div>
+        {/* 5. AI ENGINE SPECIFICATION */}
+        <section className="py-24 border-b border-white/10 relative">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <SectionHeader
+              align="center"
+              eyebrow="INTELLIGENT LEARNING ENVIRONMENT"
+              eyebrowColor="waypoint"
+              title="Engineered with Built-In Cognitive Assistance"
+              description="Every candidate works within a purpose-built AI environment. Accelerate comprehension of dense statutory statutes, clarify quiz rationales, and receive immediate rubric feedback."
+              className="mb-16"
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[
                 {
                   icon: BookOpen,
-                  title: "AI Lesson Assistant",
-                  desc: "Summarize any lesson into key takeaways or ask plain-English questions about the handbook material as you study.",
-                  color: "bg-primary-glow text-primary border-primary/20",
+                  title: "AI Statutory Assistant",
+                  desc: "Ask questions directly against Nigerian real estate handbooks and statutory regulations during active lesson reading.",
+                  color: "text-product-hcem bg-product-hcem/10 border-product-hcem/20",
                 },
                 {
                   icon: CheckCircle2,
-                  title: "AI Answer Explanations",
-                  desc: "After every quiz, get a clear, conversational breakdown of why the correct answer is right and where you went wrong.",
-                  color: "bg-primary-glow text-primary border-primary/20",
+                  title: "Instant Quiz Explanations",
+                  desc: "Receive conversational yet legally rigorous rationales for every quiz question, reinforcing core concepts immediately.",
+                  color: "text-product-hcem bg-product-hcem/10 border-product-hcem/20",
                 },
                 {
                   icon: Award,
-                  title: "Smart Scorecard Insights",
-                  desc: "Receive a personalized, encouraging read on your grades: what you are doing well and exactly where to focus next.",
-                  color: "bg-accent-glow text-accent border-accent/20",
+                  title: "Adaptive Competency Scorecard",
+                  desc: "Analyzes assignment sub-scores across the 10 Nigerian operational pillars, highlighting precise areas for improvement.",
+                  color: "text-product-vault bg-product-vault/10 border-product-vault/20",
                 },
                 {
                   icon: UserCheck,
-                  title: "AI Application Screening",
-                  desc: "Admissions gets an instant, structured recommendation on each applicant so strong candidates are never missed.",
-                  color: "bg-secondary-glow text-secondary border-secondary/20",
+                  title: "Admissions Screening",
+                  desc: "Structured qualification appraisal evaluates incoming candidates to ensure cohort readiness and integrity.",
+                  color: "text-product-hcpa bg-product-hcpa/10 border-product-hcpa/20",
                 },
                 {
                   icon: AlertTriangle,
-                  title: "At-Risk Detection",
-                  desc: "Instructors and admins receive automatic briefings on students who are slipping, with suggested interventions.",
-                  color: "bg-error/10 text-error border-error/20",
+                  title: "At-Risk Telemetry",
+                  desc: "Automated early-warning triggers alert instructors to struggling trainees before certification benchmarks lapse.",
+                  color: "text-product-consul bg-product-consul/10 border-product-consul/20",
                 },
                 {
                   icon: FileText,
-                  title: "AI Grading Support",
-                  desc: "Instructors draft structured, consistent feedback in seconds while keeping the final human verdict in their hands.",
-                  color: "bg-secondary-glow text-secondary border-secondary/20",
+                  title: "Rubric Grading Copilot",
+                  desc: "Empowers faculty to draft granular, consistent evaluation feedback while maintaining human verdict finality.",
+                  color: "text-product-waypoint bg-product-waypoint/10 border-product-waypoint/20",
                 },
-              ].map((f, idx) => (
-                <div
+              ].map((item, idx) => (
+                <SpotlightCard
                   key={idx}
-                  className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4 hover:border-primary/30 transition-all duration-300 scroll-stagger"
+                  radius="lg"
+                  className="p-6 bg-zinc-950 border-white/10 space-y-4 hover:border-white/20 transition-all"
                 >
-                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${f.color}`}>
-                    <f.icon className="w-5 h-5" />
+                  <div className={`w-10 h-10 rounded-md border flex items-center justify-center ${item.color}`}>
+                    <item.icon className="w-5 h-5" />
                   </div>
-                  <h3 className="font-heading font-bold text-base text-text-main">{f.title}</h3>
-                  <p className="text-text-muted text-xs sm:text-sm leading-relaxed">{f.desc}</p>
-                </div>
+                  <h3 className="text-base font-bold text-white">{item.title}</h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{item.desc}</p>
+                </SpotlightCard>
               ))}
-            </div>
-
-            <div className="mt-12 text-center">
-              <Link
-                href="/programs"
-                className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3.5 rounded-xl font-bold inline-flex items-center gap-2 transition-all"
-              >
-                Explore the AI-Enhanced Tracks
-                <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
           </div>
         </section>
 
-        {/* 4. Certification Pathway */}
-        <section className="py-28 border-b border-border-main bg-bg-card scroll-section transition-all duration-1000 opacity-0 translate-y-12 [&.section-visible]:opacity-100 [&.section-visible]:translate-y-0 scroll-slide-up">
+        {/* 6. FOUR-TIER OPERATOR HIERARCHY */}
+        <section className="py-24 border-b border-white/10 bg-zinc-950/60">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
-              <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
-                The Certification Ladder
-              </h2>
-              <div className="h-1.5 w-16 bg-primary mx-auto rounded-full" />
-              <p className="text-text-muted leading-relaxed text-base">
-                Four levels of verification structured to advance you from trainee operator to an independent real estate agency owner.
-              </p>
-            </div>
+            <SectionHeader
+              align="center"
+              eyebrow="PROGRESSION SPECIFICATION"
+              eyebrowColor="vault"
+              title="The Four-Tier Operator Ladder"
+              description="A clear credential progression establishing your formal operational authority from candidate trainee to enterprise agency partner."
+              className="mb-16"
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 scroll-stagger">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {levels.map((lvl) => (
-                <div 
-                  key={lvl.num} 
-                  className="premium-card rounded-2xl p-7 bg-bg-main border-border-main relative flex flex-col gap-5 transition-all duration-500 shadow-md hover:-translate-y-1.5 scroll-glow"
+                <SpotlightCard
+                  key={lvl.num}
+                  radius="lg"
+                  className="p-6 bg-zinc-950 border-white/10 flex flex-col justify-between space-y-5 hover:border-product-hcem/40 transition-all"
                 >
-                  <div className="absolute top-4 right-4 font-heading font-black text-5xl text-primary/5 select-none transition-colors group-hover:text-primary/10">
-                    0{lvl.num}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-2xl font-bold text-white/20">{lvl.num}</span>
+                      <ShimmerBadge variant="default">
+                        {lvl.badge}
+                      </ShimmerBadge>
+                    </div>
+
+                    <span className="text-[10px] font-mono text-product-hcem uppercase tracking-wider block">
+                      {lvl.eyebrow}
+                    </span>
+
+                    <h3 className="text-sm font-bold text-white tracking-tight">
+                      {lvl.name}
+                    </h3>
+
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      {lvl.desc}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 rounded-lg bg-primary text-text-inverse font-heading font-bold text-xs flex items-center justify-center flex-shrink-0 shadow-sm shadow-primary/20">
-                    LVL {lvl.num}
+
+                  <div className="pt-3 border-t border-white/5">
+                    <span className="text-[10px] font-mono text-zinc-500 uppercase">VERIFIED STATUS</span>
                   </div>
-                  <h3 className="font-heading font-bold text-base tracking-tight text-text-main mt-1">
-                    {lvl.name}
-                  </h3>
-                  <p className="text-text-muted text-xs leading-relaxed flex-grow text-wrap-pretty">
-                    {lvl.desc}
-                  </p>
-                </div>
+                </SpotlightCard>
               ))}
             </div>
           </div>
         </section>
 
-        {/* 5. Course Director */}
-        <section className="py-28 border-b border-border-main scroll-section transition-all duration-1000 bg-bg-main scroll-fade-in">
+        {/* 7. ACADEMIC DIRECTOR SPECIFICATION */}
+        <section className="py-24 border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-3xl mx-auto text-center space-y-4 mb-20">
-              <h2 className="text-3xl sm:text-4xl font-heading font-black tracking-tight text-text-main">
-                Course Director
-              </h2>
-              <div className="h-1.5 w-16 bg-primary mx-auto rounded-full" />
-            </div>
-
-            <div className="max-w-4xl mx-auto premium-card rounded-2.5xl bg-bg-card border-border-main p-8 md:p-14 grid grid-cols-1 md:grid-cols-12 gap-10 items-center relative shadow-lg scroll-scale-in">
-              <div className="absolute -inset-4 bg-gradient-to-tr from-primary/5 to-transparent rounded-[3rem] blur-xl opacity-30 pointer-events-none" />
-              <div className="md:col-span-4 flex justify-center relative z-10">
-                <div className="w-48 h-48 sm:w-52 sm:h-52 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-heading font-extrabold text-text-inverse text-5xl shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-300">
+            <SpotlightCard
+              variant="hcem"
+              radius="2xl"
+              className="max-w-4xl mx-auto p-8 sm:p-12 bg-zinc-950 border-white/10 grid grid-cols-1 md:grid-cols-12 gap-8 items-center"
+            >
+              <div className="md:col-span-4 flex justify-center">
+                <div className="w-44 h-44 rounded-xl bg-gradient-to-br from-product-hcem to-product-hcpa flex items-center justify-center font-bold text-black text-5xl shadow-2xl">
                   AA
                 </div>
               </div>
 
-              <div className="md:col-span-8 space-y-6 text-center md:text-left relative z-10">
+              <div className="md:col-span-8 space-y-4 text-center md:text-left">
                 <div>
-                  <h3 className="text-2xl font-heading font-bold tracking-tight text-text-main">
+                  <ShimmerBadge variant="hcem" dot className="mb-2">
+                    Course Director
+                  </ShimmerBadge>
+                  <h3 className="text-2xl font-bold text-white">
                     Akinwunmi Awoyode
                   </h3>
-                  <p className="text-primary text-xs font-bold uppercase tracking-widest mt-1">
-                    Managing Director & CEO, Property Max Results Ltd.
-                  </p>
+                  <div className="text-xs font-mono text-product-hcem uppercase tracking-wider mt-0.5">
+                    Managing Director &amp; CEO, Property Max Results Ltd.
+                  </div>
                 </div>
-                <p className="text-text-muted text-sm leading-relaxed text-wrap-pretty">
-                  Recognised by *The Guardian Nigeria* as one of the visionary CEOs shaping the economic landscape. Holding an MSc in Real Estate Management & Investment from Edinburgh Napier University, UK, and an MBA from the University of South Wales, UK, he directs the academic standards of Housmata training handbook.
+
+                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                  Recognised by <em>The Guardian Nigeria</em> as one of the visionary CEOs shaping the economic landscape. Holding an MSc in Real Estate Management &amp; Investment from Edinburgh Napier University, UK, and an MBA from the University of South Wales, UK, he directs the academic standards of Housmata training handbook.
                 </p>
+
                 <div className="pt-2">
-                  <Link
-                    href="/instructors"
-                    className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
-                  >
-                    View Full Credentials
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+                  <Button variant="outline" size="sm" href="/instructors">
+                    View Faculty &amp; Credentials
+                  </Button>
                 </div>
+              </div>
+            </SpotlightCard>
+          </div>
+        </section>
+
+        {/* 8. BOTTOM CTA BANNER — Surface-1 24px Radius Container */}
+        <section className="py-24">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="rounded-2xl p-10 sm:p-16 bg-surface-1 border border-white/10 space-y-6 relative overflow-hidden shadow-2xl">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(2,184,117,0.1),transparent_60%)] pointer-events-none" />
+
+              <ShimmerBadge variant="hcem" dot>
+                Admissions Open // Next Cohort
+              </ShimmerBadge>
+
+              <h2 className="text-display-lg font-bold tracking-tight text-white max-w-2xl mx-auto text-balance">
+                Accelerate Your Real Estate Operator Career
+              </h2>
+
+              <p className="text-body-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
+                Admissions board reviews applications weekly. Selected candidates are inducted into active cohort tracks with immediate access to self-paced modules, AI tutoring, and live masterclass sandboxes.
+              </p>
+
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+                <Button variant="secondary" size="lg" href="/programs">
+                  Compare Program Tracks
+                </Button>
+                <MagneticButton
+                  variant="primary"
+                  size="lg"
+                  href="/apply"
+                  icon={<ArrowRight className="w-4 h-4" />}
+                >
+                  Access Application Form
+                </MagneticButton>
               </div>
             </div>
           </div>
         </section>
 
-        {/* 6. Call to Action Banner */}
-        <section className="py-32 bg-bg-card relative overflow-hidden text-center scroll-section transition-all duration-1000 scroll-scale-in">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(2,184,117,0.08),transparent_55%)]" />
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-8">
-            <h2 className="text-4xl sm:text-5xl font-heading font-black tracking-tight text-text-main text-wrap-balance">
-              Start Your Real Estate Operator Career
-            </h2>
-            <p className="text-text-muted text-sm sm:text-base max-w-xl mx-auto leading-relaxed text-wrap-pretty">
-              Submit your application details today. Our admissions board reviews submissions weekly and accepts students into their chosen cohort tracks.
-            </p>
-            <div className="pt-4 flex justify-center gap-4">
-              <Link
-                href="/programs"
-                className="btn border border-border-main text-text-muted hover:text-text-main px-8 py-4 rounded-xl font-bold flex items-center justify-center transition-all"
-              >
-                Compare Program Tracks
-              </Link>
-              <Link
-                href="/apply"
-                className="btn bg-primary text-text-inverse hover:brightness-110 px-10 py-4 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg shadow-primary-glow transition-all"
-              >
-                Access Application Form
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </div>
-          </div>
-        </section>
       </div>
     </PublicLayout>
   );

@@ -64,6 +64,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export function useToast() {
   const ctx = useContext(ToastContext);
-  if (!ctx) return { toast: (_m: string, _v?: ToastVariant) => {} };
+  if (!ctx) return { toast: () => {} };
   return ctx;
 }

@@ -49,10 +49,20 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
     setSidebarOpen(false);
   }, [pathname]);
 
+  const [courseTitle, setCourseTitle] = useState("");
+
   // Load progress details if student
   useEffect(() => {
     if (currentUser && currentUser.role === "student") {
       const studentId = currentUser.id;
+      const studentProg = db.getProgress(studentId);
+      if (studentProg) {
+        setCourseTitle(
+          studentProg.course_id === "property-advisor-hcpa"
+            ? "HCPA • Property Advisor"
+            : "HCEM • Estate Manager"
+        );
+      }
       const submissions = db.getStudentSubmissions(studentId).filter((s) => s.status === "graded");
       const quizAttempts = db.getQuizAttempts(studentId).filter((q) => q.passed);
       
@@ -125,26 +135,34 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
     ],
   }[role];
 
-  // Bottom tab bar (mobile < md) - only for admin/instructor roles
-  // Students use StudentLayout which has its own header/nav
-  const bottomTabs = role !== "student"
-    ? [
-        // admin tabs
-        ...(role === "admin" ? [
+  // Bottom tab bar (mobile < md)
+  const bottomTabs = [
+    ...(role === "admin"
+      ? [
           { name: "Dashboard", href: "/lms/admin/dashboard", icon: <BarChart2 className="w-5 h-5" /> },
           { name: "Users", href: "/lms/admin/users", icon: <Users className="w-5 h-5" /> },
           { name: "Applications", href: "/lms/admin/applications", icon: <UserCheck className="w-5 h-5" /> },
           { name: "Cohorts", href: "/lms/admin/cohorts", icon: <Layers className="w-5 h-5" /> },
           { name: "Students", href: "/lms/admin/students", icon: <GraduationCap className="w-5 h-5" /> },
-        ] : []),
-        // instructor tabs
-        ...(role === "instructor" ? [
+        ]
+      : []),
+    ...(role === "instructor"
+      ? [
           { name: "Dashboard", href: "/lms/instructor/dashboard", icon: <Layers className="w-5 h-5" /> },
           { name: "Grading", href: "/lms/instructor/grading", icon: <ClipboardList className="w-5 h-5" /> },
           { name: "Attendance", href: "/lms/instructor/attendance", icon: <FileCheck2 className="w-5 h-5" /> },
-        ] : []),
-      ]
-    : [];
+        ]
+      : []),
+    ...(role === "student"
+      ? [
+          { name: "Hub", href: "/lms/student/dashboard", icon: <ListTodo className="w-5 h-5" /> },
+          { name: "Learn", href: "/lms/student/curriculum", icon: <BookOpen className="w-5 h-5" /> },
+          { name: "Live", href: "/lms/student/meetings", icon: <Calendar className="w-5 h-5" /> },
+          { name: "Grades", href: "/lms/student/grades", icon: <Award className="w-5 h-5" /> },
+          { name: "Credentials", href: "/lms/student/credentials", icon: <GraduationCap className="w-5 h-5" /> },
+        ]
+      : []),
+  ];
 
   const handleLogout = () => {
     logout();
@@ -197,7 +215,7 @@ export default function LmsLayout({ children }: LmsLayoutProps) {
                   {currentUser.full_name}
                 </span>
                 <span className="block text-[10px] text-text-muted capitalize">
-                  {role === "student" ? "Candidate Operator" : role}
+                  {role === "student" ? (courseTitle || "Candidate Operator") : role}
                 </span>
               </div>
             </div>

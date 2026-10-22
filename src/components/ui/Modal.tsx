@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useRef } from "react";
 import { X } from "lucide-react";
+import { useSmoothScroll } from "@/components/providers/SmoothScrollProvider";
 
 interface ModalProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface ModalProps {
 
 export function Modal({ open, onClose, children, variant = "center", title, className }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const { stop, start } = useSmoothScroll();
   // Keep latest onClose in a ref so the focus/scroll-lock effect only re-runs
   // when `open` changes — not on every render (which would steal focus and
   // blur/close the keyboard while typing in child inputs).
@@ -28,13 +30,15 @@ export function Modal({ open, onClose, children, variant = "center", title, clas
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+    stop();
     // focus the panel for accessibility
     requestAnimationFrame(() => panelRef.current?.focus());
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
+      start();
     };
-  }, [open]);
+  }, [open, stop, start]);
 
   if (!open) return null;
 
@@ -58,6 +62,7 @@ export function Modal({ open, onClose, children, variant = "center", title, clas
         ref={panelRef}
         tabIndex={-1}
         className={panel}
+        data-lenis-prevent
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

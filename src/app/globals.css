@@ -3,6 +3,39 @@
 @source "../components";
 
 @theme {
+  --color-canvas: var(--canvas);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-inverse-canvas: var(--inverse-canvas);
+  --color-inverse-ink: var(--inverse-ink);
+
+  --color-hairline: var(--hairline);
+  --color-hairline-soft: var(--hairline-soft);
+  --color-hairline-glow: var(--hairline-glow);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-accent-blue: var(--accent-blue);
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-bright: var(--brand-primary-bright);
+  --color-brand-primary-glow: var(--brand-primary-glow);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-bright: var(--brand-secondary-bright);
+  --color-brand-secondary-glow: var(--brand-secondary-glow);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-glow: var(--brand-accent-glow);
+
+  --color-product-hcem: var(--product-hcem);
+  --color-product-hcpa: var(--product-hcpa);
+  --color-product-hcpa-accent: var(--product-hcpa-accent);
+  --color-product-vault: var(--product-vault);
+  --color-product-waypoint: var(--product-waypoint);
+  --color-product-consul: var(--product-consul);
+
+  /* Legacy mappings so existing pages continue to work seamlessly */
   --color-bg-main: var(--bg-main);
   --color-bg-card: var(--bg-card);
   --color-bg-card-hover: var(--bg-card-hover);
@@ -38,6 +71,7 @@
   --animate-float: float 6s ease-in-out infinite;
   --animate-pulse-slow: pulse-slow 8s ease-in-out infinite;
   --animate-grid-move: grid-move 20s linear infinite;
+  --animate-shimmer: shimmer 2.5s infinite linear;
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -59,18 +93,58 @@
     0% { background-position: 0 0; }
     100% { background-position: 4rem 4rem; }
   }
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(200%); }
+  }
 }
 
 :root {
   color-scheme: light;
-  /* Premium, warm editorial light mode */
-  --bg-main: #fcfbf9;
-  --bg-card: #ffffff;
-  --bg-card-hover: #faf9f6;
-  --bg-glass: rgba(255, 255, 255, 0.8);
-  --bg-elevated: #ffffff;
+
+  /* Canonical Brand Tokens */
+  --brand-primary: #02b875;
+  --brand-primary-bright: #00ca8e;
+  --brand-primary-glow: rgba(2, 184, 117, 0.2);
+  --brand-secondary: #4f46e5;
+  --brand-secondary-bright: #6366f1;
+  --brand-secondary-glow: rgba(99, 102, 241, 0.15);
+  --brand-accent: #f59e0b;
+  --brand-accent-glow: rgba(245, 158, 11, 0.2);
+
+  /* Surface Elevation */
+  --canvas: #fcfbf9;
+  --surface-1: #ffffff;
+  --surface-2: #faf9f6;
+  --surface-3: #f1f0ec;
+  --inverse-canvas: #000000;
+  --inverse-ink: #ffffff;
+
+  /* Hairlines & Accents */
+  --hairline: #e2e4e9;
+  --hairline-soft: rgba(15, 23, 42, 0.08);
+  --hairline-glow: rgba(2, 184, 117, 0.25);
+  --ink: #18191f;
+  --ink-muted: #5e6475;
+  --ink-subtle: #8e95a5;
+  --accent-blue: #2b89ff;
+
+  /* Per-Track Tokens */
+  --product-hcem: #02b875;
+  --product-hcpa: #7b42bc;
+  --product-hcpa-accent: #f59e0b;
+  --product-vault: #f59e0b;
+  --product-waypoint: #14c6cb;
+  --product-consul: #e62b1e;
+
+  /* Compatibility bindings */
+  --bg-main: var(--canvas);
+  --bg-card: var(--surface-1);
+  --bg-card-hover: var(--surface-2);
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --bg-elevated: var(--surface-1);
   
-  --border-color: rgba(15, 23, 42, 0.06);
+  --border-color: var(--hairline-soft);
   --border-glow: rgba(2, 184, 117, 0.2);
   
   --primary: #02b875;
@@ -80,8 +154,8 @@
   --accent: #d97706;
   --accent-glow: rgba(217, 119, 6, 0.1);
   
-  --text-main: #18191f;
-  --text-muted: #5e6475;
+  --text-main: var(--ink);
+  --text-muted: var(--ink-muted);
   --text-inverse: #ffffff;
 
   --shadow-card: 0 16px 40px -12px rgba(24, 25, 31, 0.04), 0 0 1px 1px rgba(24, 25, 31, 0.01);
@@ -90,30 +164,66 @@
 
 .dark {
   color-scheme: dark;
-  /* Deep luxury obsidian dark mode */
-    --bg-main: #06070a;
-    --bg-card: #0b0c10;
-    --bg-card-hover: #12141c;
-    --bg-glass: rgba(11, 12, 16, 0.75);
-    --bg-elevated: #0f111a;
-    
-    --border-color: rgba(255, 255, 255, 0.05);
-    --border-glow: rgba(2, 184, 117, 0.35);
-    
-    --primary: #02b875;
-    --primary-glow: rgba(2, 184, 117, 0.2);
-    --secondary: #6366f1;
-    --secondary-glow: rgba(99, 102, 241, 0.15);
-    --accent: #f59e0b;
-    --accent-glow: rgba(245, 158, 11, 0.2);
-    
-    --text-main: #f3f4f6;
-    --text-muted: #8e95a5;
-    --text-inverse: #06070a;
 
-    --shadow-card: 0 20px 50px -12px rgba(0, 0, 0, 0.5), 0 0 1px 1px rgba(255, 255, 255, 0.02);
-    --shadow-glow: 0 0 40px rgba(2, 184, 117, 0.15);
-  }
+  /* Canonical Brand Tokens */
+  --brand-primary: #02b875;
+  --brand-primary-bright: #00ca8e;
+  --brand-primary-glow: rgba(2, 184, 117, 0.2);
+  --brand-secondary: #4f46e5;
+  --brand-secondary-bright: #6366f1;
+  --brand-secondary-glow: rgba(99, 102, 241, 0.15);
+  --brand-accent: #f59e0b;
+  --brand-accent-glow: rgba(245, 158, 11, 0.2);
+
+  /* HashiCorp Pure Pitch-Black Elevation */
+  --canvas: #000000;
+  --surface-1: #15181e;
+  --surface-2: #1f232b;
+  --surface-3: #3b3d45;
+  --inverse-canvas: #ffffff;
+  --inverse-ink: #000000;
+
+  /* Hairlines & Accents */
+  --hairline: #3b3d45;
+  --hairline-soft: rgba(178, 182, 189, 0.1);
+  --hairline-glow: rgba(2, 184, 117, 0.25);
+  --ink: #ffffff;
+  --ink-muted: #b2b6bd;
+  --ink-subtle: #656a76;
+  --accent-blue: #2b89ff;
+
+  /* Per-Track Tokens */
+  --product-hcem: #02b875;
+  --product-hcpa: #7b42bc;
+  --product-hcpa-accent: #f59e0b;
+  --product-vault: #f59e0b;
+  --product-waypoint: #14c6cb;
+  --product-consul: #e62b1e;
+
+  /* Compatibility bindings mapped to engineered dark surfaces */
+  --bg-main: #000000;
+  --bg-card: #15181e;
+  --bg-card-hover: #1f232b;
+  --bg-glass: rgba(21, 24, 30, 0.85);
+  --bg-elevated: #1f232b;
+  
+  --border-color: rgba(178, 182, 189, 0.1);
+  --border-glow: rgba(2, 184, 117, 0.35);
+  
+  --primary: #02b875;
+  --primary-glow: rgba(2, 184, 117, 0.2);
+  --secondary: #6366f1;
+  --secondary-glow: rgba(99, 102, 241, 0.15);
+  --accent: #f59e0b;
+  --accent-glow: rgba(245, 158, 11, 0.2);
+  
+  --text-main: #ffffff;
+  --text-muted: #b2b6bd;
+  --text-inverse: #000000;
+
+  --shadow-card: none;
+  --shadow-glow: 0 0 32px rgba(2, 184, 117, 0.15);
+}
 
   @layer base {
   * {
@@ -487,3 +597,99 @@
     scroll-behavior: auto;
   }
 }
+
+/* Lenis Virtual Momentum Smooth-Scroll Styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* HashiCorp Engineering Typography Utilities */
+@layer utilities {
+  .text-display-xl {
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 700;
+    line-height: 1.17;
+    letter-spacing: -0.035em;
+  }
+  .text-display-lg {
+    font-size: clamp(2rem, 4.5vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.18;
+    letter-spacing: -0.03em;
+  }
+  .text-display-md {
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 600;
+    line-height: 1.19;
+    letter-spacing: -0.025em;
+  }
+  .text-headline {
+    font-size: 1.75rem;
+    font-weight: 600;
+    line-height: 1.21;
+    letter-spacing: -0.02em;
+  }
+  .text-card-title {
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+  }
+  .text-subhead {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+  .text-body-lg {
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.69;
+  }
+  .text-body-std {
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.50;
+  }
+  .text-body-sm {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.71;
+  }
+  .text-caption-std {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.38;
+    letter-spacing: 0.015em;
+  }
+  .text-button-std {
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.29;
+  }
+  .text-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.23;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+}
+

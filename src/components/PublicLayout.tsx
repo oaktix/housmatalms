@@ -34,48 +34,58 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
   return (
     <div className="flex flex-col min-h-screen bg-bg-main text-text-main font-sans selection:bg-primary-glow selection:text-primary">
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 w-full glass border-b border-border-main transition-all duration-200">
+      {/* Navigation Header - HashiCorp 64px Sticky Console Bar */}
+      <header className="sticky top-0 z-50 w-full bg-black/90 backdrop-blur-md border-b border-white/10 transition-all duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Link href="/">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo + Verified Operator Badge */}
+            <div className="flex items-center gap-3">
+              <Link href="/" className="flex items-center">
                 <Logo height={32} />
               </Link>
+              <div className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-product-hcem/10 border border-product-hcem/30 text-[10px] font-semibold tracking-wider text-product-hcem uppercase">
+                <span className="w-1.5 h-1.5 rounded-full bg-product-hcem shadow-[0_0_6px_#02b875]" />
+                Academy
+              </div>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1 lg:gap-2">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                    isActive(link.href)
-                      ? "text-primary bg-primary-glow"
-                      : "text-text-muted hover:text-text-main hover:bg-bg-card-hover"
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+            <nav className="hidden lg:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const active = isActive(link.href);
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className={`relative px-3.5 py-1.5 rounded-md text-xs font-semibold tracking-wide transition-all duration-150 ${
+                      active
+                        ? "text-white bg-white/5"
+                        : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"
+                    }`}
+                  >
+                    {link.name}
+                    {active && (
+                      <span className="absolute bottom-0 left-3.5 right-3.5 h-[2px] bg-product-hcem shadow-[0_0_8px_#02b875]" />
+                    )}
+                  </Link>
+                );
+              })}
             </nav>
 
-            {/* Header Actions */}
-            <div className="hidden lg:flex items-center gap-3">
+            {/* Header Actions - 8px Engineered CTAs */}
+            <div className="hidden lg:flex items-center gap-2.5">
               <Link
                 href="/lms"
-                className="text-sm font-semibold text-text-muted hover:text-text-main px-4 py-2 transition-all duration-150"
+                className="inline-flex items-center justify-center h-9 px-4 rounded-md text-xs font-semibold tracking-tight text-zinc-300 bg-zinc-900 border border-white/10 hover:border-white/20 hover:text-white hover:bg-zinc-800 transition-all"
               >
                 LMS Portal
               </Link>
               <Link
                 href="/apply"
-                className="btn bg-primary text-text-inverse hover:brightness-110 px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1.5 shadow-sm transition-all"
+                className="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-md text-xs font-semibold tracking-tight bg-white text-black hover:bg-zinc-200 transition-all shadow-sm active:scale-[0.98]"
               >
-                Apply Now
-                <ArrowRight className="w-4 h-4" />
+                <span>Apply Now</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
@@ -83,10 +93,10 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
             <div className="lg:hidden">
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg text-text-muted hover:text-text-main hover:bg-border-main focus:outline-none transition-colors"
+                className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-white/5 focus:outline-none transition-colors"
                 aria-label="Toggle menu"
               >
-                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -94,35 +104,38 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-border-main bg-bg-card transition-all duration-300">
-            <div className="px-2 pt-3 pb-6 space-y-1 sm:px-3">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-4 py-3 rounded-lg text-base font-semibold transition-colors ${
-                    isActive(link.href)
-                      ? "text-primary bg-primary-glow"
-                      : "text-text-muted hover:text-text-main hover:bg-bg-card-hover"
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              <div className="h-px bg-border-main my-4" />
-              <div className="grid grid-cols-2 gap-3 px-4">
+          <div className="lg:hidden border-t border-white/10 bg-black/95 backdrop-blur-xl transition-all duration-300">
+            <div className="px-3 pt-3 pb-6 space-y-1 sm:px-4">
+              {navLinks.map((link) => {
+                const active = isActive(link.href);
+                return (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-3.5 py-2.5 rounded-md text-sm font-semibold transition-colors ${
+                      active
+                        ? "text-product-hcem bg-product-hcem/10 border-l-2 border-product-hcem"
+                        : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    {link.name}
+                  </Link>
+                );
+              })}
+              <div className="h-px bg-white/10 my-3" />
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
                 <Link
                   href="/lms"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-3 rounded-xl border border-border-main text-text-muted text-sm font-bold hover:bg-bg-card-hover transition-colors"
+                  className="w-full text-center py-2.5 rounded-md border border-white/10 text-zinc-300 text-xs font-semibold hover:bg-white/5 transition-colors"
                 >
                   LMS Portal
                 </Link>
                 <Link
                   href="/apply"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="w-full text-center py-3 rounded-xl bg-primary text-text-inverse text-sm font-bold hover:brightness-110 shadow-sm transition-all"
+                  className="w-full text-center py-2.5 rounded-md bg-white text-black text-xs font-semibold hover:bg-zinc-200 transition-all shadow-sm"
                 >
                   Apply Now
                 </Link>
@@ -135,14 +148,14 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       {/* Main Content Area */}
       <main className="flex-grow">{children}</main>
 
-      {/* Structured Premium Footer */}
-      <footer className="relative bg-bg-card border-t border-border-main/80 pt-20 pb-12 transition-all duration-300 overflow-hidden">
-        {/* Glamorous glow backgrounds */}
-        <div className="absolute bottom-0 left-[10%] w-[30vw] h-[30vw] rounded-full bg-primary/4 blur-[120px] pointer-events-none select-none" />
-        <div className="absolute bottom-0 right-[15%] w-[25vw] h-[25vw] rounded-full bg-secondary/4 blur-[100px] pointer-events-none select-none [animation-delay:2s]" />
+      {/* Structured Premium Footer - Pure Pitch Black Ground */}
+      <footer className="relative bg-black border-t border-white/10 pt-20 pb-12 transition-all duration-300 overflow-hidden">
+        {/* Ambient glow backgrounds */}
+        <div className="absolute bottom-0 left-[10%] w-[30vw] h-[30vw] rounded-full bg-product-hcem/5 blur-[120px] pointer-events-none select-none" />
+        <div className="absolute bottom-0 right-[15%] w-[25vw] h-[25vw] rounded-full bg-product-hcpa/5 blur-[100px] pointer-events-none select-none" />
 
         {/* Decorative Top Glow Bar */}
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent shadow-[0_1px_10px_rgba(2,184,117,0.4)]" />
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-product-hcem/40 to-transparent" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 sm:gap-10">

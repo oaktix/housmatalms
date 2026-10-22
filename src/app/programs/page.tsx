@@ -1,9 +1,27 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { ArrowRight, BookOpen, Clock, Calendar, CheckCircle2, ChevronRight, Home, TrendingUp, Sparkles, Award, UserCheck, AlertTriangle, FileText } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  Clock,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Home,
+  TrendingUp,
+  Award,
+  UserCheck,
+  AlertTriangle,
+  FileText,
+  ShieldAlert,
+} from "lucide-react";
 import PublicLayout from "@/components/PublicLayout";
+import {
+  Button,
+  SpotlightCard,
+  ShimmerBadge,
+} from "@/components/ui/hashicorp";
 
 const HCEM_PHASES = [
   {
@@ -15,10 +33,10 @@ const HCEM_PHASES = [
       { icon: BookOpen, label: "Curriculum: 9 Modules" },
     ],
     bullets: [
-      "Ethics as an operating system (Rule-based funds).",
-      "Structural property inspection checks.",
-      "Tenancy agreements and inventory sheet rules.",
-      "Negotiation and objection handling.",
+      "Ethics as an operating system (Rule-based funds)",
+      "Structural property inspection checks",
+      "Tenancy agreements and inventory sheet rules",
+      "Negotiation and objection handling",
     ],
   },
   {
@@ -30,10 +48,10 @@ const HCEM_PHASES = [
       { icon: Clock, label: "Duration: Intensive Bootcamp" },
     ],
     bullets: [
-      "Listings control and digital property records.",
-      "Tenant KYC & scoring frameworks.",
-      "Landlord CRM and rent ledger management.",
-      "Maintenance board & document auto-generation.",
+      "Listings control and digital property records",
+      "Tenant KYC & scoring frameworks",
+      "Landlord CRM and rent ledger management",
+      "Maintenance board & document auto-generation",
     ],
   },
   {
@@ -45,10 +63,10 @@ const HCEM_PHASES = [
       { icon: CheckCircle2, label: "Supervised Field Assessments" },
     ],
     bullets: [
-      "In-person property inspections.",
-      "Live portfolio management tasks.",
-      "Structured field report documentation.",
-      "Final certification submission.",
+      "In-person property inspections",
+      "Live portfolio management tasks",
+      "Structured field report documentation",
+      "Final certification submission",
     ],
   },
 ];
@@ -63,10 +81,10 @@ const HCPA_PHASES = [
       { icon: BookOpen, label: "Curriculum: 16 Modules" },
     ],
     bullets: [
-      "Property documentation & title verification.",
-      "Due diligence and land search procedures.",
-      "Market valuation and investment analysis.",
-      "Fraud detection and risk management.",
+      "Property documentation & title verification",
+      "Due diligence and land search procedures",
+      "Market valuation and investment analysis",
+      "Fraud detection and risk management",
     ],
   },
   {
@@ -78,10 +96,10 @@ const HCPA_PHASES = [
       { icon: Clock, label: "Duration: Intensive Bootcamp" },
     ],
     bullets: [
-      "Client advisory consultation frameworks.",
-      "Property negotiation and deal structuring.",
-      "Regulatory compliance walk-throughs.",
-      "Investment portfolio case presentations.",
+      "Client advisory consultation frameworks",
+      "Property negotiation and deal structuring",
+      "Regulatory compliance walk-throughs",
+      "Investment portfolio case presentations",
     ],
   },
   {
@@ -93,235 +111,237 @@ const HCPA_PHASES = [
       { icon: CheckCircle2, label: "Supervised Field Assessments" },
     ],
     bullets: [
-      "Physical land and property verification.",
-      "Assisted client advisory sessions.",
-      "Market survey and valuation report writing.",
-      "Final certification project submission.",
+      "Physical land and property verification",
+      "Assisted client advisory sessions",
+      "Market survey and valuation report writing",
+      "Final certification project submission",
     ],
   },
 ];
 
-function PhaseCard({ phase, title, desc, meta, bullets, colorClass }: {
+function PhaseCard({
+  phase,
+  title,
+  desc,
+  meta,
+  bullets,
+  variant,
+}: {
   phase: string;
   title: string;
   desc: string;
   meta: { icon: React.ElementType; label: string }[];
   bullets: string[];
-  colorClass: string;
+  variant: "hcem" | "hcpa";
 }) {
+  const isEmerald = variant === "hcem";
   return (
-    <div className="premium-card rounded-2xl bg-bg-card border-border-main p-6 space-y-4">
-      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold uppercase ${colorClass}`}>
-        {phase}
+    <SpotlightCard
+      variant={variant}
+      radius="lg"
+      className="p-6 bg-zinc-950 border-white/10 space-y-4 hover:border-white/20 transition-all flex flex-col justify-between"
+    >
+      <div className="space-y-4">
+        <ShimmerBadge variant={variant}>
+          {phase}
+        </ShimmerBadge>
+        <h3 className="text-base font-bold text-white">{title}</h3>
+        <p className="text-xs text-zinc-400 leading-relaxed">{desc}</p>
+        
+        <div className="flex flex-wrap gap-3 text-xs font-mono text-zinc-400 pt-1">
+          {meta.map((m, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <m.icon className={`w-3.5 h-3.5 ${isEmerald ? "text-product-hcem" : "text-[#a855f7]"}`} />
+              <span>{m.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <ul className="space-y-2 pt-2 border-t border-white/5">
+          {bullets.map((b, i) => (
+            <li key={i} className="flex gap-2 text-xs text-zinc-300">
+              <CheckCircle2 className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${isEmerald ? "text-product-hcem" : "text-[#a855f7]"}`} />
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
       </div>
-      <h3 className="font-heading font-bold text-base text-text-main">{title}</h3>
-      <p className="text-text-muted text-xs leading-relaxed">{desc}</p>
-      <div className="flex flex-wrap gap-4 text-xs font-semibold text-text-muted pt-1">
-        {meta.map((m, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <m.icon className="w-3.5 h-3.5 text-primary" />
-            {m.label}
-          </div>
-        ))}
-      </div>
-      <ul className="space-y-2 pt-1">
-        {bullets.map((b, i) => (
-          <li key={i} className="flex gap-2 text-xs text-text-muted">
-            <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
-            {b}
-          </li>
-        ))}
-      </ul>
-    </div>
+    </SpotlightCard>
   );
 }
 
 export default function Programs() {
   return (
     <PublicLayout>
-      {/* Hero Header */}
-      <section className="relative py-16 md:py-20 border-b border-border-main bg-bg-card overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(38,196,150,0.08),transparent_40%)]" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-heading font-extrabold tracking-tight text-text-main">
-            Training &amp; Programs
-          </h1>
-          <p className="text-text-muted text-sm sm:text-base max-w-2xl mx-auto mt-4 leading-relaxed">
-            Two distinct professional certification tracks. Choose the path that fits your real estate career: estate management or property advisory.
-            Applications are open to one track at a time and require individual approval.
-          </p>
-        </div>
-      </section>
-
-      {/* Track Selector Grid */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
-
-        {/* Track 1: HCEM */}
-        <div className="space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-border-main pb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-primary-glow border border-primary/30 flex items-center justify-center">
-                <Home className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <span className="text-[10px] font-extrabold uppercase text-primary tracking-widest">Track 1</span>
-                <h2 className="text-xl sm:text-2xl font-heading font-extrabold text-text-main">
-                  Housmata Certified Estate Manager
-                </h2>
-                <p className="text-xs text-text-muted mt-0.5">HCEM · Rent Management &amp; Property Operations</p>
-              </div>
-            </div>
-            <div className="flex gap-3 flex-shrink-0">
-              <Link
-                href="/curriculum"
-                className="btn border border-border-main text-text-muted hover:text-text-main hover:border-border-main-hover px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-              >
-                View Curriculum
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                href="/apply"
-                className="btn bg-primary text-text-inverse hover:brightness-110 px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-              >
-                 Apply for HCEM
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
+      <div className="bg-black text-white selection:bg-product-hcem/20 selection:text-product-hcem">
+        {/* Hero Header */}
+        <section className="relative py-20 md:py-28 border-b border-white/10 bg-black overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(2,184,117,0.08),transparent_50%)]" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <ShimmerBadge variant="default" dot className="mb-4">
+              Formal Accreditation Pathways
+            </ShimmerBadge>
+            <h1 className="text-display-lg font-bold tracking-tight text-white max-w-3xl mx-auto">
+              Operator-Grade Real Estate Curriculums
+            </h1>
+            <p className="text-body-lg text-zinc-400 max-w-2xl mx-auto mt-4 leading-relaxed">
+              Two distinct professional certification pathways. Choose the specialty that aligns with your real estate career: estate management operations or title verification and advisory.
+            </p>
           </div>
+        </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {HCEM_PHASES.map((p) => (
-              <PhaseCard
-                key={p.phase}
-                {...p}
-                colorClass="bg-primary-glow border-primary/20 text-primary"
-              />
-            ))}
-          </div>
+        {/* Track Selector Grid */}
+        <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24">
 
-          <div className="p-5 rounded-2xl bg-bg-card border border-border-main text-xs text-text-muted leading-relaxed">
-            <span className="font-bold text-text-main">Who is HCEM for?</span>&nbsp;
-            Property managers, letting agents, and administrators who want to professionalize their estate management operations: handling rent collection, tenancy agreements, landlord-tenant relations, and facility upkeep.
-          </div>
-        </div>
-
-        {/* Track 2: HCPA */}
-        <div className="space-y-8">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-border-main pb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-amber-400" />
-              </div>
-              <div>
-                <span className="text-[10px] font-extrabold uppercase text-amber-400 tracking-widest">Track 2</span>
-                <h2 className="text-xl sm:text-2xl font-heading font-extrabold text-text-main">
-                  Housmata Certified Property Advisor
-                </h2>
-                <p className="text-xs text-text-muted mt-0.5">HCPA · Property Advisory, Verification &amp; Investment</p>
-              </div>
-            </div>
-            <div className="flex gap-3 flex-shrink-0">
-              <Link
-                href="/curriculum/hcpa"
-                className="btn border border-border-main text-text-muted hover:text-text-main hover:border-border-main-hover px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-              >
-                View Curriculum
-                <ChevronRight className="w-3.5 h-3.5" />
-              </Link>
-              <Link
-                href="/apply"
-                className="btn bg-amber-500 text-white hover:brightness-110 px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
-              >
-                 Apply for HCPA
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {HCPA_PHASES.map((p) => (
-              <PhaseCard
-                key={p.phase}
-                {...p}
-                colorClass="bg-amber-500/10 border-amber-500/30 text-amber-400"
-              />
-            ))}
-          </div>
-
-          <div className="p-5 rounded-2xl bg-bg-card border border-border-main text-xs text-text-muted leading-relaxed">
-            <span className="font-bold text-text-main">Who is HCPA for?</span>&nbsp;
-            Sales agents, property consultants, and investors who want to advise clients on acquiring, selling, or investing in property: mastering due diligence, title verification, market valuation, and fraud prevention.
-          </div>
-        </div>
-
-        {/* AI-Powered Learning Banner */}
-        <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-primary-glow/40 to-bg-card p-8 md:p-10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="flex flex-col md:flex-row md:items-center gap-8 relative z-10">
-            <div className="md:w-2/5 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-text-inverse text-[0.7rem] font-extrabold uppercase tracking-widest">
-                <Sparkles className="w-3.5 h-3.5" />
-                AI-Assisted Training
-              </div>
-              <h3 className="text-xl sm:text-2xl font-heading font-extrabold text-text-main">
-                Both Tracks Run on an AI Learning Engine
-              </h3>
-              <p className="text-text-muted text-sm leading-relaxed">
-                Whichever path you choose, you train inside the same intelligent environment that helps you study faster and helps instructors and admissions act sooner.
-              </p>
-            </div>
-            <div className="md:w-3/5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { icon: BookOpen, title: "AI Lesson Assistant", desc: "Summarize lessons and ask questions in plain English while you study." },
-                { icon: CheckCircle2, title: "AI Answer Explanations", desc: "Understand exactly why each quiz answer is correct after you attempt it." },
-                { icon: Award, title: "Smart Scorecard Insights", desc: "Get a personalized read on your grades and where to improve next." },
-                { icon: UserCheck, title: "AI Application Screening", desc: "Admissions receive instant, structured recommendations on every applicant." },
-                { icon: AlertTriangle, title: "At-Risk Detection", desc: "Automatic briefings flag slipping students with suggested interventions." },
-                { icon: FileText, title: "AI Grading Support", desc: "Instructors draft consistent feedback in seconds, keeping the final call human." },
-              ].map((f, i) => (
-                <div key={i} className="flex items-start gap-3 p-4 rounded-xl bg-bg-card border border-border-main">
-                  <div className="w-9 h-9 rounded-lg bg-primary-glow text-primary flex items-center justify-center flex-shrink-0">
-                    <f.icon className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-text-main text-xs">{f.title}</p>
-                    <p className="text-text-muted text-[11px] leading-relaxed mt-0.5">{f.desc}</p>
-                  </div>
+          {/* Track 1: HCEM */}
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-white/10 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-product-hcem/10 border border-product-hcem/30 flex items-center justify-center text-product-hcem">
+                  <Home className="w-6 h-6" />
                 </div>
+                <div>
+                  <span className="text-eyebrow text-product-hcem font-mono">TRACK 01 // OPERATIONS</span>
+                  <h2 className="text-2xl font-bold text-white mt-0.5">
+                    Housmata Certified Estate Manager (HCEM)
+                  </h2>
+                  <p className="text-xs text-zinc-400">Rent Governance · Lease Law · Portfolio Operations</p>
+                </div>
+              </div>
+              <div className="flex gap-2.5 flex-shrink-0">
+                <Button variant="secondary" size="sm" href="/curriculum" icon={<ChevronRight className="w-3.5 h-3.5" />}>
+                  View Syllabus
+                </Button>
+                <Button variant="hcem" size="sm" href="/apply" icon={<ArrowRight className="w-3.5 h-3.5" />}>
+                  Apply for HCEM
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {HCEM_PHASES.map((p) => (
+                <PhaseCard
+                  key={p.phase}
+                  {...p}
+                  variant="hcem"
+                />
               ))}
             </div>
-          </div>
-        </div>
 
-        {/* Enrollment Rule Banner */}
-        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-6 text-center space-y-3">
-          <h3 className="text-sm font-heading font-extrabold text-text-main">
-            One Track at a Time
-          </h3>
-          <p className="text-xs text-text-muted max-w-xl mx-auto leading-relaxed">
-            Applicants may only enroll in <strong className="text-text-main">one certification track at a time</strong>.
-            Each enrollment requires a fresh application and awaits individual admin approval.
-            You may apply for the second track once you have completed or exited your current program.
-          </p>
-        </div>
-
-        {/* CTA */}
-        <div className="text-center pt-4 space-y-4">
-          <h3 className="text-lg font-heading font-bold text-text-main">Ready to Begin?</h3>
-          <p className="text-text-muted text-xs max-w-sm mx-auto leading-relaxed">
-            Apply for either track. Your application enters an admin review queue before enrollment is confirmed.
-          </p>
-          <div className="pt-2">
-            <Link
-              href="/apply"
-              className="btn bg-primary text-text-inverse hover:brightness-110 px-8 py-3 rounded-xl font-bold inline-flex items-center gap-2 transition-all"
-            >
-              Start Admission Application
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <div className="p-4 rounded-lg bg-zinc-950 border border-white/10 text-xs text-zinc-400 leading-relaxed">
+              <strong className="text-white">Target Operational Profile:</strong>&nbsp;
+              Property managers, letting agents, and facility custodians seeking to professionalize and standardize rent collection, statutory tenancy agreements, dispute mediation, and computerized utility accounting.
+            </div>
           </div>
-        </div>
-      </section>
+
+          {/* Track 2: HCPA */}
+          <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-white/10 pb-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg bg-product-hcpa/10 border border-product-hcpa/30 flex items-center justify-center text-[#a855f7]">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-eyebrow text-[#a855f7] font-mono">TRACK 02 // ADVISORY</span>
+                  <h2 className="text-2xl font-bold text-white mt-0.5">
+                    Housmata Certified Property Advisor (HCPA)
+                  </h2>
+                  <p className="text-xs text-zinc-400">Title Search · Coordinate Charting · Land Banking Due Diligence</p>
+                </div>
+              </div>
+              <div className="flex gap-2.5 flex-shrink-0">
+                <Button variant="secondary" size="sm" href="/curriculum/hcpa" icon={<ChevronRight className="w-3.5 h-3.5" />}>
+                  View Syllabus
+                </Button>
+                <Button variant="hcpa" size="sm" href="/apply" icon={<ArrowRight className="w-3.5 h-3.5" />}>
+                  Apply for HCPA
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {HCPA_PHASES.map((p) => (
+                <PhaseCard
+                  key={p.phase}
+                  {...p}
+                  variant="hcpa"
+                />
+              ))}
+            </div>
+
+            <div className="p-4 rounded-lg bg-zinc-950 border border-white/10 text-xs text-zinc-400 leading-relaxed">
+              <strong className="text-white">Target Operational Profile:</strong>&nbsp;
+              Sales agents, land investment consultants, and legal searchers advising clients on land acquisitions: mastering root of title searches, surveyor coordinate plotting, forest reserve exclusions, and gazette compliance.
+            </div>
+          </div>
+
+          {/* AI-Powered Learning Specification */}
+          <SpotlightCard
+            variant="hcem"
+            radius="xl"
+            className="p-8 md:p-10 bg-zinc-950 border-white/10 relative overflow-hidden"
+          >
+            <div className="flex flex-col md:flex-row md:items-center gap-8 relative z-10">
+              <div className="md:w-2/5 space-y-4">
+                <ShimmerBadge variant="waypoint" dot>
+                  Cognitive Engine
+                </ShimmerBadge>
+                <h3 className="text-2xl font-bold text-white">
+                  Intelligent Operator Console
+                </h3>
+                <p className="text-zinc-400 text-xs sm:text-sm leading-relaxed">
+                  Both tracks run on our proprietary AI learning engine. Accelerate lesson comprehension, obtain instant quiz rationales, and receive granular rubric scoring.
+                </p>
+              </div>
+              <div className="md:w-3/5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[
+                  { icon: BookOpen, title: "AI Statutory Tutor", desc: "Ask questions directly against Nigerian real estate handbooks." },
+                  { icon: CheckCircle2, title: "Instant Quiz Rationales", desc: "Explanations for every quiz answer reinforce core statutes." },
+                  { icon: Award, title: "Rubric Scorecard", desc: "Personalized breakdown across 10 operational pillars." },
+                  { icon: UserCheck, title: "Admissions Screening", desc: "Instant qualification profiling ensures cohort readiness." },
+                  { icon: AlertTriangle, title: "At-Risk Telemetry", desc: "Automatic faculty briefings flag slipping trainees early." },
+                  { icon: FileText, title: "Grading Copilot", desc: "Assists faculty to deliver consistent, structured feedback." },
+                ].map((f, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3.5 rounded-lg bg-zinc-900/50 border border-white/5">
+                    <div className="w-8 h-8 rounded-md bg-white/5 text-product-hcem flex items-center justify-center flex-shrink-0">
+                      <f.icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-white text-xs">{f.title}</div>
+                      <div className="text-zinc-400 text-[11px] leading-relaxed mt-0.5">{f.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </SpotlightCard>
+
+          {/* Enrollment Rule Banner */}
+          <div className="rounded-lg border border-product-vault/20 bg-product-vault/[0.04] p-5 text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 text-product-vault font-semibold text-xs uppercase tracking-wider">
+              <ShieldAlert className="w-4 h-4" />
+              Single Active Track Policy
+            </div>
+            <p className="text-xs text-zinc-400 max-w-xl mx-auto leading-relaxed">
+              Trainees may only enroll in <strong className="text-white">one certification track at a time</strong>.
+              Upon completing or exiting your current track, you may submit a subsequent admission application for the secondary pathway.
+            </p>
+          </div>
+
+          {/* Bottom CTA */}
+          <div className="text-center pt-6 space-y-4">
+            <h3 className="text-xl font-bold text-white">Begin Your Admission Evaluation</h3>
+            <p className="text-zinc-400 text-xs max-w-sm mx-auto leading-relaxed">
+              Select your track and submit credentials. The admissions board convenes weekly to review applicants.
+            </p>
+            <div className="pt-2">
+              <Button variant="primary" size="lg" href="/apply" icon={<ArrowRight className="w-4 h-4" />}>
+                Start Admission Application
+              </Button>
+            </div>
+          </div>
+        </section>
+      </div>
     </PublicLayout>
   );
 }

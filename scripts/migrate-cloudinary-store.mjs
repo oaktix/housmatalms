@@ -141,7 +141,8 @@ async function resolveEmailConflict(table, record) {
   if (cloudTime <= dbTime) return "kept-database-row";
 
   // Cloud copy is newer — update the existing row in place (keep its id).
-  const { id: _ignored, ...payload } = record;
+  const payload = { ...record };
+  delete payload.id;
   const patch = await fetch(
     `${SUPA_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(current.id)}`,
     {

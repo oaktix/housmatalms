@@ -86,6 +86,7 @@ export default function AdminStudents() {
 
     db.updateGraduateStatus(selectedStudent.id, status, notes);
 
+    toast(`Deployment status for ${selectedStudent.full_name} updated to ${status}!`);
     setMessage(`Deployment status for ${selectedStudent.full_name} updated to ${status}!`);
     loadStudents();
 

@@ -253,7 +253,7 @@ export default function InstructorGrading() {
     return () => {
       cancelled = true;
     };
-  }, [selectedSub?.id, selectedSub?.content_link, previewNonce, releaseDocUrl]);
+  }, [selectedSub, previewNonce, releaseDocUrl]);
 
   // Release the current blob when the component unmounts.
   useEffect(() => releaseDocUrl, [releaseDocUrl]);
